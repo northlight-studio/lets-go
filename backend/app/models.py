@@ -333,3 +333,7 @@ class Intro(Base):
     said_hi_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     declined_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = _created()
+
+
+# The city catalog lives in its own module; importing it here registers its tables on Base.metadata.
+from app.catalog import tables as _catalog_tables  # noqa: E402, F401
