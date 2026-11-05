@@ -1,0 +1,58 @@
+name: backend-cd
+# Deploys the API to Railway (project lets-go, service api) after backend-ci passes on main, then waits
+# until the new build answers. Run it by hand from Actions → backend-cd → Run workflow.
+#
+# Needs one repo secret: RAILWAY_TOKEN, a Railway *project* token for lets-go's production environment
+# (Railway → lets-go → Settings → Tokens). The service runs `alembic upgrade head` on start.
+on:
+  workflow_run:
+    workflows: [backend-ci]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: backend-cd
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      API: https://api-production-658b9.up.railway.app
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Check the deploy token
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "::error::Add RAILWAY_TOKEN (a Railway project token for lets-go production) under Settings → Secrets → Actions."
+            exit 1
+          fi
+
+      - name: Install the Railway CLI
+        run: npm install -g @railway/cli@4
+
+      - name: Deploy the API
+        working-directory: backend
+        run: railway up --service api --ci
+
+      - name: Wait for the new build to answer
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS "$API/openapi.json" | grep -q '"/v1/discover"'; then
+              curl -fsS "$API/health"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::$API never served /v1/discover after the deploy."
+          exit 1

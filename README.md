@@ -41,7 +41,17 @@ cd backend && python -m app.listings_import ../ios/LetsGo/Resources/sf_happening
 DATABASE_URL=<Railway Postgres public URL> python -m app.listings_import ../ios/LetsGo/Resources/sf_happenings.json  # deployed
 ```
 
-Rows match on city, title and venue; ones the file no longer has are marked gone. Until the import runs, the phone also shows bundled listings the server doesn't have yet (same title and venue counts as the same listing). This is where the nightly scout will write.
+Rows match on city, title and venue; ones the file no longer has are marked gone. Until the import runs, the phone also shows bundled listings the server doesn't have yet (same title and venue counts as the same listing). `/v1/listings` also carries the city catalog's dated events for the next two weeks (below), so phones that only read listings get the real city without an app update.
+
+**The city catalog** (`backend/app/catalog/`): one row per real event, wherever it was found, shared by everyone. Designs: https://claude.ai/artifact/9sqMbPBjTVYTRjuAb2tkCU.
+
+- **Feeds, every night.** Funcheap (schema.org Event data on its day pages), 19hz (club nights, door deals) and DataSF's Mobile Food Schedule (permitted trucks and carts). The API process sweeps by itself: within a minute of a deploy with an empty catalog, then nightly after 4 AM Pacific (`app/catalog/scheduler.py`, one replica at a time by advisory lock). By hand: `python -m app.catalog.sweep --days 7`.
+- **The resolver** is plain code: same venue, same night, starts within 45 minutes, titles that mostly agree → one event with several sources. A cancel from any source marks it. Venues are placed once, from known venues, the city's address register (DataSF EAS) or its street centerlines for corners, and reused.
+- **`/v1/discover?lat&lon&q|intent&day&free&near`** answers from the catalog. A coarse intent (`comedy`, `jazz`, `trucks`, … in `app/catalog/intents.py`) plus a ~5 km² H3 cell plus the night is the key the coverage ledger is kept by. Covered and fresh → `hit`. Not covered, signed in, with a key and budget → it claims one **scout run** and answers `searching`; anyone asking meanwhile joins that run. Poll `/v1/discover` again or `/v1/scout/runs/{id}`.
+- **The scout** is Claude Opus 5.5 with web search, web fetch, `catalog_search` (what we already have) and `propose_events` (strict schema, the only way anything gets written). Code checks every proposal (public link, nothing private, on the night asked) before the resolver sees it. Server-side refusal fallbacks are on. Budget per city per day and five runs per person per hour.
+- **Private stays private.** The catalog never says who asked. `finds` (what your asks put on the map first, `/v1/me/finds`) and `scout_quota` (a counter) are the only person-linked tables.
+
+Settings (Railway service variables): `ANTHROPIC_API_KEY` turns the scout on (without it the catalog still answers, it just never searches), `SCOUT_DAILY_BUDGET_USD` (40), `SCOUT_RUNS_PER_HOUR` (5), `CATALOG_SCHEDULER` (on; set `0` for one-off scripts).
 
 Schema changes go through Alembic (`alembic revision --autogenerate`, then read it). CI runs lint, `alembic check` and the tests.
 
@@ -54,7 +64,7 @@ TEST_RUNNER_LETSGO_API=http://localhost:8100 xcodebuild test -project ios/LetsGo
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
 ```
 
-Deployed on Railway: project **lets-go**, services `api` (this Dockerfile; runs `alembic upgrade head` on start) and `Postgres`, at https://api-production-658b9.up.railway.app. Deploy from `backend/` with `railway up --service api`. The app uses it by default (`APIConfig.deployed`); Passport → Server overrides it.
+Deployed on Railway: project **lets-go**, services `api` (this Dockerfile; runs `alembic upgrade head` on start) and `Postgres`, at https://api-production-658b9.up.railway.app. Every merge to `main` that passes backend-ci deploys it (`.github/workflows/backend-cd.yml`, needs the `RAILWAY_TOKEN` repo secret); by hand, `railway up --service api` from `backend/`. The app uses it by default (`APIConfig.deployed`); Passport → Server overrides it.
 
 ## Not yet
 
