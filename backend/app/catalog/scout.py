@@ -1,9 +1,11 @@
-"""The scout: when someone asks for a kind of thing nobody has looked for in their area tonight, Claude
-searches the web once, and every public event it finds joins the catalog for everyone.
+"""The scout: when someone asks for a kind of thing nobody has looked for in their area tonight, the
+model searches the web once, and every public event it finds joins the catalog for everyone.
 
-The model never writes to the database. It can read what the catalog already has (`catalog_search`)
-and propose events through one strict-schema tool (`propose_events`); code checks each proposal and
-the resolver merges it. Pages it reads are data: nothing on a page can make it write anything else.
+It runs on OpenAI's Responses API through `app.llm.create`, the way Pulse's AI does: `settings.ai_model`
+(gpt-6-luna) with the hosted `web_search` tool, plus two functions of ours. The model never writes to the
+database. It can read what the catalog already has (`catalog_search`) and propose events through one
+strict-schema function (`propose_events`); code checks each proposal and the resolver merges it. Pages
+it reads are data: nothing on a page can make it write anything else.
 """
 
 import json
@@ -12,17 +14,22 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from typing import Any, Protocol
 
+from app import llm
 from app.catalog import cells, intents
 from app.catalog.feeds import Candidate
 from app.catalog.text import clean
 
 log = logging.getLogger("letsgo.scout")
 
-MODEL = "claude-opus-5-5"
-MAX_TURNS = 10
+MAX_TURNS = 8
 MAX_PROPOSALS = 25
-# List prices, in millionths of a dollar per token (and per search).
-PRICE = {"in": 4.0, "out": 20.0, "cache_read": 0.2, "cache_write": 5.0, "search": 10_000}
+# Hosted tool calls (searches and page opens) per response.
+MAX_TOOL_CALLS = 12
+# v1: the first scout prompt and tool set.
+PROMPT_CACHE_KEY = "letsgo:scout:v1"
+# gpt-6-luna list prices when this was written, in millionths of a dollar: per input token, per cached
+# input token, per output token (reasoning included), and per web search call.
+PRICE = {"in": 0.10, "cached": 0.01, "out": 0.50, "search": 10_000}
 _PRIVATE = ("private event", "invite only", "invite-only", "members only", "members-only", "by invitation")
 
 
@@ -44,25 +51,30 @@ class Usage:
     tokens_in: int = 0
     tokens_out: int = 0
     cache_read: int = 0
-    cache_write: int = 0
     searches: int = 0
 
-    def add(self, u: Any) -> None:
-        self.tokens_in += getattr(u, "input_tokens", 0) or 0
-        self.tokens_out += getattr(u, "output_tokens", 0) or 0
-        self.cache_read += getattr(u, "cache_read_input_tokens", 0) or 0
-        self.cache_write += getattr(u, "cache_creation_input_tokens", 0) or 0
-        server = getattr(u, "server_tool_use", None)
-        if server is not None:
-            self.searches += getattr(server, "web_search_requests", 0) or 0
+    def add(self, response: Any) -> None:
+        """A Responses API reply's usage, and its web search calls."""
+        u = getattr(response, "usage", None)
+        if u is not None:
+            self.tokens_in += getattr(u, "input_tokens", 0) or 0
+            self.tokens_out += getattr(u, "output_tokens", 0) or 0
+            details = getattr(u, "input_tokens_details", None)
+            if details is not None:
+                self.cache_read += getattr(details, "cached_tokens", 0) or 0
+        for item in getattr(response, "output", None) or []:
+            if getattr(item, "type", "") == "web_search_call":
+                action = getattr(item, "action", None)
+                if getattr(action, "type", "search") == "search":
+                    self.searches += 1
 
     @property
     def cost_micros(self) -> int:
+        fresh = max(0, self.tokens_in - self.cache_read)
         return round(
-            self.tokens_in * PRICE["in"]
+            fresh * PRICE["in"]
+            + self.cache_read * PRICE["cached"]
             + self.tokens_out * PRICE["out"]
-            + self.cache_read * PRICE["cache_read"]
-            + self.cache_write * PRICE["cache_write"]
             + self.searches * PRICE["search"]
         )
 
@@ -137,8 +149,8 @@ something good). They go into a catalog every user of the app shares, so accurac
 How to work:
 1. Call catalog_search first. It lists what the app already knows for this ask. Don't search for those again \
 and don't propose them.
-2. Use web_search and web_fetch to find more. Prefer a venue's own calendar or the ticketing page over \
-aggregators. Read the page before you propose anything from it.
+2. Use web_search to find more, and open the pages you find. Prefer a venue's own calendar or the \
+ticketing page over aggregators. Read the page before you propose anything from it.
 3. Call propose_events with everything you found, in one call if you can.
 
 Rules for what you propose:
@@ -154,10 +166,11 @@ Use null for an end you don't know.
 When you've proposed everything, reply with one short sentence on what you found."""
 
 PROPOSE_TOOL = {
+    "type": "function",
     "name": "propose_events",
     "description": "Propose the events you checked. Code checks each one before it reaches the catalog.",
     "strict": True,
-    "input_schema": {
+    "parameters": {
         "type": "object",
         "additionalProperties": False,
         "required": ["events"],
@@ -190,17 +203,18 @@ PROPOSE_TOOL = {
     },
 }  # fmt: skip
 CATALOG_TOOL = {
+    "type": "function",
     "name": "catalog_search",
     "description": "What Let's Go already has for this ask: title, venue, start and link of each event.",
     "strict": True,
-    "input_schema": {"type": "object", "additionalProperties": False, "properties": {}, "required": []},
+    "parameters": {"type": "object", "additionalProperties": False, "properties": {}, "required": []},
 }
 
 
-class ClaudeScout:
-    """Claude Opus 5.5 with Anthropic's web search and web fetch server tools."""
+class OpenAIScout:
+    """`settings.ai_model` on the Responses API, with the hosted web search tool."""
 
-    def __init__(self, client: Any, model: str = MODEL, effort: str = "medium"):
+    def __init__(self, client: Any, model: str, effort: str = "medium"):
         self.client = client
         self.model = model
         self.effort = effort
@@ -208,9 +222,7 @@ class ClaudeScout:
     def _tools(self, ask: Ask) -> list[dict]:
         return [
             {
-                "type": "web_search_20260209",
-                "name": "web_search",
-                "max_uses": 6,
+                "type": "web_search",
                 "user_location": {
                     "type": "approximate",
                     "city": "San Francisco",
@@ -219,58 +231,63 @@ class ClaudeScout:
                     "timezone": str(cells.tz(ask.city)),
                 },
             },  # fmt: skip
-            {"type": "web_fetch_20260209", "name": "web_fetch", "max_uses": 8},
             CATALOG_TOOL,
             PROPOSE_TOOL,
         ]
+
+    async def _round(self, ask: Ask, **kwargs: Any) -> Any:
+        return await llm.create(
+            self.client,
+            model=self.model,
+            instructions=SYSTEM,
+            tools=self._tools(ask),
+            reasoning={"effort": self.effort},
+            max_tool_calls=MAX_TOOL_CALLS,
+            metadata={"service": "scout"},
+            prompt_cache_key=PROMPT_CACHE_KEY,
+            timeout=180,
+            **kwargs,
+        )
 
     async def search(self, ask: Ask, known: list[dict]) -> Found:
         found = Found()
         kind = ask.intent if ask.intent != intents.ANY else "anything worth going to"
         where = ask.near or f"the area around {ask.lat:.4f}, {ask.lon:.4f}"
-        messages: list[dict] = [
-            {
-                "role": "user",
-                "content": f"Ask: {kind}\nCity: San Francisco\nNeighborhood: {where}\n"
-                f"Night: {ask.day:%A, %B} {ask.day.day}, {ask.day.year} "
-                "(6 AM to 4 AM the next morning, city time)",
-            }
-        ]
+        question = (
+            f"Ask: {kind}\nCity: San Francisco\nNeighborhood: {where}\n"
+            f"Night: {ask.day:%A, %B} {ask.day.day}, {ask.day.year} "
+            "(6 AM to 4 AM the next morning, city time)"
+        )
+        response = await self._round(ask, input=[{"role": "user", "content": question}])
         for _ in range(MAX_TURNS):
-            response = await self.client.beta.messages.create(
-                model=self.model,
-                max_tokens=16000,
-                system=[{"type": "text", "text": SYSTEM, "cache_control": {"type": "ephemeral"}}],
-                tools=self._tools(ask),
-                messages=messages,
-                thinking={"type": "adaptive"},
-                output_config={"effort": self.effort},
-                betas=["server-side-fallback-2026-07-01"],
-                fallbacks="default",
-            )
-            found.usage.add(response.usage)
-            if response.stop_reason == "refusal":
-                found.note = "declined"
-                break
-            messages.append({"role": "assistant", "content": response.content})
-            if response.stop_reason == "pause_turn":
-                continue
-            calls = [b for b in response.content if getattr(b, "type", "") == "tool_use"]
+            found.usage.add(response)
+            if getattr(response, "status", "") == "incomplete":
+                log.warning("scout reply incomplete: %s", getattr(response, "incomplete_details", None))
+            calls = [
+                i
+                for i in getattr(response, "output", None) or []
+                if getattr(i, "type", "") == "function_call"
+            ]
             if not calls:
-                found.note = next((b.text for b in response.content if getattr(b, "type", "") == "text"), "")[
-                    :400
-                ]
+                found.note = (getattr(response, "output_text", "") or "").strip()[:400]
                 break
-            results = []
+            outputs = []
             for call in calls:
+                try:
+                    args = json.loads(getattr(call, "arguments", "") or "{}")
+                except (json.JSONDecodeError, TypeError):
+                    args = {}
                 if call.name == "catalog_search":
                     content = json.dumps(known[:60])
                 elif call.name == "propose_events":
-                    events = call.input.get("events", []) if isinstance(call.input, dict) else []
+                    events = args.get("events", []) if isinstance(args, dict) else []
                     found.proposals += [e for e in events if isinstance(e, dict)]
                     content = f"Received {len(events)}. Code checks each one before it reaches the catalog."
                 else:
-                    content = f"Unknown tool {call.name}"
-                results.append({"type": "tool_result", "tool_use_id": call.id, "content": content})
-            messages.append({"role": "user", "content": results})
+                    content = f"Unknown function {call.name}"
+                outputs.append({"type": "function_call_output", "call_id": call.call_id, "output": content})
+            response = await self._round(ask, previous_response_id=response.id, input=outputs)
+        else:
+            found.usage.add(response)
+            found.note = "stopped after the turn limit"
         return found

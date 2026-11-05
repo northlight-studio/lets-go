@@ -1,14 +1,14 @@
 import uuid
 from datetime import date
 
-from anthropic import AsyncAnthropic
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
+from openai import AsyncOpenAI
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.auth import current_user, optional_user
 from app.catalog.discover import GeocoderFactory, city_geocoder, discover, execute, known_for
-from app.catalog.scout import Ask, ClaudeScout, Scout
+from app.catalog.scout import Ask, OpenAIScout, Scout
 from app.catalog.tables import Event, EventSource, Find, ScoutRun
 from app.config import settings
 from app.db import get_session, get_session_factory
@@ -23,11 +23,11 @@ _scout: Scout | None = None
 
 
 def get_scout() -> Scout | None:
-    """Claude, when there's a key; without one the catalog still answers, it just never searches."""
+    """The model, when there's an OpenAI key. Without one the catalog still answers; it never searches."""
     global _scout
-    if _scout is None and settings.anthropic_api_key:
-        _scout = ClaudeScout(
-            AsyncAnthropic(api_key=settings.anthropic_api_key), settings.scout_model, settings.scout_effort
+    if _scout is None and settings.openai_api_key:
+        _scout = OpenAIScout(
+            AsyncOpenAI(api_key=settings.openai_api_key), settings.ai_model, settings.scout_reasoning_effort
         )
     return _scout
 

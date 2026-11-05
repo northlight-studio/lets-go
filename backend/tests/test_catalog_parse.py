@@ -1,5 +1,6 @@
 """Feeds and the small text rules the resolver leans on. No database."""
 
+import json
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -175,80 +176,87 @@ def test_scout_proposals_are_checked_in_code():
     assert good[0].source == "scout" and good[0].tags == ["comedy"] and good[0].why
 
 
-class FakeMessages:
-    """Plays back Claude responses and records each request."""
+class FakeResponses:
+    """Plays back Responses API replies and records each request."""
 
-    def __init__(self, responses):
-        self.responses = list(responses)
+    def __init__(self, replies):
+        self.replies = list(replies)
         self.requests: list[dict] = []
 
     async def create(self, **kwargs):
-        # The scout appends to one list as it goes; keep what each request actually sent.
-        self.requests.append(kwargs | {"messages": list(kwargs["messages"])})
-        return self.responses.pop(0)
+        self.requests.append(kwargs)
+        return self.replies.pop(0)
 
 
-def reply(stop: str, *blocks, searches: int = 0):
+def reply(rid: str, *items, text: str = "", cached: int = 0):
     from types import SimpleNamespace as NS
 
-    usage = NS(
-        input_tokens=1000, output_tokens=200, cache_read_input_tokens=500, cache_creation_input_tokens=0,
-        server_tool_use=NS(web_search_requests=searches),
-    )  # fmt: skip
-    return NS(stop_reason=stop, content=list(blocks), usage=usage)
+    usage = NS(input_tokens=1000, output_tokens=200, input_tokens_details=NS(cached_tokens=cached))
+    return NS(id=rid, status="completed", output=list(items), output_text=text, usage=usage)
 
 
-async def test_claude_scout_reads_the_catalog_proposes_and_stops():
+def call(cid: str, name: str, arguments: dict):
     from types import SimpleNamespace as NS
 
-    from app.catalog.scout import ClaudeScout
+    return NS(type="function_call", call_id=cid, name=name, arguments=json.dumps(arguments))
 
-    messages = FakeMessages(
+
+def searched(action: str = "search"):
+    from types import SimpleNamespace as NS
+
+    return NS(type="web_search_call", action=NS(type=action))
+
+
+async def test_openai_scout_reads_the_catalog_proposes_and_stops():
+    from types import SimpleNamespace as NS
+
+    from app.catalog.scout import PROMPT_CACHE_KEY, OpenAIScout
+
+    responses = FakeResponses(
         [
-            reply("pause_turn", NS(type="server_tool_use", name="web_search"), searches=2),
-            reply("tool_use", NS(type="tool_use", id="t1", name="catalog_search", input={})),
-            reply(
-                "tool_use",
-                NS(type="tool_use", id="t2", name="propose_events", input={"events": [proposal()]}),
-            ),
-            reply("end_turn", NS(type="text", text="Found one new show."), searches=1),
+            reply("r1", searched(), searched("open_page"), call("c1", "catalog_search", {})),
+            reply("r2", searched(), call("c2", "propose_events", {"events": [proposal()]}), cached=800),
+            reply("r3", text="Found one new show."),
         ]
     )
-    scout = ClaudeScout(NS(beta=NS(messages=messages)))
+    scout = OpenAIScout(NS(responses=responses), "gpt-6-luna", "medium")
     ask = Ask("sf", "872830828ffffff", "comedy", date(2026, 11, 6), 37.78, -122.41, "Mission")
     found = await scout.search(ask, [{"title": "Golden Gate Comedy Night"}])
 
     assert [p["title"] for p in found.proposals] == ["The Infinite Wrench"]
     assert found.note == "Found one new show."
-    assert found.usage.searches == 3 and found.usage.tokens_in == 4000
-    assert found.usage.cost_micros == 4000 * 4 + 800 * 20 + 2000 * 0.2 + 3 * 10_000
-    first = messages.requests[0]
-    assert first["model"] == "claude-opus-5-5"
-    assert first["fallbacks"] == "default" and first["betas"] == ["server-side-fallback-2026-07-01"]
-    assert first["system"][0]["cache_control"] == {"type": "ephemeral"}
-    assert {t["name"] for t in first["tools"]} == {
+    # Two searches (opening a page isn't one), three replies' tokens, 800 of them read from cache.
+    assert found.usage.searches == 2 and found.usage.tokens_in == 3000 and found.usage.cache_read == 800
+    assert found.usage.cost_micros == round(2200 * 0.10 + 800 * 0.01 + 600 * 0.50 + 2 * 10_000)
+    first, second = responses.requests[0], responses.requests[1]
+    assert first["model"] == "gpt-6-luna" and first["reasoning"] == {"effort": "medium"}
+    assert first["prompt_cache_key"] == PROMPT_CACHE_KEY == "letsgo:scout:v1"
+    assert "temperature" not in first
+    assert [t.get("name", t["type"]) for t in first["tools"]] == [
         "web_search",
-        "web_fetch",
         "catalog_search",
         "propose_events",
-    }
+    ]
     assert (
-        "Mission" in first["messages"][0]["content"]
-        and "Friday, November 6, 2026" in first["messages"][0]["content"]
+        "Mission" in first["input"][0]["content"]
+        and "Friday, November 6, 2026" in first["input"][0]["content"]
     )
-    # The catalog answer went back as a tool result, and a paused turn was resumed without a new user message.
-    assert messages.requests[1]["messages"][-1]["role"] == "assistant"
-    catalog_result = messages.requests[2]["messages"][-1]["content"][0]
-    assert catalog_result["tool_use_id"] == "t1" and "Golden Gate" in catalog_result["content"]
+    # Later rounds carry on from the last reply and send back only the function outputs.
+    assert second["previous_response_id"] == "r1"
+    assert second["input"][0]["call_id"] == "c1" and "Golden Gate" in second["input"][0]["output"]
+    assert responses.requests[2]["input"][0]["output"].startswith("Received 1.")
 
 
-async def test_claude_scout_stops_on_a_refusal():
+async def test_every_model_call_names_its_cache_key():
     from types import SimpleNamespace as NS
 
-    from app.catalog.scout import ClaudeScout
+    import pytest
 
-    messages = FakeMessages([reply("refusal")])
-    found = await ClaudeScout(NS(beta=NS(messages=messages))).search(
-        Ask("sf", "a", "comedy", date(2026, 11, 6), 37.78, -122.41), []
-    )
-    assert found.proposals == [] and found.note == "declined" and len(messages.requests) == 1
+    from app import llm
+
+    with pytest.raises(ValueError):
+        await llm.create(NS(responses=FakeResponses([])), model="gpt-6-luna", input="hi")
+    with pytest.raises(ValueError):
+        await llm.create(
+            NS(responses=FakeResponses([])), model="gpt-6-luna", prompt_cache_key="letsgo:x:v1", temperature=0
+        )
