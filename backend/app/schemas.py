@@ -399,3 +399,58 @@ class People(BaseModel):
 
 # GatheringOut names PersonOut before it's defined.
 GatheringOut.model_rebuild()
+
+
+# The city catalog
+
+
+class EventOut(BaseModel):
+    id: uuid.UUID
+    title: str
+    venue: str
+    address: str
+    lat: float
+    lon: float
+    starts_at: datetime
+    ends_at: datetime | None
+    genre: Genre
+    tags: list[str]
+    price_text: str
+    price_min_cents: int | None
+    ages: str
+    url: str
+    why: str | None
+    # on | canceled | sold_out
+    status: str
+    # Where it was seen: funcheap, 19hz, datasf, scout.
+    sources: list[str]
+    distance_m: float | None = None
+    # Your ask put it on the map first. Only ever true for you.
+    found_by_you: bool = False
+
+
+class ScoutRunOut(Out):
+    id: uuid.UUID
+    intent: str
+    day: date_
+    # running | done | failed
+    status: str
+    searches: int
+    added: int
+    merged: int
+    started_at: datetime
+    finished_at: datetime | None
+
+
+class DiscoverOut(BaseModel):
+    intent: str
+    day: date_
+    # hit · searching · miss · off (see app.catalog.discover.Discovery)
+    coverage: Literal["hit", "searching", "miss", "off"]
+    checked_at: datetime | None
+    run: ScoutRunOut | None
+    events: list[EventOut]
+
+
+class FindsOut(BaseModel):
+    events: list[EventOut]

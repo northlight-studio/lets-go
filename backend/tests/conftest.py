@@ -1,3 +1,4 @@
+import inspect
 import os
 from datetime import UTC, datetime, timedelta
 
@@ -7,7 +8,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app import models  # noqa: F401
-from app.db import Base, get_session
+from app.db import Base, get_session, get_session_factory
 from app.main import app
 
 TEST_URL = os.environ.get(
@@ -45,6 +46,7 @@ async def client(engine):
             yield s
 
     app.dependency_overrides[get_session] = session_override
+    app.dependency_overrides[get_session_factory] = lambda: maker
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         yield c
     app.dependency_overrides.clear()
@@ -68,7 +70,8 @@ def offset(east_m: float, north_m: float) -> tuple[float, float]:
 
 
 def pytest_collection_modifyitems(items):
-    # One event loop for the whole run, shared with the session-scoped engine.
+    # One event loop for the whole run, shared with the session-scoped engine. Plain functions stay plain.
     marker = pytest.mark.asyncio(loop_scope="session")
     for item in items:
-        item.add_marker(marker, append=False)
+        if inspect.iscoroutinefunction(getattr(item, "function", None)):
+            item.add_marker(marker, append=False)
