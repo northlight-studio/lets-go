@@ -12,6 +12,15 @@ class Settings(BaseSettings):
     check_in_early_min: int = 30
     # The default "near you" radius for the map.
     nearby_radius_m: float = 2500
+    # Run the nightly sweep from the API process (off in tests and one-off scripts).
+    catalog_scheduler: bool = True
+    # The scout runs only when there's a key. Read from ANTHROPIC_API_KEY.
+    anthropic_api_key: str = ""
+    scout_model: str = "claude-opus-5-5"
+    scout_effort: str = "medium"
+    # A day's scout spend per city at list prices, and runs one person can start in an hour.
+    scout_daily_budget_usd: float = 40
+    scout_runs_per_hour: int = 5
 
     @field_validator("database_url")
     @classmethod
