@@ -14,6 +14,16 @@ iOS app: a live map of things to do within walking distance, home kitchens selli
 - Anything shown as a real person, place or listing that isn't one must be marked Sample.
 - Tests use Swift Testing (`import Testing`), not XCTest.
 - Never commit the App Store Connect key (`*.p8`, `asc_api_key.json`).
+- AI works the way Pulse's does: every model call goes through `backend/app/llm.py` (`llm.create`, the OpenAI Responses API), names the model only through `settings.ai_model` (gpt-6-luna), and passes a `prompt_cache_key` of `letsgo:<surface>:v<n>`. The key is `OPENAI_API_KEY`, the same one Pulse uses.
+
+## Pull requests (same rules as Pulse)
+- **Merge it yourself.** When your PR is ready, merge it, squashed like the rest of `main`: `gh pr merge <n> --squash`, or the GitHub merge tool in a cloud session. Don't hand it back to be merged. Ready means its checks finished green, it merges cleanly with `main`, and your own pass over the diff found nothing.
+- **Wait for the checks in the same turn, then merge** (`gh pr checks <n> --watch --fail-fast`; backend-ci takes about a minute, ios-ci a few). A PR that starts no checks merges as soon as it's open.
+- **Never merge while a check is running or red.** Merging cancels an ios-ci build that hasn't finished. Red: fix it on the branch, push, wait again. A conflict with `main`: bring `main` in, push, wait again. If it won't go green, leave it open and say why.
+- **One PR per task.** Follow-ups to the same ask go on the open PR's branch. Check it hasn't merged before pushing more.
+- Merge as the owner, not with a workflow's `GITHUB_TOKEN`: a merge made that way starts no workflows, and backend-cd deploys off the push to `main`.
+- Don't merge when told to hold it or that someone wants to look first. Merging doesn't send a TestFlight build; that waits for an ask.
+- Don't schedule self check-ins on a PR. Wait for its checks in the turn, merge, report the link.
 
 ## Ship
 From GitHub: `gh workflow run ios-cd.yml -R yasser100ali/lets-go` (tests, archive, sign, upload, wait for processing) on the Mac mini's `letsgo` runner. Locally: `scripts/ship.sh`. Either way the build number is App Store Connect's highest + 1, so nothing is committed. Internal testers get every build. Only ship when asked for a build.

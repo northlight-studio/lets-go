@@ -33,3 +33,14 @@ async def current_user(
     if user is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Unknown token")
     return user
+
+
+async def optional_user(
+    creds: HTTPAuthorizationCredentials | None = Depends(_bearer),
+    session: AsyncSession = Depends(get_session),
+) -> User | None:
+    """The caller if they sent a known token, else nobody. For public reads that do a little more
+    for people with an account."""
+    if creds is None:
+        return None
+    return await session.scalar(select(User).where(User.token_hash == hash_token(creds.credentials)))
