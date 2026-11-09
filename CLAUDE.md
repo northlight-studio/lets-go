@@ -26,4 +26,4 @@ iOS app: a live map of things to do within walking distance, home kitchens selli
 - Don't schedule self check-ins on a PR. Wait for its checks in the turn, merge, report the link.
 
 ## Ship
-From GitHub: `gh workflow run ios-cd.yml -R yasser100ali/lets-go` (tests, archive, sign, upload, wait for processing) on the Mac mini's `letsgo` runner. Locally: `scripts/ship.sh`. Either way the build number is App Store Connect's highest + 1, so nothing is committed. Internal testers get every build. Only ship when asked for a build.
+From GitHub: `gh workflow run ios-cd.yml -R northlight-studio/lets-go` (tests, archive, sign, upload, wait for processing) on the Mac mini's `letsgo` runner. Locally: `scripts/ship.sh`. Either way the build number is App Store Connect's highest + 1, so nothing is committed. Internal testers get every build. Only ship when asked for a build.
