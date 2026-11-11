@@ -84,6 +84,7 @@ async def create_gathering(
     session.add(g)
     await session.commit()
     g = await _get(session, g.id)
+    await session.refresh(g, ["web_guests"])
     return gathering_out(g, user.id, friend_ids=await friend_ids(session, user.id))
 
 
@@ -119,12 +120,12 @@ async def join(
     )
     if g is None:
         raise HTTPException(404, "Gathering not found")
-    await session.refresh(g, ["members"])
+    await session.refresh(g, ["members", "web_guests"])
     if any(m.user_id == user.id for m in g.members):
         return gathering_out(g, user.id, friend_ids=await friend_ids(session, user.id))
     if g.ends_at <= now():
         raise HTTPException(409, "It's over")
-    if g.capacity and len(g.members) >= g.capacity:
+    if g.capacity and g.going >= g.capacity:
         raise HTTPException(409, "It's full")
     session.add(GatheringMember(gathering_id=g.id, user_id=user.id))
     await session.commit()
@@ -166,7 +167,7 @@ async def check_in(
         )
     member = await session.get(GatheringMember, (g.id, user.id))
     if member is None:
-        if g.capacity and len(g.members) >= g.capacity:
+        if g.capacity and g.going >= g.capacity:
             raise HTTPException(409, "It's full")
         member = GatheringMember(gathering_id=g.id, user_id=user.id)
         session.add(member)

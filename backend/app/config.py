@@ -26,6 +26,22 @@ class Settings(BaseSettings):
     scout_daily_budget_usd: float = 40
     scout_runs_per_hour: int = 5
 
+    # Where a poster's short link points: this API's own public address (or a short domain aimed at it).
+    public_base_url: str = "https://api-production-658b9.up.railway.app"
+    # Where the poster page sends people to get the app (TestFlight public link or App Store page).
+    # Empty: the page says the app is in beta on iPhone and to ask the host.
+    app_download_url: str = ""
+    # Mixed into IP hashes so the stored hashes can't be reversed by hashing every address.
+    web_ip_salt: str = "letsgo-dev-salt"
+    # Proxies in front of the API that append to X-Forwarded-For (Railway's edge: one).
+    trusted_proxy_hops: int = 1
+    # Joins from the web: at most this share of a capped gathering's spots, this many for an open one,
+    # this many per network per gathering, and this many per network per hour across all posters.
+    web_share_of_spots: float = 0.5
+    web_open_max: int = 25
+    web_per_ip_per_gathering: int = 3
+    web_per_ip_per_hour: int = 6
+
     @field_validator("database_url")
     @classmethod
     def _async_driver(cls, url: str) -> str:

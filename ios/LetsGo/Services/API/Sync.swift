@@ -74,7 +74,7 @@ enum Sync {
             let dto: GatheringDTO = try await api.send(.post("/v1/gatherings", NewGatheringDTO(
                 title: g.title, genre: g.categoryRaw, details: g.details, placeName: g.placeName,
                 lat: g.latitude, lon: g.longitude, startsAt: g.start, endsAt: g.end,
-                capacity: g.capacity, bring: g.bring
+                capacity: g.capacity, bring: g.bring, recurring: g.recurring
             )))
             g.remoteID = dto.id
             update(g, from: dto)
@@ -110,6 +110,29 @@ enum Sync {
             update(g, from: try await api.send(.post("/v1/gatherings/\(id.uuidString)/check-in", CheckInDTO(lat: c.latitude, lon: c.longitude))))
         }
         return Ledger.checkIn(g, context: context)
+    }
+
+    // MARK: Posters
+
+    /// The gathering's poster link: made the first time, the same one after. Only for a real
+    /// gathering you host that lives on the server; `PosterCopy.unavailable` says why not.
+    @discardableResult
+    static func makePoster(for g: Gathering, context: ModelContext, now: Date = .now) async throws(APIError) -> PosterDTO {
+        if let reason = PosterCopy.unavailable(g, now: now) { throw .rejected(status: 0, reason: reason) }
+        guard let id = g.remoteID else { throw .notConfigured }
+        let dto: PosterDTO = try await api.send(.post(
+            "/v1/gatherings/\(id.uuidString)/poster", NewPosterDTO(tz: TimeZone.current.identifier)
+        ))
+        Ledger.poster(g, code: dto.code, url: dto.url, shortText: dto.shortText, context: context)
+        return dto
+    }
+
+    /// Takes the poster down: its page says so and takes no more joins.
+    static func retirePoster(for g: Gathering, context: ModelContext) async throws(APIError) {
+        if let code = g.posterCode {
+            let _: Empty = try await api.send(.delete("/v1/posters/\(code)"))
+        }
+        Ledger.retirePoster(g, context: context)
     }
 
     // MARK: Kitchens
@@ -230,6 +253,7 @@ enum Sync {
         g.othersGoing = max(0, dto.going - (dto.isJoined ? 1 : 0))
         if let at = dto.checkedInAt { g.checkedInAt = at }
         g.friendIDs = dto.friendsGoing?.map(\.id) ?? []
+        g.webNames = dto.webNames ?? []
         g.isSample = false
     }
 

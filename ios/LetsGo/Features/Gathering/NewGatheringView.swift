@@ -14,6 +14,7 @@ struct NewGatheringView: View {
     @State private var category: Genre = .play
     @State private var start = Date.now.addingTimeInterval(3600)
     @State private var end = Date.now.addingTimeInterval(3 * 3600)
+    @State private var weekly = false
     @State private var placeName = ""
     @State private var capacity = 0
     @State private var bring = ""
@@ -38,6 +39,7 @@ struct NewGatheringView: View {
                 Section("When") {
                     DatePicker("Starts", selection: $start, in: Date.now.addingTimeInterval(-3600)...)
                     DatePicker("Ends", selection: $end, in: start...)
+                    Toggle(weekly ? PosterCopy.weekly(from: start) : "Every week", isOn: $weekly)
                 }
                 Section {
                     TextField("Place name, like \"The big field\"", text: $placeName)
@@ -127,6 +129,7 @@ struct NewGatheringView: View {
             capacity: capacity,
             hostName: "You",
             bring: bring,
+            recurring: weekly ? PosterCopy.weekly(from: start) : "",
             isMine: true
         )
         posting = true

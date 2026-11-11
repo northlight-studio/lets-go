@@ -13,6 +13,7 @@ struct GatheringDetailView: View {
     @Query private var people: [Person]
     @State private var earned: Stamp?
     @State private var inviting = false
+    @State private var postering = false
     @State private var here: HereMoment?
     @State private var walk: WalkTarget?
     @State private var confirmDelete = false
@@ -36,6 +37,7 @@ struct GatheringDetailView: View {
                             Text(gathering.details).font(.system(size: 15)).foregroundStyle(Palette.ink.opacity(0.9))
                         }
                         hostLine
+                        if gathering.isMine { posterBlock(now: now) }
                         if gathering.isListing { listingLinks }
                         checkInHint(now: now)
                         if gathering.isSample { SampleNote() }
@@ -58,6 +60,7 @@ struct GatheringDetailView: View {
         .fullScreenCover(item: $here) { YouAreHereView(moment: $0) }
         .fullScreenCover(item: $walk) { EyesUpView(target: $0) }
         .sheet(isPresented: $inviting) { InviteFriendsView(gathering: gathering) }
+        .sheet(isPresented: $postering) { PosterSheet(gathering: gathering) }
         .errorAlert($problem)
         .confirmationDialog("Cancel \(gathering.title)?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Cancel it", role: .destructive) {
@@ -173,6 +176,31 @@ struct GatheringDetailView: View {
                         .font(.system(size: 12)).foregroundStyle(Palette.muted)
                 } else if !gathering.recurring.isEmpty {
                     Text(gathering.recurring).font(.system(size: 12)).foregroundStyle(Palette.muted)
+                }
+            }
+        }
+    }
+
+    /// Hosts get a poster to print and tape up; people who scan it can say they're in from the web.
+    /// Only for a real gathering on the server, never a sample.
+    @ViewBuilder
+    private func posterBlock(now: Date) -> some View {
+        let unavailable = PosterCopy.unavailable(gathering, now: now)
+        if !gathering.isSample, !gathering.hasEnded(at: now) {
+            VStack(alignment: .leading, spacing: 8) {
+                Button { postering = true } label: {
+                    Label(gathering.posterCode == nil ? "Make a poster" : "Your poster", systemImage: "doc.richtext")
+                }
+                .buttonStyle(SecondaryButtonStyle())
+                .disabled(unavailable != nil)
+                if let unavailable {
+                    Text(unavailable).font(.system(size: 12)).foregroundStyle(Palette.muted)
+                } else if !gathering.webNames.isEmpty {
+                    Text("From your poster: \(gathering.webNames.joined(separator: ", "))")
+                        .font(.system(size: 13)).foregroundStyle(Palette.muted)
+                } else {
+                    Text("Tape it up nearby. Anyone can scan it and say they're in, no app needed.")
+                        .font(.system(size: 12)).foregroundStyle(Palette.muted)
                 }
             }
         }

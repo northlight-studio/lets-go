@@ -39,6 +39,7 @@ struct PassportView: View {
     private let goals: [(key: String, title: String, symbol: String, category: Genre)] = [
         ("first-checkin", "First show-up", "figure.wave", .play),
         ("first-host", "Hosted one", "flag.fill", .party),
+        ("first-poster", "Put one up", "doc.richtext", .party),
         ("opened-kitchen", "Opened a kitchen", "house.fill", .food),
         ("first-review", "First review", "text.bubble.fill", .food),
         ("checkins-5", "Five show-ups", "star.circle", .move),

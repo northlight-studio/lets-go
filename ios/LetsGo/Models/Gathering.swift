@@ -37,6 +37,14 @@ final class Gathering {
     var friendIDs: [UUID] = []
     /// The friend who asked you along, if one did.
     var invitedBy: String = ""
+    /// First names of people who said they're in from your poster's web page. The server only sends
+    /// them to the host; they're counted in `othersGoing` like anyone else.
+    var webNames: [String] = []
+    /// Your poster's short link, once you've made one (see `PosterCopy`).
+    var posterCode: String?
+    var posterURL: String?
+    /// The link without "https://", for the tear-off tabs.
+    var posterShortText: String?
 
     var isListing: Bool { listingKey != nil }
 
