@@ -10,14 +10,12 @@ enum Art {
         return Double(h % 1000) / 1000
     }
 
-    /// The dark ground under a gathering's art.
+    /// The ground under a gathering's art: a pale wash of its colour by day, deep after dark.
     static func ground(_ genre: Genre) -> Color {
         switch genre {
-        case .play: Color(hex: 0x16301F)
-        case .move: Color(hex: 0x16283A)
-        case .music: Color(hex: 0x241C3A)
-        case .party: Color(hex: 0x33192A)
-        case .food: Color(hex: 0x3A2418)
+        case .music: Color(light: 0xF8E3D6, dark: 0x3A2418)
+        case .food: Color(light: 0xDDEFE3, dark: 0x16301F)
+        case .play, .move, .party: Color(light: 0xDDE7F5, dark: 0x16283A)
         }
     }
 

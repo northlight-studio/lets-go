@@ -62,6 +62,49 @@ enum HomeLine {
         return Date(timeIntervalSinceReferenceDate: whole)
     }
 
+    // MARK: Wren's pick
+
+    /// The line under the pick's title: "4 of 6 in · 6-minute walk · leave by 6:40 PM".
+    /// Already on: "On now" instead of when to leave. `walkMinutes` is a real route's.
+    static func meta(
+        for c: Candidate, now: Date, walkMinutes: Int? = nil,
+        clock: (Date) -> String = HomeLine.clock
+    ) -> String {
+        var parts: [String] = []
+        switch c.kind {
+        case .gathering:
+            if c.capacity > 0 { parts.append("\(c.going) of \(c.capacity) in") }
+            else if c.going > 0 { parts.append("\(c.going) going") }
+        case .drop:
+            if let left = c.dropLeft, let total = c.dropTotal, total > 0 { parts.append("\(left) of \(total) left") }
+        }
+        let walk = walkMinutes ?? c.walkMinutes
+        parts.append("\(walk)-minute walk")
+        if c.start <= now {
+            parts.append(c.kind == .drop ? "open till \(clock(c.end))" : "on now")
+        } else {
+            parts.append("leave by \(clock(leaveBy(c, now: now, walkMinutes: walk)))")
+        }
+        let line = parts.joined(separator: " · ")
+        return line.prefix(1).uppercased() + line.dropFirst()
+    }
+
+    /// Faces after the friends shown: "+2" for the others who are in. Nil when there are none.
+    static func others(_ c: Candidate, friendsShown: Int) -> String? {
+        let rest = c.going - friendsShown - (c.isJoined ? 1 : 0)
+        return rest > 0 ? "+\(rest)" : nil
+    }
+
+    /// The search capsule over the map: "Tonight, nearby".
+    static func searchPrompt(_ window: TimeWindow, inCity: Bool) -> String {
+        let when = switch window {
+        case .now: "Right now"
+        case .tonight: "Tonight"
+        case .weekend: "This weekend"
+        }
+        return "\(when), \(inCity ? "in the city" : "nearby")"
+    }
+
     // MARK: Wren's line
 
     /// What Wren says about the top pick. With friends going, it leads with them, and with a

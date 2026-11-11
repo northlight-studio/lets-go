@@ -50,6 +50,29 @@ struct HomeLineTests {
         #expect(HomeLine.badge(gathering("Open mic", startsIn: 30)) == nil)
     }
 
+    @Test func picksMetaLineSaysHowFullTheWalkAndWhenToLeave() {
+        let soccer = gathering("Pickup soccer", startsIn: 30, meters: 480, capacity: 6, going: 4)
+        #expect(HomeLine.meta(for: soccer, now: now, clock: clock) == "4 of 6 in · 6-minute walk · leave by T")
+        let on = gathering("Trivia", startsIn: -10, meters: 480, going: 9)
+        #expect(HomeLine.meta(for: on, now: now, clock: clock) == "9 going · 6-minute walk · on now")
+        let curry = drop(left: 4, total: 20)
+        #expect(HomeLine.meta(for: curry, now: now, clock: clock) == "4 of 20 left · 5-minute walk · leave by T")
+        // Nothing to count: it starts with the walk.
+        let open = gathering("Open mic", startsIn: 30, meters: 480)
+        #expect(HomeLine.meta(for: open, now: now, walkMinutes: 9, clock: clock) == "9-minute walk · leave by T")
+    }
+
+    @Test func othersCountsEveryoneNotShownAsAFace() {
+        let soccer = gathering("Pickup soccer", startsIn: 30, capacity: 6, going: 4)
+        #expect(HomeLine.others(soccer, friendsShown: 2) == "+2")
+        #expect(HomeLine.others(soccer, friendsShown: 4) == nil)
+    }
+
+    @Test func searchPromptFollowsTheWindow() {
+        #expect(HomeLine.searchPrompt(.tonight, inCity: false) == "Tonight, nearby")
+        #expect(HomeLine.searchPrompt(.weekend, inCity: true) == "This weekend, in the city")
+    }
+
     @Test func leaveByIsTheStartLessTheWalk() {
         let trivia = gathering("Trivia", startsIn: 60, meters: 1440) // 18 minutes at 80 m a minute
         let leave = HomeLine.leaveBy(trivia, now: now)

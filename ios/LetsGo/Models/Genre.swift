@@ -48,36 +48,24 @@ enum Genre: String, CaseIterable, Codable, Identifiable, Sendable {
         }
     }
 
-    /// The pin's glow on the night map.
+    /// The pin's colour: orange for music, green for food, the compass's blue for the rest.
     var color: Color {
         switch self {
-        case .play: Color(hex: 0x4FD08E)
-        case .move: Color(hex: 0x5AB4F0)
-        case .music: Color(hex: 0xB497F5)
-        case .party: Color(hex: 0xF07BB0)
-        case .food: Color(hex: 0xFFA24C)
+        case .music: Color(light: 0xF07A45, dark: 0xF07A45)
+        case .food: Color(light: 0x3FA36B, dark: 0x6FD49A)
+        case .play, .move, .party: Palette.compass
         }
     }
 
-    /// The icon on top of `color`: the same hue, nearly black.
-    var ink: Color {
-        switch self {
-        case .play: Color(hex: 0x052414)
-        case .move: Color(hex: 0x03192A)
-        case .music: Color(hex: 0x170A33)
-        case .party: Color(hex: 0x2E0716)
-        case .food: Color(hex: 0x2B1300)
-        }
-    }
+    /// The glyph on top of `color`: white by day, near-black after dark.
+    var ink: Color { Color(light: 0xFFFFFF, dark: 0x11140F) }
 
-    /// The badge text over a dark chip: "4/6", "16 left".
+    /// The kind's colour as text on the page: "4/6", "16 left".
     var light: Color {
         switch self {
-        case .play: Color(hex: 0xB8F0D2)
-        case .move: Color(hex: 0xB5DDF8)
-        case .music: Color(hex: 0xD9CCFF)
-        case .party: Color(hex: 0xFFC2DC)
-        case .food: Color(hex: 0xFFC58E)
+        case .music: Color(light: 0xB24A18, dark: 0xFFB08A)
+        case .food: Color(light: 0x1E7A47, dark: 0xA8EBC4)
+        case .play, .move, .party: Color(light: 0x2457A8, dark: 0xBBD3F5)
         }
     }
 

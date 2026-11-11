@@ -103,7 +103,7 @@ struct EyesUpView: View {
                 Button { dismiss() } label: {
                     Image(systemName: "xmark").font(.system(size: 14, weight: .bold))
                         .frame(width: 36, height: 36)
-                        .glassEffect(.regular.tint(Palette.glassTint).interactive(), in: .circle)
+                        .glassEffect(.regular.interactive(), in: .circle)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Stop the walk")

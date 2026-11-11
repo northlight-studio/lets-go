@@ -83,7 +83,7 @@ struct PeopleView: View {
                 }
             }
             .padding(3)
-            .glassEffect(.regular.tint(Palette.glassTint), in: .capsule)
+            .glassEffect(.regular, in: .capsule)
         }
         .padding(.leading, 20)
         .padding(.trailing, 16)

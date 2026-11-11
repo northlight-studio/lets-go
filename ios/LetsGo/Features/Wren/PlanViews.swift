@@ -181,7 +181,7 @@ struct PlanView: View {
             .monospacedDigit()
             .padding(.horizontal, 14)
             .frame(height: 32)
-            .glassEffect(.regular.tint(Palette.glassTint), in: .capsule)
+            .glassEffect(.regular, in: .capsule)
     }
 
     // MARK: Sheet

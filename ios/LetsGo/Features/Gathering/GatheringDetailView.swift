@@ -2,6 +2,9 @@ import SwiftUI
 import SwiftData
 import MapKit
 
+/// A gathering's page: the map at the top fading into the page, under the system's glass
+/// back and share buttons; when, the title, where and the walk; a seat per spot; the
+/// friend on their way, if one is; "I'm in" (or "Walk with Maya"); and Wren's note.
 struct GatheringDetailView: View {
     @Bindable var gathering: Gathering
     @Environment(LocationService.self) private var location
@@ -19,6 +22,8 @@ struct GatheringDetailView: View {
     @State private var confirmDelete = false
     @State private var busy = false
     @State private var problem: String?
+    /// "Just go": joined without walking in with the friend on their way.
+    @State private var justGo = false
 
     /// Close enough to count as being there.
     private let checkInRadius: CLLocationDistance = 200
@@ -26,13 +31,18 @@ struct GatheringDetailView: View {
     var body: some View {
         TimelineView(.periodic(from: .now, by: 30)) { timeline in
             let now = timeline.date
+            let going = friendsGoing(now: now)
+            let meet = meetUp(going: going, now: now)
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    VStack(alignment: .leading, spacing: 14) {
+                VStack(alignment: .leading, spacing: 0) {
+                    banner
+                    VStack(alignment: .leading, spacing: 16) {
                         titleBlock(now: now)
+                        whosIn(going: going, now: now)
+                        if let meet { onTheWay(meet, going: going) }
+                        actions(meet: meet, going: going, now: now)
+                        if let note = wrenNote(going: going, now: now) { WrenNote(text: note) }
                         InfoStrip(items: facts(now: now))
-                        whosIn(now: now)
-                        if let note = tipNote(now: now) { TipNote(text: note) }
                         if !gathering.details.isEmpty {
                             Text(gathering.details).font(.system(size: 15)).foregroundStyle(Palette.ink.opacity(0.9))
                         }
@@ -48,13 +58,25 @@ struct GatheringDetailView: View {
                         }
                     }
                     .padding(.horizontal, 18)
-                    .padding(.top, 6)
+                    .padding(.top, -28)
                 }
                 .padding(.bottom, 24)
             }
             .scrollIndicators(.hidden)
+            .ignoresSafeArea(edges: .top)
             .background(Palette.bg)
-            .safeAreaInset(edge: .bottom) { actions(now: now) }
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    ShareLink(item: GatheringLine.share(
+                        title: gathering.title,
+                        eyebrow: GatheringLine.eyebrow(start: gathering.start, end: gathering.end, now: now),
+                        place: gathering.placeName, link: gathering.posterURL
+                    )) {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                    .accessibilityLabel("Share")
+                }
+            }
         }
         .navigationBarTitleDisplayMode(.inline)
         .fullScreenCover(item: $here) { YouAreHereView(moment: $0) }
@@ -74,14 +96,39 @@ struct GatheringDetailView: View {
         }
     }
 
+    /// The map around the place, fading into the page. Just to look at.
+    private var banner: some View {
+        let me = Candidate(gathering, from: location.center)
+        return Map(initialPosition: .camera(MapCamera(centerCoordinate: gathering.coordinate.offset(east: 0, north: -90), distance: 1600)),
+                   interactionModes: []) {
+            UserAnnotation()
+            Annotation(gathering.title, coordinate: gathering.coordinate, anchor: .center) {
+                NightPin(pick: me, size: 30, now: .now, showsCaption: false, picked: false)
+            }
+            .annotationTitles(.hidden)
+        }
+        .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .including([.park, .beach, .publicTransport])))
+        .frame(height: 290)
+        .mask(LinearGradient(stops: [.init(color: .black, location: 0.55), .init(color: .clear, location: 1)], startPoint: .top, endPoint: .bottom))
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
     private func titleBlock(now: Date) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(gathering.recurring.isEmpty ? gathering.category.label : "\(gathering.category.label) · \(gathering.recurring)")
-                .eyebrow()
-            Text(gathering.title).display(28).foregroundStyle(Palette.ink)
-            Label(gathering.placeName, systemImage: "mappin.and.ellipse")
+            HStack(spacing: 8) {
+                Text(GatheringLine.eyebrow(start: gathering.start, end: gathering.end, now: now)).eyebrow(Palette.accentSoft)
+                if gathering.isSample { SampleTag() }
+            }
+            Text(gathering.title).display(32).foregroundStyle(Palette.ink)
+            Text(GatheringLine.whereLine(place: gathering.placeName, meters: location.center.distance(to: gathering.coordinate)))
                 .font(.system(size: 15))
                 .foregroundStyle(Palette.muted)
+            if !gathering.recurring.isEmpty {
+                Text("\(gathering.category.label) · \(gathering.recurring)")
+                    .font(.system(size: 13))
+                    .foregroundStyle(Palette.muted)
+            }
         }
     }
 
@@ -108,16 +155,47 @@ struct GatheringDetailView: View {
 
     /// Seats and friends for things with people to count; for a listing, just your friends.
     @ViewBuilder
-    private func whosIn(now: Date) -> some View {
-        let me = Candidate(gathering, from: location.center)
-        let going = friendsGoing(now: now)
+    private func whosIn(going: [Friend], now: Date) -> some View {
         if !gathering.isListing || !going.isEmpty {
-            WhosInCard(
-                gathering: gathering, friends: going,
-                meet: gathering.isJoined || gathering.isLive(at: now) ? nil : MeetUp.best(here: location.center, friends: going, to: me, now: now),
-                now: now
-            )
+            WhosInCard(gathering: gathering, friends: going, now: now)
         }
+    }
+
+    /// Wren's walk past a friend who's on the way: until you've said "Just go", or it's started.
+    private func meetUp(going: [Friend], now: Date) -> MeetUp? {
+        guard !justGo, gathering.checkedInAt == nil, !gathering.isLive(at: now), !gathering.hasEnded(at: now) else { return nil }
+        return MeetUp.best(here: location.center, friends: going, to: Candidate(gathering, from: location.center), now: now)
+    }
+
+    /// "Maya's on the way · Two minutes from you. Leave at 6:32 and walk in together?"
+    @ViewBuilder
+    private func onTheWay(_ meet: MeetUp, going: [Friend]) -> some View {
+        let words = GatheringLine.onTheWay(meet)
+        HStack(spacing: 12) {
+            if let friend = going.first(where: { $0.id == meet.friendID }) {
+                FriendAvatar(friend: friend, size: 38, ring: .live, ground: Palette.card)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(words.title).font(.system(size: 15, weight: .semibold)).foregroundStyle(Palette.ink)
+                Text(words.detail).font(.system(size: 14)).foregroundStyle(Palette.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(14)
+        .card(radius: 22)
+    }
+
+    /// Wren's note under the buttons: who's already there, and why this one.
+    private func wrenNote(going: [Friend], now: Date) -> String? {
+        if gathering.hasEnded(at: now) { return nil }
+        var parts: [String] = []
+        let there = going.filter { $0.out?.state == .there }
+        if gathering.checkedInAt == nil, let f = there.first {
+            parts.append("\(f.firstName)'s already there\(there.count > 1 ? " with \(there.count - 1) more" : ""). It's a straight walk over.")
+        }
+        if let tip = tipNote(now: now) { parts.append(tip) }
+        return parts.isEmpty ? nil : parts.joined(separator: " ")
     }
 
     /// "Free" → "Free"; "$10–20" → "$10–20"; long text gets cut to its first part.
@@ -219,73 +297,95 @@ struct GatheringDetailView: View {
         }
     }
 
-    private func actions(now: Date) -> some View {
+    /// The one prominent button (yellow glass) and a clear glass one next to it.
+    private func actions(meet: MeetUp?, going: [Friend], now: Date) -> some View {
         let distance = location.center.distance(to: gathering.coordinate)
         let canCheckIn = !location.isUsingFallback && distance <= checkInRadius && gathering.checkInOpen(at: now)
-        return HStack(spacing: 10) {
-            if gathering.checkedInAt != nil {
-                Button("You're here") {}.buttonStyle(PrimaryButtonStyle(color: gathering.category.color)).disabled(true)
-            } else if canCheckIn {
-                Button("Check in") {
-                    let at = location.center
-                    let with = friendsGoing(now: now)
-                    run { () throws(APIError) in
-                        earned = try await Sync.checkIn(gathering, at: at, context: context)
-                        Ledger.arrive(gathering.placeName, genre: gathering.category, with: with, isSample: gathering.isSample, context: context)
-                        here = HereMoment(title: gathering.placeName, genre: gathering.category, checkedInAt: .now,
-                                          friends: with, stamped: earned != nil)
+        let walkable = distance > checkInRadius && !gathering.hasEnded(at: now)
+        let meetFriend = meet.flatMap { m in going.first { $0.id == m.friendID } }
+        return VStack(spacing: 10) {
+            HStack(spacing: 10) {
+                if gathering.checkedInAt != nil {
+                    prominent("You're here", tint: gathering.category.color) {}
+                        .disabled(true)
+                    Button { here = HereMoment(title: gathering.placeName, genre: gathering.category, checkedInAt: gathering.checkedInAt ?? now,
+                                               friends: going, stamped: true) } label: {
+                        Image(systemName: "moon.stars")
                     }
-                }
-                .buttonStyle(PrimaryButtonStyle(color: gathering.category.color))
-            } else if gathering.isJoined {
-                Button("You're in") {}
-                    .buttonStyle(PrimaryButtonStyle(color: Palette.raise))
-                    .disabled(true)
-                if !gathering.isMine {
-                    Button("Leave") {
-                        run { () throws(APIError) in try await Sync.leave(gathering, context: context) }
+                    .buttonStyle(.glass)
+                    .accessibilityLabel("You're here")
+                } else if canCheckIn {
+                    prominent("Check in") {
+                        let at = location.center
+                        run { () throws(APIError) in
+                            earned = try await Sync.checkIn(gathering, at: at, context: context)
+                            Ledger.arrive(gathering.placeName, genre: gathering.category, with: going, isSample: gathering.isSample, context: context)
+                            here = HereMoment(title: gathering.placeName, genre: gathering.category, checkedInAt: .now,
+                                              friends: going, stamped: earned != nil)
+                        }
                     }
-                        .font(.system(size: 15, weight: .semibold))
-                        .padding(.horizontal, 18)
-                        .padding(.vertical, 15)
-                        .card()
+                } else if gathering.isJoined {
+                    if let meet, let meetFriend, walkable {
+                        prominent("Walk with \(meet.friendName)", symbol: "figure.walk") { walkThere(with: [meetFriend]) }
+                    } else if walkable {
+                        prominent("Walk there", symbol: "figure.walk") { walkThere(with: going) }
+                            .accessibilityLabel("Walk me there, eyes up")
+                    } else {
+                        Button { } label: { Text("You're in").frame(maxWidth: .infinity) }
+                            .buttonStyle(.glass)
+                            .disabled(true)
+                    }
+                    if !gathering.isMine {
+                        Button("Leave") {
+                            run { () throws(APIError) in try await Sync.leave(gathering, context: context) }
+                        }
+                        .buttonStyle(.glass)
+                    }
+                } else if let meet, !gathering.isFull {
+                    // Say you're in, walking in with them; the card says when to leave.
+                    prominent("Walk with \(meet.friendName)", symbol: "figure.walk") {
+                        run { () throws(APIError) in try await Sync.join(gathering, context: context) }
+                    }
+                    Button("Just go") {
+                        justGo = true
+                        run { () throws(APIError) in try await Sync.join(gathering, context: context) }
+                    }
+                    .buttonStyle(.glass)
+                } else {
+                    prominent(gathering.isFull ? "Full" : gathering.isListing ? "I'm going" : "I'm in") {
+                        run { () throws(APIError) in try await Sync.join(gathering, context: context) }
+                    }
+                    .disabled(gathering.isFull)
                 }
-            } else {
-                Button(gathering.isFull ? "Full" : gathering.isListing ? "I'm going" : "I'm in") {
-                    run { () throws(APIError) in try await Sync.join(gathering, context: context) }
-                }
-                .buttonStyle(PrimaryButtonStyle())
-                .disabled(gathering.isFull)
             }
-            if gathering.checkedInAt != nil {
-                Button { here = HereMoment(title: gathering.placeName, genre: gathering.category, checkedInAt: gathering.checkedInAt ?? now,
-                                           friends: friendsGoing(now: now), stamped: true) } label: {
-                    Image(systemName: "moon.stars")
-                }
-                .buttonStyle(SecondaryButtonStyle())
-                .accessibilityLabel("You're here")
-            } else if gathering.isJoined, !canCheckIn, distance > checkInRadius, !gathering.hasEnded(at: now) {
-                Button { walkThere(now: now) } label: { Label("Walk", systemImage: "figure.walk") }
-                    .buttonStyle(SecondaryButtonStyle())
-                    .fixedSize()
-                    .accessibilityLabel("Walk me there, eyes up")
-            } else if !people.isEmpty {
-                Button("Bring someone") { inviting = true }
-                    .buttonStyle(SecondaryButtonStyle())
-                    .fixedSize()
+            if !people.isEmpty, gathering.checkedInAt == nil, !gathering.hasEnded(at: now) {
+                Button { inviting = true } label: { Label("Bring someone", systemImage: "person.badge.plus").frame(maxWidth: .infinity) }
+                    .buttonStyle(.glass)
             }
         }
+        .font(.system(size: 17, weight: .semibold))
+        .foregroundStyle(Palette.ink)
+        .controlSize(.large)
         .sensoryFeedback(.success, trigger: gathering.isJoined)
         .disabled(busy)
-        .padding(.horizontal, 18)
-        .padding(.top, 10)
-        .padding(.bottom, 6)
-        .background(Palette.bg)
     }
 
-    private func walkThere(now: Date) {
+    /// The system's prominent glass, in yellow (or the colour given) with dark ink.
+    private func prominent(_ title: String, symbol: String? = nil, tint: Color = Palette.accent, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Group {
+                if let symbol { Label(title, systemImage: symbol) } else { Text(title) }
+            }
+            .frame(maxWidth: .infinity)
+            .foregroundStyle(Palette.accentInk)
+        }
+        .buttonStyle(.glassProminent)
+        .tint(tint)
+    }
+
+    private func walkThere(with friends: [Friend]) {
         walk = WalkTarget(title: gathering.placeName, genre: gathering.category, latitude: gathering.latitude,
-                          longitude: gathering.longitude, start: gathering.start, friends: friendsGoing(now: now))
+                          longitude: gathering.longitude, start: gathering.start, friends: friends)
     }
 
     private func run(_ work: @escaping () async throws(APIError) -> Void) {

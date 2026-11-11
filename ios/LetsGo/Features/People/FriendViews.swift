@@ -44,7 +44,7 @@ struct AvatarStack: View {
     var friends: [Friend]
     var size: CGFloat = 24
     var includesYou = false
-    var ground: Color = Color(hex: 0x1A1822)
+    var ground: Color = Palette.card
     var limit = 5
 
     var body: some View {
@@ -87,16 +87,17 @@ struct FriendPin: View {
                     .scaleEffect(glow ? 1.15 : 1)
                     .opacity(glow ? 1 : 0.55)
             }
-            FriendAvatar(friend: friend, size: 26, ring: porch ? .porch : .edge(Palette.bg), ground: Palette.bg)
-                .shadow(color: friend.color.opacity(porch ? 0 : 0.6), radius: 7)
+            FriendAvatar(friend: friend, size: 26, ring: porch ? .porch : .edge(Palette.card), ground: Palette.card)
+                .shadow(color: .black.opacity(porch ? 0 : 0.18), radius: 3, y: 1)
         }
         .frame(width: 26, height: 26)
         .overlay(alignment: .top) {
             if showsName {
                 Text(label)
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(porch ? Color(hex: 0xFFD9A8) : Palette.ink)
-                    .shadow(color: .black, radius: 2, y: 1)
+                    .foregroundStyle(porch ? Palette.porchSoft : Palette.ink)
+                    .shadow(color: Palette.bg, radius: 1.5)
+                    .shadow(color: Palette.bg, radius: 1.5)
                     .fixedSize()
                     .offset(y: 30)
             }

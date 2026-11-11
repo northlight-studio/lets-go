@@ -35,16 +35,18 @@ struct PulseRing: View {
     }
 }
 
-/// A pin on the night map: a glowing disc in its kind's color, a count on its
-/// shoulder, and for the top few, a caption underneath. It pulses while it fills.
+/// A pin on the map: a small disc in its kind's colour with its glyph, a white rim and a
+/// soft halo, a count on its shoulder, and for the top few, a caption underneath. It
+/// pulses while it fills. Wren's pick is yellow with a flag.
 struct NightPin: View {
     var pick: Candidate
     var size: CGFloat
     var now: Date
     var showsCaption: Bool
+    var picked = false
 
     var body: some View {
-        let color = pick.category.color
+        let color = picked ? Palette.accent : pick.category.color
         ZStack {
             if let period = HomeLine.pulsePeriod(pick) {
                 PulseRing(color: color, size: size, period: period).id(period)
@@ -54,14 +56,15 @@ struct NightPin: View {
             }
             Circle()
                 .fill(color.opacity(0.22))
-                .frame(width: size + size * 0.25, height: size + size * 0.25)
+                .frame(width: size * 1.5, height: size * 1.5)
             Circle()
                 .fill(color)
                 .frame(width: size, height: size)
-                .shadow(color: color.opacity(0.5), radius: size * 0.55)
-            Image(systemName: pick.category.symbol)
-                .font(.system(size: size * 0.44, weight: .bold))
-                .foregroundStyle(pick.category.ink)
+                .overlay(Circle().stroke(Palette.card, lineWidth: 2))
+                .shadow(color: .black.opacity(0.18), radius: 3, y: 1)
+            Image(systemName: picked ? "flag.fill" : pick.category.symbol)
+                .font(.system(size: size * 0.42, weight: .bold))
+                .foregroundStyle(picked ? Palette.accentInk : pick.category.ink)
         }
         .frame(width: size, height: size)
         .overlay(alignment: .topTrailing) {
@@ -72,7 +75,7 @@ struct NightPin: View {
                     .foregroundStyle(pick.category.light)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 1)
-                    .background(Palette.bg, in: .capsule)
+                    .background(Palette.card, in: .capsule)
                     .overlay(Capsule().stroke(color, lineWidth: 1.5))
                     .fixedSize()
                     .offset(x: size * 0.55, y: -size * 0.55)
@@ -88,8 +91,8 @@ struct NightPin: View {
                 .foregroundStyle(Palette.ink)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 3)
-                .background(Palette.bg.opacity(0.74), in: .rect(cornerRadius: 9))
-                .overlay(RoundedRectangle(cornerRadius: 9).stroke(Color.white.opacity(0.1)))
+                .background(Palette.card.opacity(0.92), in: .rect(cornerRadius: 9))
+                .overlay(RoundedRectangle(cornerRadius: 9).stroke(Palette.line))
                 .fixedSize()
                 .offset(y: size + 6)
             }
@@ -110,6 +113,7 @@ struct NightPin: View {
     private var accessibility: String {
         var parts = [pick.title, pick.start <= now ? "on now" : "at \(HomeLine.clock(pick.start))"]
         if let badge = HomeLine.badge(pick) { parts.append(badge) }
+        if picked { parts.append("Wren's pick") }
         if pick.isSample { parts.append("sample") }
         return parts.joined(separator: ", ")
     }
@@ -167,7 +171,7 @@ struct SignalDot: View {
     }
 }
 
-/// Wren's mark: an ember disc with a four-point spark.
+/// Wren's mark: a yellow disc with a four-point spark.
 struct WrenOrb: View {
     var size: CGFloat = 26
     var glows = true
@@ -178,7 +182,7 @@ struct WrenOrb: View {
             .foregroundStyle(Palette.accentInk)
             .frame(width: size, height: size)
             .background(Palette.accent, in: .circle)
-            .shadow(color: glows ? Palette.accent.opacity(0.5) : .clear, radius: size * 0.6)
+            .shadow(color: glows ? Palette.accent.opacity(0.35) : .clear, radius: size * 0.3)
             .accessibilityHidden(true)
     }
 }
