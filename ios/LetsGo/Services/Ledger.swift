@@ -68,6 +68,23 @@ enum Ledger {
         save(context, "host")
     }
 
+    // MARK: Posters
+
+    static func poster(_ g: Gathering, code: String, url: String, shortText: String, context: ModelContext) {
+        g.posterCode = code
+        g.posterURL = url
+        g.posterShortText = shortText
+        award(key: "first-poster", title: "Put one up", symbol: "doc.richtext", category: g.category, context: context)
+        save(context, "poster")
+    }
+
+    static func retirePoster(_ g: Gathering, context: ModelContext) {
+        g.posterCode = nil
+        g.posterURL = nil
+        g.posterShortText = nil
+        save(context, "retire poster")
+    }
+
     // MARK: Kitchens
 
     static func reserve(_ order: Order, at kitchen: Kitchen, drop: Drop?, context: ModelContext) {

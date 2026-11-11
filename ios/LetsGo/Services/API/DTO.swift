@@ -23,6 +23,24 @@ nonisolated struct GatheringDTO: Codable, Sendable, Identifiable {
     var distanceM: Double?
     /// Your friends who are in. Older servers don't send it.
     var friendsGoing: [PersonDTO]?
+    /// How many of `going` said they're in from a poster's web page, and (to the host only) their first names.
+    var webGoing: Int?
+    var webNames: [String]?
+}
+
+/// A poster's short link (backend `PosterOut`).
+nonisolated struct PosterDTO: Codable, Sendable {
+    var code: String
+    var url: String
+    var shortText: String
+    var gatheringId: UUID
+    var views: Int
+    var webGoing: Int
+}
+
+nonisolated struct NewPosterDTO: Encodable, Sendable {
+    /// The host's IANA time zone, so the web page shows local time and a weekly one keeps its hour.
+    var tz: String
 }
 
 nonisolated struct NewGatheringDTO: Encodable, Sendable {

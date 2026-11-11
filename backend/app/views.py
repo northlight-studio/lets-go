@@ -35,7 +35,10 @@ def gathering_out(
         bring=g.bring,
         recurring=g.recurring,
         host_name=g.host.display_name,
-        going=len(g.members),
+        going=g.going,
+        web_going=len(g.web_guests),
+        # First names from the poster's page are for the host alone.
+        web_names=[w.first_name for w in g.web_guests] if g.host_id == viewer_id else [],
         is_mine=g.host_id == viewer_id,
         is_joined=mine is not None,
         checked_in_at=mine.checked_in_at if mine else None,

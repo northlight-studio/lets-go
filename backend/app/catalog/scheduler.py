@@ -17,6 +17,7 @@ from app.catalog.geocode import CityGeocoder
 from app.catalog.sweep import sweep
 from app.catalog.tables import SweepLog
 from app.db import SessionLocal, engine
+from app.poster_roll import roll_due
 from app.views import now
 
 log = logging.getLogger("letsgo.scheduler")
@@ -49,6 +50,11 @@ async def tick() -> None:
         if not got:
             return
         try:
+            try:
+                async with SessionLocal() as session:
+                    await roll_due(session, now())
+            except Exception:  # a poster problem mustn't stop the sweep
+                log.exception("rolling weekly posters failed")
             for city in CITIES:
                 if await due(city):
                     log.info("sweeping %s", city)

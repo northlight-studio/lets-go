@@ -68,13 +68,34 @@ class GatheringOut(Out):
     bring: str
     recurring: str
     host_name: str
+    # Everyone in, app and web.
     going: int
+    # How many of `going` said they're in from a poster's web page.
+    web_going: int = 0
+    # Their first names: only on the host's copy, empty for everyone else.
+    web_names: list[str] = []
     is_mine: bool
     is_joined: bool
     checked_in_at: datetime | None
     distance_m: float | None = None
     # Which of your friends are in. Never anyone else's names.
     friends_going: list["PersonOut"] = []
+
+
+class PosterCreate(BaseModel):
+    # The host's IANA time zone, e.g. "America/Los_Angeles".
+    tz: str = Field(min_length=1, max_length=64)
+
+
+class PosterOut(BaseModel):
+    code: str
+    # What the QR code encodes.
+    url: str
+    # The same link without "https://", for the tear-off tabs.
+    short_text: str
+    gathering_id: uuid.UUID
+    views: int
+    web_going: int
 
 
 class CheckIn(BaseModel):
