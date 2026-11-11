@@ -2,7 +2,7 @@ import Foundation
 
 /// The words at the top of a gathering's page: when, where and the walk, the friend on
 /// the way, and what Share sends. Plain functions, so they're tested.
-enum GatheringLine {
+enum GatheringCopy {
     /// Over the title: "Thursday · 6:45 PM", "Tonight · 6:45 PM", "On now · till 9:00 PM".
     static func eyebrow(start: Date, end: Date, now: Date, calendar: Calendar = .current,
                         clock: (Date) -> String = HomeLine.clock) -> String {

@@ -324,11 +324,13 @@ struct HomeView: View {
     /// The round glass button by the search: the kinds that aren't chips, Quick pick and hosting.
     private var filterMenu: some View {
         @Bindable var model = model
+        let menuKinds: [Genre] = [.play, .move, .party]
+        let narrowed = model.friendsOnly || (model.genre.map { menuKinds.contains($0) } ?? false)
         return Menu {
             Button { model.toggleSignal() } label: { Label("Quick pick", systemImage: "bolt.fill") }
             Button { hostingBlank = true } label: { Label("Host something", systemImage: "plus") }
             Section("Show only") {
-                ForEach([Genre.play, .move, .party]) { g in
+                ForEach(menuKinds) { g in
                     Toggle(isOn: Binding(get: { model.genre == g }, set: { model.genre = $0 ? g : nil })) {
                         Label(g.plural, systemImage: g.symbol)
                     }
@@ -338,7 +340,7 @@ struct HomeView: View {
         } label: {
             Image(systemName: "line.3.horizontal.decrease")
                 .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(model.genre.map { [.play, .move, .party].contains($0) } == true || model.friendsOnly ? Palette.accentSoft : Palette.ink)
+                .foregroundStyle(narrowed ? Palette.accentSoft : Palette.ink)
                 .frame(width: 48, height: 48)
                 .contentShape(.circle)
         }

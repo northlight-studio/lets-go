@@ -67,9 +67,9 @@ struct GatheringDetailView: View {
             .background(Palette.bg)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    ShareLink(item: GatheringLine.share(
+                    ShareLink(item: GatheringCopy.share(
                         title: gathering.title,
-                        eyebrow: GatheringLine.eyebrow(start: gathering.start, end: gathering.end, now: now),
+                        eyebrow: GatheringCopy.eyebrow(start: gathering.start, end: gathering.end, now: now),
                         place: gathering.placeName, link: gathering.posterURL
                     )) {
                         Image(systemName: "square.and.arrow.up")
@@ -117,11 +117,11 @@ struct GatheringDetailView: View {
     private func titleBlock(now: Date) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
-                Text(GatheringLine.eyebrow(start: gathering.start, end: gathering.end, now: now)).eyebrow(Palette.accentSoft)
+                Text(GatheringCopy.eyebrow(start: gathering.start, end: gathering.end, now: now)).eyebrow(Palette.accentSoft)
                 if gathering.isSample { SampleTag() }
             }
             Text(gathering.title).display(32).foregroundStyle(Palette.ink)
-            Text(GatheringLine.whereLine(place: gathering.placeName, meters: location.center.distance(to: gathering.coordinate)))
+            Text(GatheringCopy.whereLine(place: gathering.placeName, meters: location.center.distance(to: gathering.coordinate)))
                 .font(.system(size: 15))
                 .foregroundStyle(Palette.muted)
             if !gathering.recurring.isEmpty {
@@ -170,7 +170,7 @@ struct GatheringDetailView: View {
     /// "Maya's on the way · Two minutes from you. Leave at 6:32 and walk in together?"
     @ViewBuilder
     private func onTheWay(_ meet: MeetUp, going: [Friend]) -> some View {
-        let words = GatheringLine.onTheWay(meet)
+        let words = GatheringCopy.onTheWay(meet)
         HStack(spacing: 12) {
             if let friend = going.first(where: { $0.id == meet.friendID }) {
                 FriendAvatar(friend: friend, size: 38, ring: .live, ground: Palette.card)
