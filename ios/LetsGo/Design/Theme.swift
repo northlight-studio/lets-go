@@ -80,10 +80,14 @@ extension Color {
 
     /// One colour by day, another after dark; follows the view's appearance.
     init(light: UInt32, lightAlpha: Double = 1, dark: UInt32, darkAlpha: Double = 1) {
-        // Built out here: the provider runs off the main actor.
-        let day = UIColor(hex: light, alpha: lightAlpha)
-        let night = UIColor(hex: dark, alpha: darkAlpha)
-        self.init(uiColor: UIColor { traits in traits.userInterfaceStyle == .dark ? night : day })
+        self.init(uiColor: Self.adaptive(day: UIColor(hex: light, alpha: lightAlpha), night: UIColor(hex: dark, alpha: darkAlpha)))
+    }
+
+    /// The provider is made here, outside the main actor, on purpose: SwiftUI resolves
+    /// colours off the main thread, and a closure formed in main-actor code would carry a
+    /// main-actor check and crash there.
+    nonisolated private static func adaptive(day: UIColor, night: UIColor) -> UIColor {
+        UIColor { traits in traits.userInterfaceStyle == .dark ? night : day }
     }
 }
 
