@@ -17,7 +17,7 @@ struct MorningAfterView: View {
     private let paper = Palette.bg
     private let ink = Palette.ink
     private let gray = Palette.muted
-    private let ember = Palette.accentSoft
+    private let accent = Palette.accentSoft
 
     var body: some View {
         let end = max(night.lastActiveAt, (night.stops.map(\.arrivedAt).max() ?? night.startedAt).addingTimeInterval(3600))
@@ -27,7 +27,7 @@ struct MorningAfterView: View {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("\(Date.now.formatted(.dateTime.weekday(.wide))) \u{00B7} The morning after")
-                            .eyebrow(ember)
+                            .eyebrow(accent)
                         Text("\(Text("\(night.evening.formatted(.dateTime.weekday(.wide))),\nlived"))\(Text(".").foregroundStyle(Palette.accent))")
                             .font(.system(size: 48, weight: .bold))
                             .tracking(-1)
@@ -48,7 +48,7 @@ struct MorningAfterView: View {
                     ThirdTimeRow(intro: intro) { openIntro = intro }
                         .padding(.top, 8)
                 }
-                Text("\(Text("\u{2018}Live more.\u{2019}").italic().foregroundStyle(ember)) Same time next week?")
+                Text("\(Text("\u{2018}Live more.\u{2019}").italic().foregroundStyle(accent)) Same time next week?")
                     .font(.serif(21))
                     .foregroundStyle(Palette.soft)
                     .frame(maxWidth: .infinity)

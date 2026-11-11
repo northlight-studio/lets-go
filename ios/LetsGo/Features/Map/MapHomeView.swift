@@ -445,7 +445,7 @@ struct HomeView: View {
         model.walking.toggle()
         if model.walking {
             model.listOpen = false
-            model.mode = .afterglow
+            model.mode = .daylight
             followInWorld()
         } else {
             withAnimation(.smooth(duration: 0.8)) { position = HomeView.followMe }

@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 import MapKit
 
-/// The People tab: your friends on a small night map, your porch light, who's out now
+/// The People tab: your friends on a small map, your porch light, who's out now
 /// (with a way to join them), whose porch lights are on (wave), invites, and crews.
 struct PeopleView: View {
     enum Segment: String, CaseIterable, Identifiable {

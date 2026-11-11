@@ -10,8 +10,8 @@ final class HomeModel {
     static let half = PresentationDetent.fraction(0.5)
 
     var tab: AppTab = .map
-    /// Afterglow, or Signal when you just want to be told where to go.
-    var mode: MapMode = .afterglow
+    /// The everyday map, or Signal when you just want to be told where to go.
+    var mode: MapMode = .daylight
     var window: TimeWindow = .now
     /// Hours past now the map is showing, from Signal's ruler. Only used with `.now`.
     var ahead: Double = 0
@@ -86,7 +86,7 @@ final class HomeModel {
 
     func toggleSignal() {
         withAnimation(.smooth(duration: 0.45)) {
-            mode = mode == .signal ? .afterglow : .signal
+            mode = mode == .signal ? .daylight : .signal
             if mode == .signal {
                 window = .now
                 walking = false
@@ -102,8 +102,8 @@ enum AppTab: Hashable {
 }
 
 enum MapMode: Hashable {
-    /// The night map: glowing pins, Wren's line on glass.
-    case afterglow
+    /// The everyday map: MapKit by day or after dark, pins in their colours, Wren's pick on glass.
+    case daylight
     /// Black and lime: the top three, numbered, with when to leave.
     case signal
 }
