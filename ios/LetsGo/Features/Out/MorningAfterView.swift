@@ -2,7 +2,8 @@ import SwiftUI
 import SwiftData
 
 /// The morning after: last night as a ribbon of where you were, with how little of it
-/// was on the phone; hours out, who you were with, the walk, the stamps. Light, like a morning.
+/// was on the phone; hours out, who you were with, the walk, the stamps. Paper by day,
+/// trail green if the phone is still dark; the hours out in yellow.
 struct MorningAfterView: View {
     var night: Night
     @Environment(\.modelContext) private var context
@@ -13,10 +14,10 @@ struct MorningAfterView: View {
     @State private var grown = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private let paper = Color(hex: 0xF4F3F6)
-    private let ink = Color(hex: 0x121016)
-    private let gray = Color(hex: 0x5B5866)
-    private let ember = Color(hex: 0xB8341A)
+    private let paper = Palette.bg
+    private let ink = Palette.ink
+    private let gray = Palette.muted
+    private let accent = Palette.accentSoft
 
     var body: some View {
         let end = max(night.lastActiveAt, (night.stops.map(\.arrivedAt).max() ?? night.startedAt).addingTimeInterval(3600))
@@ -25,32 +26,31 @@ struct MorningAfterView: View {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("\(Date.now.formatted(.dateTime.weekday(.wide)).uppercased()) \u{00B7} THE MORNING AFTER")
-                            .font(.system(size: 12, weight: .heavy)).tracking(1.4).foregroundStyle(ember)
-                        Text("\(Text("\(night.evening.formatted(.dateTime.weekday(.wide))),\nlived"))\(Text(".").foregroundStyle(Color(hex: 0xE8492A)))")
-                            .font(.poster(56, weight: .black))
+                        Text("\(Date.now.formatted(.dateTime.weekday(.wide))) \u{00B7} The morning after")
+                            .eyebrow(accent)
+                        Text("\(Text("\(night.evening.formatted(.dateTime.weekday(.wide))),\nlived"))\(Text(".").foregroundStyle(Palette.accent))")
+                            .font(.system(size: 48, weight: .bold))
+                            .tracking(-1)
                             .foregroundStyle(ink)
                     }
                     Spacer()
                     Button { close() } label: {
                         Image(systemName: "xmark").font(.system(size: 14, weight: .bold)).foregroundStyle(ink)
                             .frame(width: 44, height: 44)
-                            .background(.white.opacity(0.7), in: .circle)
+                            .contentShape(.circle)
                     }
+                    .glassEffect(.regular.interactive(), in: .circle)
                     .accessibilityLabel("Close")
                 }
                 ribbon(end: end, out: out).padding(.top, 22)
                 tiles(out: out).padding(.top, 8)
                 if let intro = intros.first {
                     ThirdTimeRow(intro: intro) { openIntro = intro }
-                        .environment(\.colorScheme, .dark)
-                        .padding(14)
-                        .background(ink, in: .rect(cornerRadius: 24))
                         .padding(.top, 8)
                 }
-                Text("\(Text("\u{2018}Live more.\u{2019}").italic().foregroundStyle(ember)) Same time next week?")
+                Text("\(Text("\u{2018}Live more.\u{2019}").italic().foregroundStyle(accent)) Same time next week?")
                     .font(.serif(21))
-                    .foregroundStyle(Color(hex: 0x3D3A46))
+                    .foregroundStyle(Palette.soft)
                     .frame(maxWidth: .infinity)
                     .multilineTextAlignment(.center)
                     .padding(.top, 26)
@@ -61,8 +61,7 @@ struct MorningAfterView: View {
         }
         .scrollIndicators(.hidden)
         .background(paper.ignoresSafeArea())
-        .preferredColorScheme(.light)
-        .sheet(item: $openIntro) { ThirdTimeView(intro: $0).presentationBackground(Palette.bg).preferredColorScheme(.dark) }
+        .sheet(item: $openIntro) { ThirdTimeView(intro: $0).presentationBackground(Palette.bg) }
         .onAppear {
             if reduceMotion { grown = true } else { withAnimation(.timingCurve(0.3, 0.6, 0.2, 1, duration: 1.6).delay(0.2)) { grown = true } }
         }
@@ -74,7 +73,7 @@ struct MorningAfterView: View {
         let places = Array(Set(night.stops.map(\.title))).sorted()
         return VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline) {
-                Text("YOUR NIGHT").font(.system(size: 12, weight: .heavy)).tracking(1.2).foregroundStyle(gray)
+                Text("Your night").font(.system(size: 13, weight: .semibold)).foregroundStyle(gray)
                 Spacer()
                 Text("\(Text("in Let's Go ").foregroundStyle(gray))\(Text("\(Int(night.phoneSeconds / 60)) min").fontWeight(.heavy).foregroundStyle(ink))\(Text(" of \(NightMath.duration(out))").foregroundStyle(gray))")
                     .font(.system(size: 12.5, weight: .semibold))
@@ -89,7 +88,7 @@ struct MorningAfterView: View {
                     HStack(spacing: 2) {
                         ForEach(Array(segments.enumerated()), id: \.offset) { _, seg in
                             Rectangle()
-                                .fill(seg.genre.map(\.color) ?? Color(hex: 0xD9D6DE))
+                                .fill(seg.genre.map(\.color) ?? Palette.raise)
                                 .frame(width: max(1, w * (seg.to - seg.from) - 2))
                         }
                     }
@@ -118,14 +117,13 @@ struct MorningAfterView: View {
                         Text(title)
                     }
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Color(hex: 0x3D3A46))
+                    .foregroundStyle(Palette.soft)
                 }
             }
             .padding(.top, 10)
         }
         .padding(16)
-        .background(.white, in: .rect(cornerRadius: 24))
-        .shadow(color: Color(hex: 0x1C1828, opacity: 0.06), radius: 15, y: 10)
+        .card(radius: 24)
     }
 
     private func tiles(out: TimeInterval) -> some View {
@@ -143,13 +141,13 @@ struct MorningAfterView: View {
 
     private func tile(_ value: String, _ caption: String, dark: Bool = false) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(value).font(.poster(36, weight: .black)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
-            Text(caption).font(.system(size: 13)).foregroundStyle(dark ? Color(hex: 0xC9C4D2) : gray).lineLimit(2)
+            Text(value).font(.system(size: 36, weight: .bold)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
+            Text(caption).font(.system(size: 13)).foregroundStyle(dark ? Palette.accentInk.opacity(0.75) : gray).lineLimit(2)
         }
-        .foregroundStyle(dark ? Color(hex: 0xF6F2EA) : ink)
+        .foregroundStyle(dark ? Palette.accentInk : ink)
         .padding(.horizontal, 16).padding(.vertical, 14)
         .frame(maxWidth: .infinity, minHeight: 104, alignment: .topLeading)
-        .background(dark ? ink : .white, in: .rect(cornerRadius: 22))
+        .background(dark ? Palette.accent : Palette.card, in: .rect(cornerRadius: 22))
     }
 
     private func close() {

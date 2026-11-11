@@ -87,7 +87,7 @@ struct SharedTableCard: View {
             .padding(.top, 12)
             Text(line)
                 .font(.system(size: 14))
-                .foregroundStyle(Color(hex: 0xD8D3DF))
+                .foregroundStyle(Palette.soft)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 10)
         }
@@ -108,18 +108,18 @@ struct SharedTableCard: View {
     private func seatView(_ seat: SharedTable.Seat) -> some View {
         switch seat.kind {
         case .friend(let f, _):
-            FriendAvatar(friend: f, size: 34, ring: .live, ground: Palette.surface)
+            FriendAvatar(friend: f, size: 34, ring: .live, ground: Palette.card)
         case .taken(let i):
             let tones: [UInt32] = [0xC9C3B6, 0xA7B6C9, 0xC6B2A6, 0xB4C7B0]
             Circle().fill(Color(hex: tones[i % tones.count])).frame(width: 34, height: 34)
                 .overlay(Image(systemName: "person.fill").font(.system(size: 13)).foregroundStyle(.black.opacity(0.45)))
         case .yours:
-            Circle().strokeBorder(Palette.accent, style: StrokeStyle(lineWidth: 2, dash: [4, 3]))
+            Circle().strokeBorder(Palette.accent, lineWidth: 2.5)
                 .frame(width: 34, height: 34)
-                .overlay(Text("+").font(.system(size: 17)).foregroundStyle(Palette.accentSoft))
+                .overlay(Text("You?").font(.system(size: 9, weight: .bold)).foregroundStyle(Palette.accentSoft))
                 .accessibilityLabel("An open seat for you")
         case .open:
-            Circle().strokeBorder(Color.white.opacity(0.2), style: StrokeStyle(lineWidth: 2, dash: [4, 3]))
+            Circle().strokeBorder(Palette.muted.opacity(0.45), style: StrokeStyle(lineWidth: 2, dash: [4, 3]))
                 .frame(width: 34, height: 34)
         }
     }

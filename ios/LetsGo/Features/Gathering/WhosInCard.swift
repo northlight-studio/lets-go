@@ -2,12 +2,12 @@ import SwiftUI
 import SwiftData
 
 /// Who's in on a gathering: a seat per spot when it's small enough to count, filled as
-/// people say they're in. Your friends get a green ring; your seat pops in when you join.
-/// Under it, Wren's walk: past a friend who's on the way, when one is.
+/// people say they're in. Your friends get a green ring, the seat that's yours if you want
+/// it is ringed in yellow ("You?"), and your face pops into it when you join. Sits on the
+/// page, not in a box.
 struct WhosInCard: View {
     var gathering: Gathering
     var friends: [Friend]
-    var meet: MeetUp?
     var now: Date
 
     var body: some View {
@@ -29,25 +29,12 @@ struct WhosInCard: View {
             if (1...12).contains(gathering.capacity) {
                 seats.padding(.top, 14)
             } else if !friends.isEmpty {
-                AvatarStack(friends: friends, size: 40, includesYou: gathering.isJoined, ground: Color(hex: 0x1A1822), limit: 8)
+                AvatarStack(friends: friends, size: 40, includesYou: gathering.isJoined, ground: Palette.bg, limit: 8)
                     .padding(.top, 14)
             }
             notes
         }
-        .padding(16)
-        .card(radius: 24)
         .animation(.spring(response: 0.45, dampingFraction: 0.7), value: gathering.isJoined)
-
-        if let line = wrenLine {
-            HStack(alignment: .top, spacing: 12) {
-                WrenOrb(size: 28)
-                Text(line).font(.system(size: 15)).foregroundStyle(Palette.ink).fixedSize(horizontal: false, vertical: true)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-            .background(Palette.accent.opacity(0.09), in: .rect(cornerRadius: 22))
-            .overlay(RoundedRectangle(cornerRadius: 22).stroke(Palette.accent.opacity(0.26)))
-        }
     }
 
     private var title: String {
@@ -123,7 +110,7 @@ struct WhosInCard: View {
                 .frame(width: 46, height: 46)
                 .background(Color(hex: Friend.hue(for: name)), in: .circle)
         case .friend(let f):
-            FriendAvatar(friend: f, size: 46, ring: .live, ground: Color(hex: 0x1A1822))
+            FriendAvatar(friend: f, size: 46, ring: .live, ground: Palette.bg)
         case .you:
             Text("You")
                 .font(.system(size: 13, weight: .bold))
@@ -132,12 +119,12 @@ struct WhosInCard: View {
                 .background(Palette.me, in: .circle)
                 .transition(.scale(scale: 0.4).combined(with: .opacity))
         case .taken:
-            Circle().fill(Color.white.opacity(0.16)).frame(width: 46, height: 46)
+            Circle().fill(Palette.raise).frame(width: 46, height: 46)
                 .overlay(Image(systemName: "person.fill").font(.system(size: 17)).foregroundStyle(Palette.muted))
         case .yours:
             YourSeat()
         case .open:
-            Circle().strokeBorder(Color.white.opacity(0.22), style: StrokeStyle(lineWidth: 2, dash: [4, 4]))
+            Circle().strokeBorder(Palette.muted.opacity(0.45), lineWidth: 1.5)
                 .frame(width: 46, height: 46)
         }
     }
@@ -148,7 +135,7 @@ struct WhosInCard: View {
         case .friend(let f): f.firstName
         case .you: "You"
         case .taken: "In"
-        case .yours: "You?"
+        case .yours: "Your seat"
         case .open: "Open"
         }
     }
@@ -171,13 +158,13 @@ struct WhosInCard: View {
                 ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                         Circle().fill(line.dot).frame(width: 6, height: 6).offset(y: -2)
-                        Text(line.text).font(.system(size: 14)).foregroundStyle(Color(hex: 0xD8D3DF))
+                        Text(line.text).font(.system(size: 14)).foregroundStyle(Palette.soft)
                     }
                 }
             }
             .padding(.top, 12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .overlay(alignment: .top) { Rectangle().fill(Color.white.opacity(0.08)).frame(height: 1).padding(.top, 2) }
+            .overlay(alignment: .top) { Rectangle().fill(Palette.line).frame(height: 1).padding(.top, 2) }
             .padding(.top, 10)
         }
     }
@@ -194,31 +181,19 @@ struct WhosInCard: View {
         if !gathering.bring.isEmpty { out.append(("Bring: \(gathering.bring)", Palette.muted)) }
         return out
     }
-
-    private var wrenLine: String? {
-        if gathering.checkedInAt != nil || gathering.hasEnded(at: now) { return nil }
-        if let meet {
-            return "Leave at \(HomeLine.clock(meet.leave)). \(meet.friendName)'s on the way, so I'll route you past them at \(HomeLine.clock(meet.meetAt)) and you walk in together."
-        }
-        let there = friends.filter { $0.out?.state == .there }
-        if let f = there.first {
-            return "\(f.firstName)'s already there\(there.count > 1 ? " with \(there.count - 1) more" : ""). It's a straight walk over."
-        }
-        return nil
-    }
 }
 
-/// The open seat that's yours if you want it: dashed, ember, breathing.
+/// The open seat that's yours if you want it: ringed in yellow, breathing.
 private struct YourSeat: View {
     @State private var on = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Circle()
-            .strokeBorder(Palette.accent, style: StrokeStyle(lineWidth: 2, dash: [5, 3]))
+            .strokeBorder(Palette.accent, lineWidth: 2.5)
             .frame(width: 46, height: 46)
-            .overlay(Text("+").font(.system(size: 20, weight: .medium)).foregroundStyle(Palette.accentSoft))
-            .background(Circle().fill(Palette.accent.opacity(on ? 0 : 0.35)).scaleEffect(on ? 1.3 : 1))
+            .overlay(Text("You?").font(.system(size: 11, weight: .bold)).foregroundStyle(Palette.accentSoft))
+            .background(Circle().fill(Palette.accent.opacity(on ? 0 : 0.3)).scaleEffect(on ? 1.3 : 1))
             .onAppear {
                 guard !reduceMotion else { return }
                 withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) { on = true }

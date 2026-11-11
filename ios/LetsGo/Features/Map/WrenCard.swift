@@ -1,9 +1,11 @@
 import SwiftUI
 import CoreLocation
 
-/// Wren's line on a glass sheet over the map: the one thing worth going to, why, and
-/// when to leave, with "I'm in" right there. "Not tonight" moves on to the next one.
-/// Drag it up, or tap the handle, for the whole list.
+/// Wren's pick on a glass sheet over the map: "Wren's pick", the title, "4 of 6 in ·
+/// 6-minute walk · leave by 6:40", who's in, and "I'm in" right there; "Not tonight"
+/// moves on to the next one. Drag it up, or tap the handle, for the whole list. It's the
+/// system's glass in the shape of a sheet rather than a presented sheet, so the tab bar
+/// stays under it.
 struct WrenCard: View {
     var picks: [Candidate]
     var now: Date
@@ -11,6 +13,8 @@ struct WrenCard: View {
     var friends: [Friend] = []
     var here: CLLocationCoordinate2D
     var busy: Bool
+    /// The pick's walk from a real route, when there is one.
+    var walkMinutes: Int? = nil
     var onOpen: (Candidate) -> Void
     var onJoin: (Candidate) -> Void
     var onSkip: (Candidate) -> Void
@@ -20,7 +24,7 @@ struct WrenCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Capsule()
-                .fill(Color.white.opacity(0.28))
+                .fill(Palette.muted.opacity(0.5))
                 .frame(width: 36, height: 5)
                 .frame(maxWidth: .infinity)
                 .padding(.top, 8)
@@ -32,11 +36,33 @@ struct WrenCard: View {
             header
             if let top = picks.first {
                 let going = Crowd.going(to: top, among: friends)
-                line(HomeLine.sentence(for: top, now: now, friends: going,
-                                       meet: MeetUp.best(here: here, friends: going, to: top, now: now)))
-                    .onTapGesture { onOpen(top) }
-                    .accessibilityAddTraits(.isButton)
-                    .padding(.top, 10)
+                Button { onOpen(top) } label: {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(top.title)
+                            .font(.system(size: 20, weight: .bold))
+                            .tracking(-0.3)
+                            .foregroundStyle(Palette.ink)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text(HomeLine.meta(for: top, now: now, walkMinutes: walkMinutes))
+                            .font(.system(size: 14))
+                            .monospacedDigit()
+                            .foregroundStyle(Palette.muted)
+                        if let meet = MeetUp.best(here: here, friends: going, to: top, now: now) {
+                            Text("Leave at \(HomeLine.clock(meet.leave)) and walk in with \(meet.friendName).")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(Palette.accentSoft)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 6)
+                if top.kind == .gathering, !going.isEmpty || top.isJoined || top.going > 0 {
+                    faces(top, going: going)
+                        .padding(.top, 10)
+                }
                 actions(top)
                     .padding(.top, 14)
                 if let next = picks.dropFirst().first {
@@ -45,7 +71,7 @@ struct WrenCard: View {
                         .mask(LinearGradient(colors: [.black, .black.opacity(0.35)], startPoint: .top, endPoint: .bottom))
                 }
             } else {
-                line(HomeLine.quiet).padding(.top, 10)
+                line(HomeLine.quiet).padding(.top, 6)
                 Button(action: onHost) { Label("Host something", systemImage: "plus") }
                     .buttonStyle(SecondaryButtonStyle())
                     .padding(.top, 14)
@@ -60,31 +86,36 @@ struct WrenCard: View {
     }
 
     private var header: some View {
-        HStack(spacing: 8) {
-            WrenOrb(size: 26)
-            Text("WREN")
-                .font(.system(size: 12, weight: .bold))
-                .tracking(1)
-                .foregroundStyle(Palette.accentSoft)
+        HStack(spacing: 6) {
+            Image(systemName: "sparkle").font(.system(size: 12, weight: .bold))
+            Text("Wren's pick")
             if let top = picks.first, top.isSample || Crowd.going(to: top, among: friends).contains(where: { $0.isSample }) {
                 SampleTag()
             }
             Spacer()
-            if let top = picks.first, top.kind == .gathering {
-                AvatarStack(friends: Crowd.going(to: top, among: friends), size: 24, includesYou: top.isJoined)
-                    .animation(.snappy, value: top.isJoined)
-                Text(verbatim: count(top))
-                    .font(.system(size: 13, weight: .semibold))
-                    .monospacedDigit()
-                    .foregroundStyle(Palette.soft)
-            }
         }
-        .frame(height: 26)
+        .font(.system(size: 13, weight: .semibold))
+        .foregroundStyle(Palette.accentSoft)
     }
 
-    private func count(_ c: Candidate) -> String {
-        if c.capacity > 0 { return "\(c.going) of \(c.capacity)" }
-        return c.going > 0 ? "\(c.going) going" : ""
+    /// Friends' faces, you if you're in, then "+2" for everyone else.
+    private func faces(_ top: Candidate, going: [Friend]) -> some View {
+        let shown = min(going.count, 5)
+        return HStack(spacing: 6) {
+            AvatarStack(friends: going, size: 28, includesYou: top.isJoined)
+                .animation(.snappy, value: top.isJoined)
+            if let others = HomeLine.others(top, friendsShown: shown) {
+                Text(others)
+                    .font(.system(size: 12, weight: .bold))
+                    .monospacedDigit()
+                    .foregroundStyle(Palette.ink)
+                    .frame(minWidth: 28, minHeight: 28)
+                    .padding(.horizontal, 2)
+                    .background(Palette.raise, in: .capsule)
+                    .padding(.leading, going.isEmpty && !top.isJoined ? 0 : -10)
+            }
+        }
+        .accessibilityElement(children: .combine)
     }
 
     private func line(_ l: HomeLine.Line) -> some View {
@@ -103,20 +134,27 @@ struct WrenCard: View {
             switch top.kind {
             case .gathering:
                 if top.isJoined {
-                    Button("You're in") { onOpen(top) }
-                        .buttonStyle(PrimaryButtonStyle(color: Palette.accent.opacity(0.18), ink: Palette.accentSoft))
+                    Button { onOpen(top) } label: { Text("You're in").frame(maxWidth: .infinity) }
+                        .buttonStyle(.glass)
                 } else {
-                    Button(top.spotsLeft == 0 ? "Full" : "I'm in") { onJoin(top) }
-                        .buttonStyle(PrimaryButtonStyle())
+                    Button { onJoin(top) } label: { Text(top.spotsLeft == 0 ? "Full" : "I'm in").frame(maxWidth: .infinity) }
+                        .buttonStyle(.glassProminent)
+                        .tint(Palette.accent)
+                        .foregroundStyle(Palette.accentInk)
                         .disabled(top.spotsLeft == 0 || busy)
                 }
             case .drop:
-                Button("Reserve a pickup") { onOpen(top) }
-                    .buttonStyle(PrimaryButtonStyle())
+                Button { onOpen(top) } label: { Text("Reserve a pickup").frame(maxWidth: .infinity) }
+                    .buttonStyle(.glassProminent)
+                    .tint(Palette.accent)
+                    .foregroundStyle(Palette.accentInk)
             }
             Button("Not tonight") { onSkip(top) }
-                .buttonStyle(SecondaryButtonStyle())
+                .buttonStyle(.glass)
+                .foregroundStyle(Palette.ink)
         }
+        .font(.system(size: 17, weight: .semibold))
+        .controlSize(.large)
         .sensoryFeedback(.success, trigger: top.isJoined)
     }
 }
@@ -165,7 +203,7 @@ struct SampleTag: View {
             .foregroundStyle(Palette.muted)
             .padding(.horizontal, 6)
             .padding(.vertical, 1)
-            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.white.opacity(0.16)))
+            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Palette.line))
             .fixedSize()
     }
 }

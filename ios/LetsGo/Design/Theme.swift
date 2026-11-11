@@ -1,39 +1,53 @@
 import SwiftUI
 import UIKit
 
-/// Afterglow: a city at night. Plum-black ground, warm paper ink, one ember accent,
-/// and glass chrome over a custom-tinted map. The whole app is this one look; the
-/// map's quick-decide mode (`Signal`) is the only other set of colors.
+/// Daylight map: the app follows the phone's light and dark, the way Maps does (iOS's
+/// Automatic appearance turns dark at sunset). By day, paper surfaces, green-black ink
+/// and white cards; after dark, deep trail green with glass over the map. The colours
+/// come from the compass icon and the map: yellow for the one thing to press (and the
+/// walk ring and route), blue for most pins, orange for music, green for food, and the
+/// system blue dot for you. Chrome is the system's own Liquid Glass (tab bar, toolbar
+/// buttons, sheets, search); nothing here draws behind it. The map's quick-decide mode
+/// (`Signal`) keeps its own black and lime.
 enum Palette {
-    static let bg = Color(hex: 0x0D0C12)
+    /// The page: paper by day, trail green after dark.
+    static let bg = Color(light: 0xEFEDE6, dark: 0x0C1D15)
     /// Sheets and pages that sit on the map.
-    static let surface = Color(hex: 0x15131C)
-    static let raise = Color(hex: 0x24212C)
-    static let ink = Color(hex: 0xF6F2EA)
-    static let muted = Color(hex: 0xA8A3B3)
-    /// A step brighter than `muted`, for body copy on glass.
-    static let soft = Color(hex: 0xC9C4D2)
+    static let surface = Color(light: 0xF6F4EE, dark: 0x10241A)
+    /// A card on the page: white by day, a lift of the green after dark.
+    static let card = Color(light: 0xFFFFFF, dark: 0x173025)
+    /// Empty seats, unfilled bars, the quietest fills.
+    static let raise = Color(light: 0xE2DFD6, dark: 0x22392D)
+    static let ink = Color(light: 0x1B231E, dark: 0xF3F0E4)
+    static let muted = Color(light: 0x5F6A62, dark: 0xA7B5AA)
+    /// A step stronger than `muted`, for body copy on glass.
+    static let soft = Color(light: 0x3E4942, dark: 0xCAD4CB)
     /// Street names and the quietest labels.
-    static let faint = Color(hex: 0x8E8A9B)
-    static let line = Color.white.opacity(0.1)
-    /// Ember: buttons, Wren, the dots in LIVE. MORE.
-    static let accent = Color(hex: 0xFF5B3A)
-    static let accentSoft = Color(hex: 0xFF9A80)
-    static let accentInk = Color(hex: 0x1A0703)
-    static let star = Color(hex: 0xFFC766)
-    static let me = Color(hex: 0x0A84FF)
+    static let faint = Color(light: 0x7C867F, dark: 0x7F9A8A)
+    static let line = Color(light: 0x000000, lightAlpha: 0.08, dark: 0xFFFFFF, darkAlpha: 0.1)
+    /// The compass's yellow: the one prominent button a screen, the selected chip, the
+    /// walk ring, the route, Wren.
+    static let accent = Color(light: 0xF2A516, dark: 0xF5B82E)
+    /// Yellow as text or a glyph on the page (plain yellow is too light to read on paper).
+    static let accentSoft = Color(light: 0x9A6200, dark: 0xF7C85A)
+    /// Dark ink on yellow, in both appearances.
+    static let accentInk = Color(hex: 0x1C1404)
+    static let star = Color(light: 0xE09A10, dark: 0xFFC766)
+    /// You: the system blue dot.
+    static let me = Color(uiColor: .systemBlue)
+    /// The compass's blue: most pins.
+    static let compass = Color(light: 0x2F6FD6, dark: 0x8FB4E6)
     /// "On now", and a friend who's in.
-    static let live = Color(hex: 0x4FD08E)
+    static let live = Color(light: 0x1F9D55, dark: 0x6FD49A)
     /// A porch light: someone up for something.
-    static let porch = Color(hex: 0xFFB547)
-    static let porchSoft = Color(hex: 0xFFC88A)
-    /// The walk ring and route lines.
-    static let walk = Color(hex: 0x7FB2FF)
-    /// The tint glass chrome takes over the map.
-    static let glassTint = Color(hex: 0x16141E, opacity: 0.55)
+    static let porch = Color(light: 0xE08A12, dark: 0xFFB547)
+    static let porchSoft = Color(light: 0xB86E00, dark: 0xFFC88A)
+    /// The walk ring and route lines: the accent.
+    static let walk = accent
 }
 
 /// The quick-decide look: black, white and one acid lime. Numbers instead of icons.
+/// Left as it was: it's a deliberate night mode of its own, over a darkened map.
 enum SignalPalette {
     static let bg = Color(hex: 0x050505)
     static let ink = Color.white
@@ -63,12 +77,25 @@ extension Color {
             opacity: opacity
         )
     }
+
+    /// One colour by day, another after dark; follows the view's appearance.
+    init(light: UInt32, lightAlpha: Double = 1, dark: UInt32, darkAlpha: Double = 1) {
+        self.init(uiColor: Self.adaptive(day: UIColor(hex: light, alpha: lightAlpha), night: UIColor(hex: dark, alpha: darkAlpha)))
+    }
+
+    /// The provider is made here, outside the main actor, on purpose: SwiftUI resolves
+    /// colours off the main thread, and a closure formed in main-actor code would carry a
+    /// main-actor check and crash there.
+    nonisolated private static func adaptive(day: UIColor, night: UIColor) -> UIColor {
+        UIColor { traits in traits.userInterfaceStyle == .dark ? night : day }
+    }
 }
 
 extension Font {
     static let label = Font.system(size: 11, weight: .semibold)
 
-    /// The headline face: tall, tight and heavy, like a gig poster.
+    /// The printed poster's headline face (and Signal's LIVE. MORE.): tall, tight and
+    /// heavy, like a gig poster. Screens use the system face; see `display`.
     static func poster(_ size: CGFloat, weight: Font.Weight = .heavy) -> Font {
         .system(size: size, weight: weight).width(.condensed)
     }
@@ -80,36 +107,41 @@ extension Font {
 }
 
 extension View {
-    /// Page and card titles in the poster face.
+    /// Page and card titles: the system face, bold and a touch tight, like a large title.
     func display(_ size: CGFloat) -> some View {
-        font(.poster(size)).tracking(-0.2)
+        font(.system(size: size, weight: .bold)).tracking(size >= 24 ? -0.6 : -0.2)
     }
 
-    /// A grouped block: a faint fill with a hairline.
+    /// A grouped block: a white card by day, a lift of the green after dark.
     func card(radius: CGFloat = 18) -> some View { modifier(CardStyle(radius: radius)) }
 
-    /// Small spaced capitals over a section: "OUT NOW · 3".
+    /// A short line over a section or a title, in sentence case: "Out now · 3",
+    /// "Thursday · 6:45".
     func eyebrow(_ color: Color = Palette.muted) -> some View {
-        self.font(.system(size: 12, weight: .heavy)).textCase(.uppercase).tracking(1.4).foregroundStyle(color)
+        self.font(.system(size: 13, weight: .semibold)).foregroundStyle(color)
     }
 
-    /// The dark glass every floating panel uses.
+    /// A floating panel over the map: the system's own glass.
     func glassPanel(radius: CGFloat = 34) -> some View {
-        glassEffect(.regular.tint(Palette.glassTint), in: .rect(cornerRadius: radius))
+        glassEffect(.regular, in: .rect(cornerRadius: radius))
     }
 }
 
 struct CardStyle: ViewModifier {
     var radius: CGFloat
+    @Environment(\.colorScheme) private var scheme
 
     func body(content: Content) -> some View {
         content
-            .background(Color.white.opacity(0.05), in: .rect(cornerRadius: radius))
-            .overlay(RoundedRectangle(cornerRadius: radius).stroke(Color.white.opacity(0.08)))
+            .background(Palette.card, in: .rect(cornerRadius: radius))
+            .overlay {
+                if scheme == .dark { RoundedRectangle(cornerRadius: radius).stroke(Palette.line) }
+            }
+            .shadow(color: .black.opacity(scheme == .dark ? 0 : 0.06), radius: 10, y: 4)
     }
 }
 
-/// LIVE. MORE. with ember full stops. On one line, or stacked for the Signal header.
+/// LIVE. MORE. with yellow full stops. On one line, or stacked for the Signal header.
 /// Shrinks to fit rather than wrap.
 struct LiveMoreMark: View {
     var size: CGFloat = 46

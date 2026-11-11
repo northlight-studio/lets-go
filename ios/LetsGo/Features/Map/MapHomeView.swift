@@ -2,10 +2,13 @@ import SwiftUI
 import SwiftData
 import MapKit
 
-/// The opening screen: the night map. LIVE. MORE. over it, filters under that, glowing
-/// pins that pulse faster as they fill, a dashed ring for a ten-minute walk, and Wren's
-/// line on a glass sheet at the bottom. "Quick pick" turns it into Signal: black and
-/// lime, the top three numbered, with walking routes and when to leave for each.
+/// The opening screen: the map, edge to edge, in MapKit's own standard style (light by
+/// day, the evening map after dark, as the phone's appearance goes). A glass search
+/// capsule and filter button over it, glass chips under them, pins in their kind's colour
+/// that pulse as they fill, a dotted yellow ring for a ten-minute walk, the route to
+/// Wren's pick in yellow, and the pick itself on a glass sheet at the bottom. "Quick
+/// pick" turns it into Signal: black and lime, the top three numbered, with walking routes
+/// and when to leave for each.
 struct HomeView: View {
     @Environment(LocationService.self) private var location
     @Environment(SyncStatus.self) private var sync
@@ -16,6 +19,7 @@ struct HomeView: View {
     @Query private var people: [Person]
 
     @Environment(HomeModel.self) private var model
+    @Environment(\.colorScheme) private var colorScheme
     @State private var position: MapCameraPosition = HomeView.followMe
     @State private var hostingBlank = false
     /// "Not tonight": skipped on the Wren card for this session.
@@ -46,9 +50,11 @@ struct HomeView: View {
             let friends = tonight(all, taste: taste, now: at)
             let shown = filtered(all, taste: taste, friends: friends, now: now, at: at)
             let top = signal ? Signal.top(shown) : []
+            // Wren's pick: the first thing not skipped. Its route is drawn in yellow.
+            let pick = signal || model.walking ? nil : shown.first { !skipped.contains($0.id) }
             ZStack(alignment: .top) {
-                map(shown: shown, top: top, friends: friends, now: at, signal: signal)
-                shade(signal: signal)
+                map(shown: shown, top: top, pick: pick, friends: friends, now: at, signal: signal)
+                if signal { shade() }
                 if model.walking { SkyBand(now: now).allowsHitTesting(false) }
                 VStack(alignment: .leading, spacing: 12) {
                     header(signal: signal, onNow: shown.filter { $0.start <= at }.count, now: now)
@@ -60,8 +66,9 @@ struct HomeView: View {
                 bottom(signal: signal, top: top, shown: shown, friends: friends, now: now, at: at)
             }
             .mapScope(mapScope)
-            .task(id: top.map(\.id.uuidString).joined() + location.center.roundedKey) {
-                if !top.isEmpty { await routes.load(top, from: location.center) }
+            .task(id: (top + (pick.map { [$0] } ?? [])).map(\.id.uuidString).joined() + location.center.roundedKey) {
+                let wanted = top + (pick.map { [$0] } ?? [])
+                if !wanted.isEmpty { await routes.load(wanted, from: location.center) }
             }
         }
         .background(model.mode == .signal ? SignalPalette.bg : Palette.bg)
@@ -124,6 +131,7 @@ struct HomeView: View {
                     WrenCard(
                         picks: shown.filter { !skipped.contains($0.id) }, now: at, friends: friends,
                         here: location.center, busy: joining,
+                        walkMinutes: shown.first { !skipped.contains($0.id) }.flatMap { routes.legs[$0.id]?.minutes },
                         onOpen: { open($0) }, onJoin: { join($0) }, onSkip: { skip($0) },
                         onList: { model.showList() }, onHost: { hostingBlank = true }
                     )
@@ -137,18 +145,25 @@ struct HomeView: View {
 
     // MARK: Map
 
-    private func map(shown: [Candidate], top: [Candidate], friends: [Friend], now: Date, signal: Bool) -> some View {
+    private func map(shown: [Candidate], top: [Candidate], pick: Candidate?, friends: [Friend], now: Date, signal: Bool) -> some View {
         let ranked = shown.prefix(4).map(\.id)
         let numbers = Dictionary(top.enumerated().map { ($0.element.id, $0.offset + 1) }, uniquingKeysWith: { a, _ in a })
         return Map(position: $position, scope: mapScope) {
-            // The night: a plum (or, in Signal, near-black) wash over the streets, under the labels.
-            MapPolygon(coordinates: Self.wash(around: location.center))
-                .foregroundStyle(signal ? SignalPalette.bg.opacity(0.62) : Palette.bg.opacity(0.4))
-                .mapOverlayLevel(level: .aboveRoads)
+            // Signal darkens the streets under its labels. The everyday map is MapKit's own,
+            // untinted: light by day, the evening map after dark.
+            if signal {
+                MapPolygon(coordinates: Self.wash(around: location.center))
+                    .foregroundStyle(SignalPalette.bg.opacity(0.62))
+                    .mapOverlayLevel(level: .aboveRoads)
+            }
             if !signal && !model.walking {
                 MapCircle(center: location.center, radius: Self.walkRadius)
-                    .foregroundStyle(Palette.walk.opacity(0.05))
-                    .stroke(Palette.walk.opacity(0.45), style: StrokeStyle(lineWidth: 1.2, dash: [3, 6]))
+                    .foregroundStyle(.clear)
+                    .stroke(Palette.walk, style: StrokeStyle(lineWidth: 1.6, lineCap: .round, dash: [2, 6]))
+                if let pick, let leg = routes.legs[pick.id] {
+                    MapPolyline(coordinates: leg.coordinates)
+                        .stroke(Palette.walk, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
+                }
             }
             if signal {
                 ForEach(top) { c in
@@ -188,14 +203,17 @@ struct HomeView: View {
             ForEach(shown) { c in
                 Annotation(c.title, coordinate: .init(latitude: c.lat, longitude: c.lon), anchor: model.walking ? .bottom : .center) {
                     Button { open(c) } label: {
-                        pin(c, rank: ranked.firstIndex(of: c.id), number: numbers[c.id], now: now, signal: signal)
+                        pin(c, rank: ranked.firstIndex(of: c.id), number: numbers[c.id], picked: c.id == pick?.id, now: now, signal: signal)
                     }
                     .buttonStyle(.plain)
                 }
                 .annotationTitles(.hidden)
             }
         }
-        .mapStyle(.standard(elevation: model.walking ? .realistic : .flat, emphasis: .muted, pointsOfInterest: .excludingAll))
+        // MapKit's own standard map, kept quiet: muted, with only parks, beaches and transit marked.
+        .mapStyle(.standard(elevation: model.walking ? .realistic : .flat, emphasis: .muted, pointsOfInterest: .including([.park, .beach, .publicTransport])))
+        // Signal is a night look whatever the time: its map stays dark.
+        .environment(\.colorScheme, signal ? .dark : colorScheme)
         .mapControls {
             // Shown from the floating column instead (see `mapScope`).
             MapCompass().mapControlVisibility(.hidden)
@@ -204,7 +222,7 @@ struct HomeView: View {
     }
 
     @ViewBuilder
-    private func pin(_ c: Candidate, rank: Int?, number: Int?, now: Date, signal: Bool) -> some View {
+    private func pin(_ c: Candidate, rank: Int?, number: Int?, picked: Bool, now: Date, signal: Bool) -> some View {
         if signal {
             if let number {
                 SignalPin(number: number, minutes: routes.legs[c.id]?.minutes ?? c.walkMinutes, title: c.title)
@@ -216,10 +234,12 @@ struct HomeView: View {
                 NightPin(pick: c, size: 30, now: now, showsCaption: false)
                 Beam(color: c.category.color)
             }
+        } else if picked {
+            NightPin(pick: c, size: 34, now: now, showsCaption: true, picked: true)
         } else if let rank {
-            NightPin(pick: c, size: rank == 0 || model.selectedID == c.id ? 40 : 34, now: now, showsCaption: true)
+            NightPin(pick: c, size: rank == 0 || model.selectedID == c.id ? 30 : 26, now: now, showsCaption: true)
         } else if model.selectedID == c.id {
-            NightPin(pick: c, size: 34, now: now, showsCaption: true)
+            NightPin(pick: c, size: 30, now: now, showsCaption: true)
         } else {
             MapDot(genre: c.category, later: c.start.timeIntervalSince(now) > 90 * 60)
         }
@@ -238,17 +258,18 @@ struct HomeView: View {
 
     // MARK: Over the map
 
-    private func shade(signal: Bool) -> some View {
-        let ground = signal ? SignalPalette.bg : Palette.bg
+    /// Signal's black fade behind its header. The everyday map has none: glass sits on the map.
+    private func shade() -> some View {
+        let ground = SignalPalette.bg
         return LinearGradient(
             stops: [
-                .init(color: ground.opacity(signal ? 0.96 : 0.94), location: 0),
-                .init(color: ground.opacity(signal ? 0.8 : 0.62), location: 0.5),
+                .init(color: ground.opacity(0.96), location: 0),
+                .init(color: ground.opacity(0.8), location: 0.5),
                 .init(color: ground.opacity(0), location: 1),
             ],
             startPoint: .top, endPoint: .bottom
         )
-        .frame(height: signal ? 300 : 230)
+        .frame(height: 300)
         .ignoresSafeArea(edges: .top)
         .allowsHitTesting(false)
     }
@@ -277,17 +298,54 @@ struct HomeView: View {
             }
             .padding(.horizontal, 16)
         } else {
-            HStack(spacing: 10) {
-                LiveMoreMark(size: 46)
-                Spacer(minLength: 8)
-                circleButton("magnifyingglass", label: CityListings.covers(location.center) ? "Search San Francisco" : "Search nearby") {
-                    model.startSearch()
+            HStack(spacing: 8) {
+                Button { model.startSearch() } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "magnifyingglass").foregroundStyle(Palette.muted)
+                        Text(HomeLine.searchPrompt(model.window, inCity: CityListings.covers(location.center)))
+                            .foregroundStyle(Palette.ink)
+                            .lineLimit(1)
+                        Spacer(minLength: 0)
+                    }
+                    .font(.system(size: 16, weight: .semibold))
+                    .padding(.horizontal, 16)
+                    .frame(height: 48)
+                    .contentShape(.capsule)
                 }
-                circleButton("plus", label: "Host something") { hostingBlank = true }
+                .buttonStyle(.plain)
+                .glassEffect(.regular.interactive(), in: .capsule)
+                .accessibilityLabel(CityListings.covers(location.center) ? "Search San Francisco" : "Search nearby")
+                filterMenu
             }
-            .padding(.leading, 20)
-            .padding(.trailing, 16)
+            .padding(.horizontal, 16)
         }
+    }
+
+    /// The round glass button by the search: the kinds that aren't chips, Quick pick and hosting.
+    private var filterMenu: some View {
+        @Bindable var model = model
+        let menuKinds: [Genre] = [.play, .move, .party]
+        let narrowed = model.friendsOnly || (model.genre.map { menuKinds.contains($0) } ?? false)
+        return Menu {
+            Button { model.toggleSignal() } label: { Label("Quick pick", systemImage: "bolt.fill") }
+            Button { hostingBlank = true } label: { Label("Host something", systemImage: "plus") }
+            Section("Show only") {
+                ForEach(menuKinds) { g in
+                    Toggle(isOn: Binding(get: { model.genre == g }, set: { model.genre = $0 ? g : nil })) {
+                        Label(g.plural, systemImage: g.symbol)
+                    }
+                }
+                Toggle(isOn: $model.friendsOnly) { Label("Friends going", systemImage: "person.2") }
+            }
+        } label: {
+            Image(systemName: "line.3.horizontal.decrease")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(narrowed ? Palette.accentSoft : Palette.ink)
+                .frame(width: 48, height: 48)
+                .contentShape(.circle)
+        }
+        .glassEffect(.regular.interactive(), in: .circle)
+        .accessibilityLabel("Filters")
     }
 
     /// "SAN FRANCISCO · SUNSET 6:07"
@@ -303,20 +361,19 @@ struct HomeView: View {
         @Bindable var model = model
         return ScrollView(.horizontal) {
             HStack(spacing: 8) {
-                Button { model.toggleSignal() } label: {
-                    Label("Quick pick", systemImage: "bolt.fill")
-                        .font(.system(size: 14, weight: .semibold))
-                        .padding(.horizontal, 15)
-                        .frame(height: 36)
-                        .foregroundStyle(signal ? SignalPalette.bg : Palette.ink)
-                        .background(signal ? SignalPalette.lime : Color.clear, in: .capsule)
-                        .glassEffect(signal ? .identity : .regular.tint(Palette.glassTint).interactive(), in: .capsule)
-                }
-                .buttonStyle(.plain)
-                .accessibilityHint("Just the three things worth leaving for, and when to leave")
-                .accessibilityAddTraits(signal ? .isSelected : [])
-                if friendsOut > 0 || model.friendsOnly {
-                    FilterChip(title: "Friends \u{00B7} \(friendsOut)", on: model.friendsOnly) { model.friendsOnly.toggle() }
+                if signal {
+                    // Signal's own way back out, in its own colours.
+                    Button { model.toggleSignal() } label: {
+                        Label("Quick pick", systemImage: "bolt.fill")
+                            .font(.system(size: 14, weight: .semibold))
+                            .padding(.horizontal, 15)
+                            .frame(height: 36)
+                            .foregroundStyle(SignalPalette.bg)
+                            .background(SignalPalette.lime, in: .capsule)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Back to the map")
+                    .accessibilityAddTraits(.isSelected)
                 }
                 ForEach(TimeWindow.allCases) { w in
                     FilterChip(title: w.label, on: model.window == w) {
@@ -324,12 +381,15 @@ struct HomeView: View {
                         if w != .now { model.ahead = 0 }
                     }
                 }
-                ForEach([Genre.food, .play, .music, .party, .move]) { g in
+                FilterChip(title: "Free", on: model.freeOnly) { model.freeOnly.toggle() }
+                ForEach([Genre.food, .music]) { g in
                     FilterChip(title: g.plural, on: model.genre == g) { model.genre = model.genre == g ? nil : g }
                 }
-                FilterChip(title: "Free", on: model.freeOnly) { model.freeOnly.toggle() }
+                if friendsOut > 0 || model.friendsOnly {
+                    FilterChip(title: "Friends \u{00B7} \(friendsOut)", on: model.friendsOnly) { model.friendsOnly.toggle() }
+                }
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, 16)
         }
         .scrollIndicators(.hidden)
         .mask(LinearGradient(stops: [.init(color: .black, location: 0.82), .init(color: .clear, location: 1)], startPoint: .leading, endPoint: .trailing))
@@ -350,10 +410,10 @@ struct HomeView: View {
         Button(action: action) {
             Image(systemName: symbol)
                 .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(on ? Palette.accent : Palette.ink)
+                .foregroundStyle(on ? Palette.accentSoft : Palette.ink)
                 .frame(width: 44, height: 44)
         }
-        .glassEffect(.regular.tint(Palette.glassTint).interactive(), in: .circle)
+        .glassEffect(.regular.interactive(), in: .circle)
         .accessibilityLabel(label)
     }
 
@@ -385,7 +445,7 @@ struct HomeView: View {
         model.walking.toggle()
         if model.walking {
             model.listOpen = false
-            model.mode = .afterglow
+            model.mode = .daylight
             followInWorld()
         } else {
             withAnimation(.smooth(duration: 0.8)) { position = HomeView.followMe }

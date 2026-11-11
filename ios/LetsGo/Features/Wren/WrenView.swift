@@ -86,11 +86,10 @@ struct WrenView: View {
                     Button { ask(s) } label: {
                         Text(s)
                             .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(Color(hex: 0xE4E0E9))
+                            .foregroundStyle(Palette.soft)
                             .padding(.horizontal, 14)
                             .frame(height: 36)
-                            .background(Color.white.opacity(0.06), in: .capsule)
-                            .overlay(Capsule().stroke(Color.white.opacity(0.14)))
+                            .glassEffect(.regular.interactive(), in: .capsule)
                     }
                     .buttonStyle(.plain)
                 }
@@ -170,11 +169,10 @@ struct WrenView: View {
         Button(action: action) {
             Text(title)
                 .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(Color(hex: 0xE4E0E9))
+                .foregroundStyle(Palette.soft)
                 .padding(.horizontal, 14)
                 .frame(height: 36)
-                .background(Color.white.opacity(0.06), in: .capsule)
-                .overlay(Capsule().stroke(Color.white.opacity(0.14)))
+                .glassEffect(.regular.interactive(), in: .capsule)
         }
         .buttonStyle(.plain)
     }
@@ -200,8 +198,7 @@ struct WrenView: View {
         .padding(.leading, 18)
         .padding(.trailing, 6)
         .padding(.vertical, 6)
-        .background(Color.white.opacity(0.07), in: .rect(cornerRadius: 27))
-        .overlay(RoundedRectangle(cornerRadius: 27).stroke(Color.white.opacity(0.14)))
+        .glassEffect(.regular, in: .rect(cornerRadius: 27))
         .padding(.horizontal, 16)
         .padding(.bottom, 8)
     }
@@ -337,10 +334,10 @@ struct WrenHeader: View {
         HStack(spacing: 12) {
             WrenOrb(size: 40)
             VStack(alignment: .leading, spacing: 3) {
-                Text("Wren").font(.poster(26, weight: .black))
+                Text("Wren").display(34)
                 Text("Does the logistics. You show up.")
                     .font(.system(size: 13))
-                    .foregroundStyle(Color(hex: 0xB5B0BF))
+                    .foregroundStyle(Palette.muted)
             }
             Spacer()
         }
@@ -348,7 +345,7 @@ struct WrenHeader: View {
     }
 }
 
-/// What you said, in an ember bubble on the right.
+/// What you said, in a yellow bubble on the right.
 struct YouBubble: View {
     var text: String
 

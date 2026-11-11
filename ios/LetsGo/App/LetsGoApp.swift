@@ -11,8 +11,7 @@ struct LetsGoApp: App {
             RootView()
                 .environment(location)
                 .environment(sync)
-                // Afterglow is a night look; the app has no light mode.
-                .preferredColorScheme(.dark)
+                // Light by day, dark after sunset: whatever the phone's appearance is.
                 .tint(Palette.accent)
         }
         .modelContainer(for: [

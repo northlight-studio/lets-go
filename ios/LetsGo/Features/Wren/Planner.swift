@@ -129,7 +129,7 @@ struct Plan: Equatable, Sendable {
     var day: Date
     /// "Saturday, sorted." or "Halloween, sorted."
     var title: String
-    /// "SAT OCT 31 · HALLOWEEN"
+    /// "Sat, Oct 31 · Halloween"
     var dayLine: String
     var friendIDs: [UUID]
     var stops: [Stop]
@@ -307,8 +307,8 @@ enum Planner {
         }
 
         let title = "\(holiday ?? dayName), sorted."
-        var dayLine = r.day.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()).uppercased()
-        if let holiday { dayLine += " \u{00B7} \(holiday.uppercased())" }
+        var dayLine = r.day.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())
+        if let holiday { dayLine += " \u{00B7} \(holiday)" }
         return Plan(day: r.day, title: title, dayLine: dayLine, friendIDs: group.map(\.id), stops: stops, legs: legs,
                     checks: checks, reply: reply, note: note.joined(separator: " "))
     }

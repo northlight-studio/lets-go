@@ -28,7 +28,7 @@ struct YouAreHereView: View {
             let now = timeline.date
             let night = nights.first { $0.evening == NightMath.evening(of: now) }
             ZStack {
-                Color(hex: 0x070609).ignoresSafeArea()
+                Palette.bg.ignoresSafeArea()
                 VStack(spacing: 0) {
                     header
                     Spacer(minLength: 12)
@@ -55,7 +55,6 @@ struct YouAreHereView: View {
                 }
             }
         }
-        .preferredColorScheme(.dark)
         .statusBarHidden(darkUntil != nil)
         .onAppear {
             darkUntil = nights.first?.darkUntil.flatMap { $0 > .now ? $0 : nil }
@@ -87,7 +86,7 @@ struct YouAreHereView: View {
                 Image(systemName: "xmark")
                     .font(.system(size: 14, weight: .bold))
                     .frame(width: 36, height: 36)
-                    .background(Color.white.opacity(0.08), in: .circle)
+                    .glassEffect(.regular.interactive(), in: .circle)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Close")
@@ -108,15 +107,14 @@ struct YouAreHereView: View {
             }
             Circle().fill(Palette.accent.opacity(0.06)).frame(width: 190, height: 190).blur(radius: 30)
             VStack(spacing: 6) {
-                Text("You're here.").font(.poster(46, weight: .black))
+                Text("You're here.").font(.system(size: 46, weight: .bold))
                 Text(NightMath.clock(out))
                     .font(.system(size: 40, weight: .light))
                     .monospacedDigit()
-                    .foregroundStyle(Color(hex: 0xFFB09E))
+                    .foregroundStyle(Palette.accentSoft)
                     .contentTransition(.numericText())
-                Text("OUT IN THE WORLD TONIGHT")
-                    .font(.system(size: 12, weight: .bold))
-                    .tracking(1.7)
+                Text("Out in the world tonight")
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(Palette.muted)
             }
         }
@@ -132,7 +130,7 @@ struct YouAreHereView: View {
                 if moment.friends.isEmpty {
                     Image(systemName: "person.2").font(.system(size: 20)).foregroundStyle(Palette.muted).frame(height: 26)
                 } else {
-                    AvatarStack(friends: moment.friends, size: 26, ground: Color(hex: 0x121116))
+                    AvatarStack(friends: moment.friends, size: 26, ground: Palette.card)
                 }
             } caption: {
                 moment.friends.isEmpty ? "Say hi to whoever's here" : "\(Crowd.names(moment.friends))\(moment.friends.contains { $0.isSample } ? " (sample)" : "")"
@@ -159,8 +157,8 @@ struct YouAreHereView: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, minHeight: 92, alignment: .topLeading)
-        .background(Color.white.opacity(0.05), in: .rect(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.white.opacity(0.07)))
+        .background(Palette.card, in: .rect(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Palette.line))
     }
 
     private func darkButton(now: Date) -> some View {
@@ -172,7 +170,7 @@ struct YouAreHereView: View {
                     Text("Go dark until \(NightPin.hour(until))").font(.system(size: 16, weight: .bold))
                     Text(moment.friends.isEmpty ? "Let's Go stays quiet till then" : "Let's Go stays quiet; \(Crowd.names(moment.friends)) can still find you here")
                         .font(.system(size: 12.5))
-                        .foregroundStyle(Color(hex: 0xB5B0BF))
+                        .foregroundStyle(Palette.muted)
                         .lineLimit(2)
                 }
                 Spacer()
@@ -201,19 +199,21 @@ struct YouAreHereView: View {
                     Text(NightMath.clock(now.timeIntervalSince(night?.startedAt ?? moment.checkedInAt)))
                         .font(.system(size: 30, weight: .light))
                         .monospacedDigit()
-                        .foregroundStyle(Color(hex: 0x8E5A4E))
+                        .foregroundStyle(Palette.accent.opacity(0.5))
                 }
                 Text("Dark until \(NightPin.hour(until))")
                     .font(.system(size: 14))
                     .foregroundStyle(Palette.faint)
                 Button("Wake") { goDark(nil) }
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Color(hex: 0x8C8896))
+                    .foregroundStyle(Palette.muted)
                     .padding(.horizontal, 22)
                     .frame(height: 44)
-                    .overlay(Capsule().stroke(Color(hex: 0x2A2830)))
+                    .overlay(Capsule().stroke(Color.white.opacity(0.15)))
             }
         }
+        // Black whatever the phone's appearance: this is the phone off.
+        .environment(\.colorScheme, .dark)
     }
 
     private func goDark(_ until: Date?) {

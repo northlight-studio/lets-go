@@ -23,8 +23,8 @@ struct MapMarker: View {
             .foregroundStyle(Palette.ink)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
-            .background(Palette.bg.opacity(0.74), in: .rect(cornerRadius: 9))
-            .overlay(RoundedRectangle(cornerRadius: 9).stroke(Color.white.opacity(0.1)))
+            .background(Palette.card.opacity(0.9), in: .rect(cornerRadius: 9))
+            .overlay(RoundedRectangle(cornerRadius: 9).stroke(Palette.line))
             .fixedSize()
         }
         .animation(.snappy, value: selected)
@@ -32,17 +32,17 @@ struct MapMarker: View {
     }
 }
 
-/// Everything else on the map: a small glowing dot. Hollow when it's later.
+/// Everything else on the map: a small dot in its kind's colour. Hollow when it's later.
 struct MapDot: View {
     var genre: Genre
     var later: Bool
 
     var body: some View {
         Circle()
-            .fill(later ? Palette.bg : genre.color)
+            .fill(later ? Palette.card : genre.color)
             .frame(width: 14, height: 14)
-            .overlay(Circle().stroke(later ? genre.color : Palette.bg, lineWidth: 2))
-            .shadow(color: later ? .clear : genre.color.opacity(0.7), radius: 5)
+            .overlay(Circle().stroke(later ? genre.color : Palette.card, lineWidth: 2))
+            .shadow(color: .black.opacity(later ? 0 : 0.2), radius: 2, y: 1)
             .padding(8)
             .contentShape(Circle())
             .accessibilityLabel(genre.label)
@@ -63,7 +63,7 @@ struct CategoryDot: View {
     }
 }
 
-/// A chip in the map's filter row.
+/// A chip in the map's filter row: clear glass, or yellow glass when it's on.
 struct FilterChip: View {
     var title: String
     var on: Bool
@@ -75,9 +75,8 @@ struct FilterChip: View {
                 .font(.system(size: 14, weight: .semibold))
                 .padding(.horizontal, 15)
                 .frame(height: 36)
-                .foregroundStyle(on ? Color(hex: 0x121016) : Palette.ink)
-                .background(on ? Palette.ink : Color.clear, in: .capsule)
-                .glassEffect(on ? .identity : .regular.tint(Palette.glassTint).interactive(), in: .capsule)
+                .foregroundStyle(on ? Palette.accentInk : Palette.ink)
+                .glassEffect(on ? .regular.tint(Palette.accent).interactive() : .regular.interactive(), in: .capsule)
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(on ? .isSelected : [])
@@ -133,7 +132,7 @@ struct InfoStrip: View {
             ForEach(Array(items.enumerated()), id: \.element.id) { i, item in
                 if i > 0 { Divider().overlay(Palette.line).frame(height: 36) }
                 VStack(spacing: 2) {
-                    Text(item.label).font(.system(size: 10, weight: .semibold)).textCase(.uppercase).foregroundStyle(Palette.muted)
+                    Text(item.label).font(.system(size: 12, weight: .medium)).foregroundStyle(Palette.muted)
                     Text(item.value).font(.system(size: 18, weight: .bold)).monospacedDigit()
                     Text(item.detail).font(.system(size: 11)).foregroundStyle(Palette.muted)
                 }
@@ -203,6 +202,26 @@ struct Stars: View {
     }
 }
 
+/// Wren's note on a page: the spark, "Wren", and a line. Bold figures in markdown.
+struct WrenNote: View {
+    var text: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Label("Wren", systemImage: "sparkle")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Palette.accentSoft)
+            Text(markdown: text)
+                .font(.system(size: 15))
+                .foregroundStyle(Palette.ink)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .card(radius: 20)
+    }
+}
+
 /// A short tip, set off from the page.
 struct TipNote: View {
     var text: String
@@ -223,6 +242,10 @@ struct TipNote: View {
     }
 }
 
+/// The one prominent button a screen: full-width glass tinted yellow (or the colour
+/// given), dark ink on it. Where a screen lays its own buttons out, it uses the system's
+/// `.glassProminent` with `.tint(Palette.accent)` instead; this is the same glass for
+/// the many full-width buttons that share a style.
 struct PrimaryButtonStyle: ButtonStyle {
     var color: Color = Palette.accent
     var ink: Color = Palette.accentInk
@@ -230,16 +253,18 @@ struct PrimaryButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 17, weight: .bold))
-            .foregroundStyle(ink)
+            .font(.system(size: 17, weight: .semibold))
+            .foregroundStyle(ink.opacity(isEnabled ? 1 : 0.5))
             .frame(maxWidth: .infinity)
             .frame(height: 52)
-            .background(color.opacity(isEnabled ? 1 : 0.35), in: .capsule)
+            .contentShape(.capsule)
+            .glassEffect(.regular.tint(color.opacity(isEnabled ? 1 : 0.35)).interactive(), in: .capsule)
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
             .animation(.snappy(duration: 0.15), value: configuration.isPressed)
     }
 }
 
+/// Everything else you can press next to it: clear glass.
 struct SecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -247,8 +272,8 @@ struct SecondaryButtonStyle: ButtonStyle {
             .foregroundStyle(Palette.ink)
             .padding(.horizontal, 20)
             .frame(height: 52)
-            .background(Color.white.opacity(0.08), in: .capsule)
-            .overlay(Capsule().stroke(Color.white.opacity(0.14)))
+            .contentShape(.capsule)
+            .glassEffect(.regular.interactive(), in: .capsule)
             .opacity(configuration.isPressed ? 0.75 : 1)
     }
 }
