@@ -14,7 +14,7 @@ struct ThinkingList: View {
                 if step > i {
                     HStack(spacing: 12) {
                         ZStack {
-                            Circle().fill(Color.white.opacity(0.07))
+                            Circle().fill(Palette.raise)
                             if step > i + 1 {
                                 Image(systemName: "checkmark")
                                     .font(.system(size: 12, weight: .bold))
@@ -50,8 +50,7 @@ struct PlanCard: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text(window)
-                    .font(.system(size: 12, weight: .heavy))
-                    .tracking(1.4)
+                    .font(.system(size: 13, weight: .semibold))
                     .monospacedDigit()
                     .foregroundStyle(Palette.accentSoft)
                 Spacer()
@@ -81,18 +80,18 @@ struct PlanCard: View {
             .padding(.top, 16)
         }
         .padding(16)
-        .background(Color.white.opacity(0.06), in: .rect(cornerRadius: 26))
-        .overlay(RoundedRectangle(cornerRadius: 26).stroke(Color.white.opacity(0.1)))
+        .background(Palette.card, in: .rect(cornerRadius: 26))
+        .overlay(RoundedRectangle(cornerRadius: 26).stroke(Palette.line))
     }
 
     private var askTitle: String { friends.isEmpty ? "Hold it" : "Ask \(Crowd.names(friends))" }
 
-    /// "SAT OCT 31 · 4:30–10 PM"
+    /// "Sat, Oct 31 · 4:30–10 PM"
     private var window: String {
         guard let first = plan.stops.first, let last = plan.stops.last else { return plan.dayLine }
-        let day = plan.day.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()).uppercased()
+        let day = plan.day.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())
         let end = last.start.addingTimeInterval(3 * 3600)
-        return "\(day) \u{00B7} \(NightPin.hour(first.start))\u{2013}\(HomeLine.clock(end).uppercased())"
+        return "\(day) \u{00B7} \(NightPin.hour(first.start))\u{2013}\(HomeLine.clock(end))"
     }
 }
 
@@ -147,9 +146,7 @@ struct PlanView: View {
         Map(initialPosition: .automatic) {
             ForEach(Array(plan.legs.indices), id: \.self) { i in
                 if let coords = lines[i] {
-                    let color = plan.stops[min(i + 1, plan.stops.count - 1)].genre.color
-                    MapPolyline(coordinates: coords).stroke(color.opacity(0.22), lineWidth: 6)
-                    MapPolyline(coordinates: coords).stroke(color, style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
+                    MapPolyline(coordinates: coords).stroke(Palette.walk, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
                 }
             }
             ForEach(Array(plan.stops.enumerated()), id: \.element.id) { i, stop in
@@ -159,14 +156,14 @@ struct PlanView: View {
                         .foregroundStyle(stop.genre.ink)
                         .frame(width: 30, height: 30)
                         .background(stop.genre.color, in: .circle)
-                        .overlay(Circle().stroke(Palette.bg, lineWidth: 3))
-                        .shadow(color: stop.genre.color.opacity(0.55), radius: 10)
+                        .overlay(Circle().stroke(Palette.card, lineWidth: 2.5))
+                        .shadow(color: .black.opacity(0.18), radius: 3, y: 1)
                 }
                 .annotationTitles(.hidden)
             }
             UserAnnotation()
         }
-        .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll))
+        .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .including([.park, .beach, .publicTransport])))
         .overlay(alignment: .top) {
             LinearGradient(colors: [Palette.bg.opacity(0.92), Palette.bg.opacity(0)], startPoint: .top, endPoint: .bottom)
                 .frame(height: 110)
@@ -196,7 +193,7 @@ struct PlanView: View {
                     Spacer()
                     if !group.isEmpty { status(group, in: inNow) }
                 }
-                Text(plan.title).display(36).padding(.top, 8)
+                Text(plan.title).display(34).padding(.top, 8)
                 VStack(spacing: 0) {
                     ForEach(Array(plan.stops.enumerated()), id: \.element.id) { i, stop in
                         stopRow(stop, last: i == plan.stops.count - 1)
@@ -205,14 +202,7 @@ struct PlanView: View {
                 }
                 .padding(.top, 18)
                 if !plan.note.isEmpty {
-                    HStack(alignment: .top, spacing: 10) {
-                        WrenOrb(size: 24, glows: false)
-                        Text(plan.note).font(.system(size: 14)).fixedSize(horizontal: false, vertical: true)
-                    }
-                    .padding(.horizontal, 14).padding(.vertical, 12)
-                    .background(Palette.accent.opacity(0.09), in: .rect(cornerRadius: 20))
-                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(Palette.accent.opacity(0.26)))
-                    .padding(.top, 14)
+                    WrenNote(text: plan.note).padding(.top, 14)
                 }
                 HStack(spacing: 10) {
                     Button(plan.confirmed ? "Sorted" : "Looks good") { confirm() }
@@ -230,7 +220,7 @@ struct PlanView: View {
             .padding(.bottom, 24)
         }
         .scrollIndicators(.hidden)
-        .background(Color(hex: 0x14121B, opacity: 0.97), in: UnevenRoundedRectangle(topLeadingRadius: 34, topTrailingRadius: 34))
+        .background(Palette.surface, in: UnevenRoundedRectangle(topLeadingRadius: 34, topTrailingRadius: 34))
     }
 
     private func status(_ group: [Friend], in ids: Set<UUID>) -> some View {
@@ -238,16 +228,16 @@ struct PlanView: View {
         let label: String
         if all { label = "Everyone's in" } else if plan.askedAt == nil { label = "Not asked yet" } else { label = "\(ids.count) of \(group.count) in" }
         return HStack(spacing: 6) {
-            AvatarStack(friends: group, size: 18, ground: Color(hex: 0x1A1822))
+            AvatarStack(friends: group, size: 18, ground: Palette.card)
             Text(label)
                 .font(.system(size: 12.5, weight: .bold))
-                .foregroundStyle(all ? Color(hex: 0x8FE6B6) : Palette.soft)
+                .foregroundStyle(all ? Palette.live : Palette.soft)
             if group.contains(where: \.isSample) { SampleTag() }
         }
         .padding(.leading, 4).padding(.trailing, 10)
         .frame(height: 26)
-        .background(all ? Palette.live.opacity(0.14) : Color.white.opacity(0.06), in: .capsule)
-        .overlay(Capsule().stroke(all ? Palette.live.opacity(0.35) : Color.white.opacity(0.12)))
+        .background(all ? Palette.live.opacity(0.14) : Palette.raise, in: .capsule)
+        .overlay(Capsule().stroke(all ? Palette.live.opacity(0.35) : Palette.line))
         .animation(.snappy, value: all)
     }
 
@@ -260,7 +250,7 @@ struct PlanView: View {
                 .padding(.top, 1)
             VStack(spacing: 4) {
                 Circle().fill(stop.genre.color).frame(width: 12, height: 12).padding(.top, 4)
-                if !last { Rectangle().fill(Color.white.opacity(0.12)).frame(width: 2) }
+                if !last { Rectangle().fill(Palette.raise).frame(width: 2) }
             }
             .frame(width: 22)
             VStack(alignment: .leading, spacing: 2) {
@@ -270,13 +260,13 @@ struct PlanView: View {
                         Text("HELD")
                             .font(.system(size: 10.5, weight: .heavy))
                             .tracking(0.6)
-                            .foregroundStyle(Color(hex: 0x8FE6B6))
+                            .foregroundStyle(Palette.live)
                             .padding(.horizontal, 6).padding(.vertical, 1)
                             .background(Palette.live.opacity(0.14), in: .rect(cornerRadius: 6))
                     }
                     if stop.isSample { SampleTag() }
                 }
-                Text(stop.note).font(.system(size: 13.5)).foregroundStyle(Color(hex: 0xB5B0BF)).fixedSize(horizontal: false, vertical: true)
+                Text(stop.note).font(.system(size: 13.5)).foregroundStyle(Palette.muted).fixedSize(horizontal: false, vertical: true)
                 if Calendar.current.isDateInToday(stop.start), stop.start.addingTimeInterval(3600) > .now {
                     Button("Walk there, eyes up") {
                         let group = people.filter { plan.friendIDs.contains($0.id) }.map(\.snapshot)
@@ -304,7 +294,7 @@ struct PlanView: View {
     private func legRow(_ leg: Plan.Leg) -> some View {
         HStack(spacing: 8) {
             Color.clear.frame(width: 48, height: 1)
-            Rectangle().fill(Color.white.opacity(0.12)).frame(width: 2).frame(width: 22)
+            Rectangle().fill(Palette.raise).frame(width: 2).frame(width: 22)
             Text(leg.note).font(.system(size: 12.5, weight: .semibold)).monospacedDigit().foregroundStyle(Palette.muted)
                 .padding(.bottom, 10)
             Spacer(minLength: 0)

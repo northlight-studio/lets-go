@@ -132,7 +132,7 @@ struct InfoStrip: View {
             ForEach(Array(items.enumerated()), id: \.element.id) { i, item in
                 if i > 0 { Divider().overlay(Palette.line).frame(height: 36) }
                 VStack(spacing: 2) {
-                    Text(item.label).font(.system(size: 10, weight: .semibold)).textCase(.uppercase).foregroundStyle(Palette.muted)
+                    Text(item.label).font(.system(size: 12, weight: .medium)).foregroundStyle(Palette.muted)
                     Text(item.value).font(.system(size: 18, weight: .bold)).monospacedDigit()
                     Text(item.detail).font(.system(size: 11)).foregroundStyle(Palette.muted)
                 }

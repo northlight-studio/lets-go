@@ -48,7 +48,6 @@ struct EyesUpView: View {
             .overlay { if pocketed { pocketScreen } }
         }
         .background(Palette.bg)
-        .preferredColorScheme(.dark)
         .statusBarHidden(pocketed)
         .task { await load() }
         .onAppear { location.setPrecise(true) }
@@ -62,13 +61,9 @@ struct EyesUpView: View {
 
     private var map: some View {
         Map(initialPosition: .camera(MapCamera(centerCoordinate: target.coordinate, distance: 1400))) {
-            MapPolygon(coordinates: HomeView.wash(around: target.coordinate))
-                .foregroundStyle(Palette.bg.opacity(0.45))
-                .mapOverlayLevel(level: .aboveRoads)
             if let d = directions {
-                MapPolyline(coordinates: d.coordinates).stroke(Palette.accent.opacity(0.22), lineWidth: 7)
                 MapPolyline(coordinates: d.coordinates)
-                    .stroke(Palette.accent, style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round, dash: [5, 4]))
+                    .stroke(Palette.walk, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
                 ForEach(Array(d.turns.enumerated()), id: \.offset) { i, turn in
                     if turn.way != .arrive {
                         Annotation(turn.instruction, coordinate: turn.coordinate, anchor: .center) {
@@ -84,7 +79,8 @@ struct EyesUpView: View {
                     .foregroundStyle(target.genre.ink)
                     .frame(width: 32, height: 32)
                     .background(target.genre.color, in: .circle)
-                    .shadow(color: target.genre.color.opacity(0.5), radius: 12)
+                    .overlay(Circle().stroke(Palette.card, lineWidth: 2))
+                    .shadow(color: .black.opacity(0.18), radius: 3, y: 1)
             }
             .annotationTitles(.hidden)
             UserAnnotation()
@@ -108,7 +104,7 @@ struct EyesUpView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Stop the walk")
             }
-            Text(arrived ? "You're here." : "Eyes up.").font(.poster(54, weight: .black))
+            Text(arrived ? "You're here." : "Eyes up.").font(.system(size: 54, weight: .bold))
             Text(arrived ? "Pocket it. Go say hi." : subtitle)
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(Palette.soft)
@@ -122,8 +118,8 @@ struct EyesUpView: View {
     }
 
     private func eyebrow(now: Date) -> String {
-        var parts = [now.formatted(.dateTime.weekday(.abbreviated)).uppercased(), HomeLine.clock(now).uppercased()]
-        if let start = target.start { parts.append("STARTS \(HomeLine.clock(start).uppercased())") }
+        var parts = [now.formatted(.dateTime.weekday(.abbreviated)), HomeLine.clock(now)]
+        if let start = target.start { parts.append("starts \(HomeLine.clock(start))") }
         return parts.joined(separator: " \u{00B7} ")
     }
 
@@ -133,17 +129,17 @@ struct EyesUpView: View {
         return VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .bottom) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(arrived ? "Here" : "\(minutes) min").font(.poster(64, weight: .black)).monospacedDigit()
+                    Text(arrived ? "Here" : "\(minutes) min").font(.system(size: 64, weight: .bold)).monospacedDigit()
                     Text("to \(target.title) \u{00B7} there at \(HomeLine.clock(there))")
                         .font(.system(size: 14))
                         .monospacedDigit()
-                        .foregroundStyle(Color(hex: 0xB5B0BF))
+                        .foregroundStyle(Palette.muted)
                         .lineLimit(1)
                 }
                 Spacer()
                 if !target.friends.isEmpty {
                     VStack(alignment: .trailing, spacing: 6) {
-                        AvatarStack(friends: target.friends, size: 30, includesYou: true, ground: Color(hex: 0x1E1C27))
+                        AvatarStack(friends: target.friends, size: 30, includesYou: true, ground: Palette.card)
                         Text("With \(Crowd.names(target.friends))").font(.system(size: 12, weight: .semibold)).foregroundStyle(Palette.soft)
                     }
                     .padding(.bottom, 4)
@@ -203,7 +199,7 @@ struct EyesUpView: View {
             .foregroundStyle(Palette.ink)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
-            .background(Color.white.opacity(0.05), in: .rect(cornerRadius: 16))
+            .background(Palette.card, in: .rect(cornerRadius: 16))
         }
         .buttonStyle(.plain)
         .accessibilityHint("Plays the buzz for this")
@@ -215,19 +211,21 @@ struct EyesUpView: View {
             VStack(spacing: 14) {
                 Text(arrived ? "You're here." : "Walking")
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Color(hex: 0x8E5A4E))
+                    .foregroundStyle(Palette.accent.opacity(0.5))
                 if let turn = upcoming, !arrived {
                     Text("Next: \(Turn.short(turn.instruction))").font(.system(size: 13)).foregroundStyle(Palette.faint)
                 }
                 Button("Show the map") { setPocketed(false) }
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Color(hex: 0x8C8896))
+                    .foregroundStyle(Palette.muted)
                     .padding(.horizontal, 22)
                     .frame(height: 44)
-                    .overlay(Capsule().stroke(Color(hex: 0x2A2830)))
+                    .overlay(Capsule().stroke(Color.white.opacity(0.15)))
                     .padding(.top, 10)
             }
         }
+        // A black screen in a pocket, whatever the phone's appearance.
+        .environment(\.colorScheme, .dark)
         .transition(.opacity)
     }
 
@@ -292,8 +290,8 @@ private struct TurnBadge: View {
             }
             .padding(.horizontal, 9)
             .frame(height: 26)
-            .background(Color(hex: 0x16141E, opacity: 0.82), in: .capsule)
-            .overlay(Capsule().stroke(Color.white.opacity(0.14)))
+            .background(Palette.surface, in: .capsule)
+            .overlay(Capsule().stroke(Palette.line))
             .fixedSize()
             .offset(x: -32)
             .opacity(done ? 0.4 : 1)

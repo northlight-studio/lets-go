@@ -66,7 +66,7 @@ struct PassportView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text("Passport").display(44)
+                Text("Passport").display(34)
                 Spacer()
                 Text(Date.now.formatted(.dateTime.year()))
                     .font(.system(size: 13, weight: .semibold))
@@ -74,8 +74,8 @@ struct PassportView: View {
                     .foregroundStyle(Palette.soft)
                     .padding(.horizontal, 12)
                     .frame(height: 32)
-                    .background(Color.white.opacity(0.07), in: .capsule)
-                    .overlay(Capsule().stroke(Color.white.opacity(0.12)))
+                    .background(Palette.card, in: .capsule)
+                    .overlay(Capsule().stroke(Palette.line))
             }
             Text("Who you were with, and where.")
                 .font(.serif(21))
@@ -93,7 +93,7 @@ struct PassportView: View {
             count(Text("\(max(out.count, showUps > 0 ? 1 : 0))"), "nights out")
             count(Text("\(met)"), met == 1 ? "person" : "people")
             NavigationLink(value: CityListRoute()) {
-                count(Text("\(city)\(Text("/\(Spots.all.count)").font(.poster(18)).foregroundStyle(Palette.muted))"), "Know your city")
+                count(Text("\(city)\(Text("/\(Spots.all.count)").font(.system(size: 18, weight: .bold)).foregroundStyle(Palette.muted))"), "Know your city")
             }
             .buttonStyle(.plain)
         }
@@ -101,7 +101,7 @@ struct PassportView: View {
 
     private func count(_ v: Text, _ label: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            v.font(.poster(32)).monospacedDigit().foregroundStyle(Palette.ink)
+            v.font(.system(size: 32, weight: .bold)).monospacedDigit().foregroundStyle(Palette.ink)
             Text(label).font(.system(size: 12)).foregroundStyle(Palette.muted).lineLimit(1)
         }
         .padding(12)

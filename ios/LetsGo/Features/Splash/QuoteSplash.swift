@@ -27,9 +27,8 @@ struct QuoteSplash: View {
                         .fill(Palette.accent)
                         .frame(width: 8, height: 8)
                         .shadow(color: Palette.accent.opacity(0.8), radius: 5)
-                    Text("LET'S GO")
-                        .font(.system(size: 13, weight: .bold))
-                        .tracking(2.3)
+                    Text("Let's Go")
+                        .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(Palette.soft)
                 }
                 .padding(.top, 8)
@@ -77,7 +76,6 @@ struct QuoteSplash: View {
         // A tap shows the rest at once, for anyone who's read it before.
         .onTapGesture { if step < QuoteText.buttonStep { withAnimation(.easeOut(duration: 0.4)) { step = QuoteText.buttonStep } } }
         .task { await reveal() }
-        .preferredColorScheme(.dark)
     }
 
     private var quote: some View {
@@ -97,14 +95,13 @@ struct QuoteSplash: View {
     private var attribution: some View {
         HStack(spacing: 10) {
             Rectangle().fill(Palette.soft).frame(width: 22, height: 1)
-            Text("FYODOR DOSTOEVSKY,")
-                .font(.system(size: 12.5, weight: .bold))
-                .tracking(1.7)
-                .foregroundStyle(Color(hex: 0xB5B0BF))
+            Text("Fyodor Dostoevsky,")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(Palette.muted)
             Text("Demons")
                 .font(.serif(17))
                 .italic()
-                .foregroundStyle(Color(hex: 0xE4E0E9))
+                .foregroundStyle(Palette.soft)
         }
         .accessibilityElement(children: .combine)
     }

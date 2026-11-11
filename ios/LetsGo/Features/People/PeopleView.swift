@@ -66,17 +66,17 @@ struct PeopleView: View {
 
     private var header: some View {
         HStack(alignment: .center) {
-            Text("People").display(42)
+            Text("People").display(34)
             Spacer()
             HStack(spacing: 0) {
                 ForEach(Segment.allCases) { s in
                     Button { withAnimation(.snappy) { segment = s } } label: {
                         Text(s.rawValue)
                             .font(.system(size: 13.5, weight: segment == s ? .semibold : .medium))
-                            .foregroundStyle(segment == s ? Color(hex: 0x121016) : Palette.ink)
+                            .foregroundStyle(segment == s ? Palette.accentInk : Palette.ink)
                             .padding(.horizontal, 14)
                             .frame(height: 34)
-                            .background(segment == s ? Palette.ink : Color.clear, in: .capsule)
+                            .background(segment == s ? Palette.accent : Color.clear, in: .capsule)
                     }
                     .buttonStyle(.plain)
                     .accessibilityAddTraits(segment == s ? .isSelected : [])
@@ -92,9 +92,6 @@ struct PeopleView: View {
     private func peopleMap(_ friends: [Friend], now: Date) -> some View {
         let lit = MyPorchLight.until.map { $0 > now } ?? false
         return Map(position: $position, interactionModes: [.pan, .zoom]) {
-            MapPolygon(coordinates: HomeView.wash(around: location.center))
-                .foregroundStyle(Palette.bg.opacity(0.45))
-                .mapOverlayLevel(level: .aboveRoads)
             ForEach(Crowd.mapped(friends, now: now)) { f in
                 if let at = f.coordinate {
                     Annotation(f.name, coordinate: at, anchor: .center) { FriendPin(friend: f, now: now) }
@@ -110,12 +107,12 @@ struct PeopleView: View {
                     }
                     Circle().fill(Palette.me).frame(width: 18, height: 18)
                         .overlay(Circle().stroke(.white, lineWidth: 3))
-                        .shadow(color: .black.opacity(0.5), radius: 5, y: 2)
+                        .shadow(color: .black.opacity(0.25), radius: 4, y: 1)
                 }
             }
             .annotationTitles(.hidden)
         }
-        .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll))
+        .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .including([.park, .beach, .publicTransport])))
         .onAppear {
             // You a little below the middle, friends around you above the panel.
             position = .camera(MapCamera(centerCoordinate: location.center.offset(east: 0, north: 150), distance: 3200))
@@ -134,7 +131,7 @@ struct PeopleView: View {
     private func panel(_ friends: [Friend], now: Date) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Capsule().fill(Color.white.opacity(0.28)).frame(width: 36, height: 5)
+                Capsule().fill(Palette.raise).frame(width: 36, height: 5)
                     .frame(maxWidth: .infinity)
                     .padding(.top, 8)
                     .padding(.bottom, 12)
@@ -148,10 +145,10 @@ struct PeopleView: View {
             .padding(.bottom, 24)
         }
         .scrollIndicators(.hidden)
-        .background(Color(hex: 0x14121B, opacity: 0.96), in: UnevenRoundedRectangle(topLeadingRadius: 34, topTrailingRadius: 34))
+        .background(Palette.surface, in: UnevenRoundedRectangle(topLeadingRadius: 34, topTrailingRadius: 34))
         .overlay(alignment: .top) {
             UnevenRoundedRectangle(topLeadingRadius: 34, topTrailingRadius: 34)
-                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                .stroke(Palette.line, lineWidth: 1)
                 .frame(height: 40)
                 .mask(LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .bottom))
                 .allowsHitTesting(false)
@@ -262,7 +259,7 @@ struct PeopleView: View {
         return personRow(f, detail: parts.joined(separator: " \u{00B7} "), ring: .porch) {
             Button(waved ? "Waved" : "Wave") { wave(f) }
                 .font(.system(size: 14, weight: .bold))
-                .foregroundStyle(Color(hex: 0xFFD9A8))
+                .foregroundStyle(Palette.porchSoft)
                 .padding(.horizontal, 14).frame(height: 34)
                 .background(Palette.porchSoft.opacity(0.14), in: .capsule)
                 .overlay(Capsule().stroke(Palette.porchSoft.opacity(0.35)))
@@ -276,11 +273,11 @@ struct PeopleView: View {
         @ViewBuilder trailing: () -> Trailing
     ) -> some View {
         HStack(spacing: 12) {
-            FriendAvatar(friend: f, size: 40, ring: ring, ground: Color(hex: 0x17151F))
+            FriendAvatar(friend: f, size: 40, ring: ring, ground: Palette.card)
                 .overlay(alignment: .bottomTrailing) {
                     if let dot {
                         Circle().fill(dot).frame(width: 12, height: 12)
-                            .overlay(Circle().stroke(Color(hex: 0x17151F), lineWidth: 2.5))
+                            .overlay(Circle().stroke(Palette.card, lineWidth: 2.5))
                             .offset(x: 1, y: 1)
                     }
                 }
@@ -344,7 +341,7 @@ struct PeopleView: View {
         ForEach(crews) { crew in
             let members = crew.memberIDs.compactMap { byID[$0] }
             HStack(spacing: 12) {
-                AvatarStack(friends: members, size: 34, includesYou: true, ground: Color(hex: 0x17151F))
+                AvatarStack(friends: members, size: 34, includesYou: true, ground: Palette.card)
                 VStack(alignment: .leading, spacing: 1) {
                     HStack(spacing: 6) {
                         Text(crew.name).font(.system(size: 16, weight: .semibold))
@@ -418,9 +415,9 @@ struct PorchLightCard: View {
                 }
                 Image(systemName: on ? "lightbulb.max.fill" : "lightbulb")
                     .font(.system(size: 19, weight: .semibold))
-                    .foregroundStyle(on ? Color(hex: 0x2B1600) : Palette.muted)
+                    .foregroundStyle(on ? Palette.accentInk : Palette.muted)
                     .frame(width: 46, height: 46)
-                    .background(on ? Palette.porch : Color.white.opacity(0.08), in: .circle)
+                    .background(on ? Palette.porch : Palette.raise, in: .circle)
             }
             .frame(width: 46, height: 46)
             VStack(alignment: .leading, spacing: 2) {
@@ -429,7 +426,7 @@ struct PorchLightCard: View {
                      ? "On till \(HomeLine.clock(until ?? now)). Friends close by can see you're up for something."
                      : "Off. Turn it on when you're up for something.")
                     .font(.system(size: 13))
-                    .foregroundStyle(Color(hex: 0xB5B0BF))
+                    .foregroundStyle(Palette.muted)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 4)
@@ -440,8 +437,8 @@ struct PorchLightCard: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .background(on ? Palette.porch.opacity(0.1) : Color.white.opacity(0.05), in: .rect(cornerRadius: 22))
-        .overlay(RoundedRectangle(cornerRadius: 22).stroke(on ? Palette.porch.opacity(0.3) : Color.white.opacity(0.08)))
+        .background(on ? Palette.porch.opacity(0.12) : Palette.card, in: .rect(cornerRadius: 22))
+        .overlay(RoundedRectangle(cornerRadius: 22).stroke(on ? Palette.porch.opacity(0.3) : Palette.line))
         .animation(.easeInOut(duration: 0.25), value: on)
         .sensoryFeedback(.impact(weight: .light), trigger: on)
     }

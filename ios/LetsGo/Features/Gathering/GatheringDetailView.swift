@@ -431,7 +431,6 @@ struct StampEarnedView: View {
         }
         .padding(24)
         .presentationDetents([.medium])
-        .presentationBackground(Palette.bg)
     }
 }
 

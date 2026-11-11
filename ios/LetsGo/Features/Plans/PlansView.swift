@@ -72,14 +72,14 @@ struct PlansView: View {
                         HStack(spacing: 12) {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(p.dayLine).eyebrow(Palette.accentSoft)
-                                Text(p.title).font(.poster(24))
+                                Text(p.title).font(.system(size: 24, weight: .bold))
                                 Text(p.stops.map(\.title).joined(separator: " \u{2192} "))
                                     .font(.system(size: 13))
                                     .foregroundStyle(Palette.muted)
                                     .lineLimit(1)
                             }
                             Spacer(minLength: 6)
-                            AvatarStack(friends: group, size: 26, includesYou: true, ground: Color(hex: 0x1A1822))
+                            AvatarStack(friends: group, size: 26, includesYou: true, ground: Palette.card)
                         }
                         .foregroundStyle(Palette.ink)
                         .padding(16)
@@ -148,7 +148,7 @@ struct PlansView: View {
         let near = Today.walkable(all, now: now, limit: 99).count
         let starting = soon.filter { $0.start > now }.count
         return VStack(alignment: .leading, spacing: 6) {
-            Text("Plans").display(44).foregroundStyle(Palette.ink)
+            Text("Plans").display(34).foregroundStyle(Palette.ink)
             Text(eyebrow(now: now)).eyebrow()
             Text(Today.headline(now: now))
                 .font(.serif(21))
@@ -422,10 +422,10 @@ struct PickCard: View {
                     .overlay(alignment: .topLeading) {
                         Label("Worth going", systemImage: "sparkles")
                             .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Palette.ink)
                             .padding(.horizontal, 10)
                             .frame(height: 28)
-                            .background(.black.opacity(0.45), in: .capsule)
+                            .glassEffect(.regular, in: .capsule)
                             .padding(12)
                     }
                 VStack(alignment: .leading, spacing: 6) {
@@ -449,10 +449,10 @@ struct PickCard: View {
                     HStack {
                         Text("Let's go")
                             .font(.system(size: 15, weight: .bold))
-                            .foregroundStyle(Palette.bg)
+                            .foregroundStyle(Palette.accentInk)
                             .frame(maxWidth: .infinity)
                             .frame(height: 46)
-                            .background(Palette.ink, in: .capsule)
+                            .glassEffect(.regular.tint(Palette.accent), in: .capsule)
                         Text(Walk.label(pick.meters))
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(Palette.ink)
@@ -495,7 +495,7 @@ struct SoonCard: View {
                     Spacer()
                     HStack(spacing: 5) {
                         Circle().fill(pick.start <= now ? Palette.live : Palette.star).frame(width: 7, height: 7)
-                        Text(pick.start <= now ? "ON NOW" : pick.start.formatted(date: .omitted, time: .shortened).uppercased())
+                        Text(pick.start <= now ? "On now" : pick.start.formatted(date: .omitted, time: .shortened))
                             .font(.system(size: 12, weight: .bold))
                             .monospacedDigit()
                             .foregroundStyle(pick.start <= now ? Palette.live : Palette.ink)

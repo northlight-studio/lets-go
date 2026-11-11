@@ -24,7 +24,8 @@ struct ThirdTimeView: View {
                     Spacer()
                     Button { dismiss() } label: {
                         Image(systemName: "xmark").font(.system(size: 13, weight: .bold))
-                            .frame(width: 34, height: 34).background(Color.white.opacity(0.08), in: .circle)
+                            .frame(width: 34, height: 34)
+                            .glassEffect(.regular.interactive(), in: .circle)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Close")
@@ -34,11 +35,12 @@ struct ThirdTimeView: View {
                 bond.frame(height: 140).padding(.top, 28)
 
                 Text("\(Text("Third time's\na friend"))\(Text(".").foregroundStyle(Palette.accent))")
-                    .font(.poster(52, weight: .black))
+                    .font(.system(size: 44, weight: .bold))
+                    .tracking(-1)
                     .padding(.top, 24)
                 Text(lead)
                     .font(.system(size: 18, weight: .medium))
-                    .foregroundStyle(Color(hex: 0xE4E0E9))
+                    .foregroundStyle(Palette.soft)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 14)
 
@@ -91,7 +93,7 @@ struct ThirdTimeView: View {
                 p.addCurve(to: b, control1: CGPoint(x: w * 0.4, y: 10), control2: CGPoint(x: w * 0.6, y: 130))
             }
             ZStack {
-                curve.stroke(Color.white.opacity(0.1), style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [2, 5]))
+                curve.stroke(Palette.line, style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [2, 5]))
                 curve.trim(from: 0, to: drawn ? 1 : 0).stroke(Palette.accent, style: StrokeStyle(lineWidth: 2.2, lineCap: .round))
                 circle(Text("You").font(.system(size: 20, weight: .bold)).foregroundStyle(.white), fill: Palette.me).position(a)
                 circle(Text(String(intro.name.prefix(1))).font(.system(size: 26, weight: .bold)).foregroundStyle(intro.friend.ink),
@@ -115,7 +117,7 @@ struct ThirdTimeView: View {
             .frame(width: 76, height: 76)
             .background(fill, in: .circle)
             .overlay(Circle().stroke(Palette.bg, lineWidth: 4).padding(-4))
-            .overlay(Circle().stroke(Color.white.opacity(0.18), lineWidth: 1.5).padding(-5.5))
+            .overlay(Circle().stroke(Palette.line, lineWidth: 1.5).padding(-5.5))
     }
 
     private func seal(_ d: Date) -> some View {
@@ -123,16 +125,16 @@ struct ThirdTimeView: View {
             Text(d.formatted(.dateTime.month(.abbreviated)).uppercased()).font(.system(size: 7, weight: .heavy)).tracking(0.6)
             Text(d.formatted(.dateTime.day())).font(.system(size: 14, weight: .heavy)).monospacedDigit()
         }
-        .foregroundStyle(Color(hex: 0xFFC2DC))
+        .foregroundStyle(Palette.accentSoft)
         .frame(width: 40, height: 40)
-        .background(Color(hex: 0x1E1A28), in: .circle)
-        .overlay(Circle().stroke(Color(hex: 0xF07BB0), lineWidth: 1.5))
+        .background(Palette.card, in: .circle)
+        .overlay(Circle().stroke(Palette.accent, lineWidth: 1.5))
     }
 
     private func rule(_ symbol: String, _ text: String) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: symbol).font(.system(size: 15)).foregroundStyle(Palette.muted).frame(width: 20)
-            Text(text).font(.system(size: 14)).foregroundStyle(Color(hex: 0xD8D3DF)).fixedSize(horizontal: false, vertical: true)
+            Text(text).font(.system(size: 14)).foregroundStyle(Palette.soft).fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -195,7 +197,7 @@ struct ThirdTimeRow: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 12) {
-                FriendAvatar(friend: intro.friend, size: 40, ring: .edge(Palette.accent), ground: Color(hex: 0x17151F))
+                FriendAvatar(friend: intro.friend, size: 40, ring: .edge(Palette.accent), ground: Palette.card)
                 VStack(alignment: .leading, spacing: 1) {
                     HStack(spacing: 6) {
                         Text("Third time's a friend").font(.system(size: 15, weight: .bold))
