@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator
 from fastapi import FastAPI
 
 from app.config import settings
-from app.routes import discover, gatherings, kitchens, listings, orders, people, posters, users
+from app.routes import admin, discover, gatherings, kitchens, listings, orders, people, posters, users
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
@@ -34,6 +34,7 @@ app.include_router(listings.router)
 app.include_router(people.router)
 app.include_router(discover.router)
 app.include_router(posters.router)
+app.include_router(admin.router)
 
 
 @app.get("/health")

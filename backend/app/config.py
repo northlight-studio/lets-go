@@ -25,6 +25,15 @@ class Settings(BaseSettings):
     # A day's scout spend per city at list prices, and runs one person can start in an hour.
     scout_daily_budget_usd: float = 40
     scout_runs_per_hour: int = 5
+    # The nightly reader (app.catalog.sources): the model's effort on a changed page with no structure,
+    # and at most this many such pages a night. Its spend counts against scout_daily_budget_usd.
+    reader_reasoning_effort: Literal["low", "medium", "high"] = "low"
+    reader_model_pages: int = 150
+    # The source finder: searches a night (0 = a seventh of the neighborhood × kind grid).
+    finder_runs_per_night: int = 0
+    finder_enabled: bool = True
+    # `X-Admin-Token` for /v1/admin/*. Empty turns those routes off.
+    admin_token: str = ""
 
     # Where a poster's short link points: this API's own public address (or a short domain aimed at it).
     public_base_url: str = "https://api-production-658b9.up.railway.app"

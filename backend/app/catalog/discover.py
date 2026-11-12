@@ -9,14 +9,16 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 
 import httpx
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.catalog import cells, intents
 from app.catalog.geocode import CityGeocoder, Geocoder
 from app.catalog.resolve import resolve
-from app.catalog.scout import Ask, Scout, to_candidates
+from app.catalog.scout import Ask, Scout, calendar_pages, to_candidates
+from app.catalog.sources.night import spent_today
+from app.catalog.sources.seed import SeedSource, add_found
 from app.catalog.tables import Coverage, Event, EventSource, Find, ScoutQuota, ScoutRun
 from app.geo import distance_m
 
@@ -122,16 +124,6 @@ async def claim(
     return (row.run_id if row and row.state == "running" else None), False
 
 
-async def spent_today(session: AsyncSession, city: str, now: datetime) -> int:
-    start, _ = cells.night_bounds(cells.night_of(now, city), city)
-    total = await session.scalar(
-        select(func.coalesce(func.sum(ScoutRun.cost_micros), 0)).where(
-            ScoutRun.city == city, ScoutRun.started_at >= start
-        )
-    )
-    return int(total or 0)
-
-
 async def take_quota(session: AsyncSession, user_id: uuid.UUID, now: datetime, limit: int) -> bool:
     hour = now.replace(minute=0, second=0, microsecond=0)
     stmt = insert(ScoutQuota).values(user_id=user_id, hour=hour, runs=1)
@@ -178,6 +170,25 @@ async def execute(
             async with geocoders() as geocoder:
                 result = await resolve(session, ask.city, candidates, geocoder, at, run_id=run_id)
             added, merged = result.added, result.merged
+            # The venue calendars it read from join the source list: tomorrow night reads them directly.
+            pages = calendar_pages(found.proposals, candidates)
+            by_url = {str(p.get("calendar_url") or "").strip(): p for p in found.proposals}
+            await add_found(
+                session,
+                ask.city,
+                [
+                    SeedSource(
+                        url=page,
+                        kind="venue",
+                        name=str(by_url[page].get("venue_name") or "")[:160],
+                        venue_name=str(by_url[page].get("venue_name") or "")[:160],
+                        address=str(by_url[page].get("address") or "")[:240],
+                        genre=intents.BY_KEY[ask.intent].genre if ask.intent in intents.BY_KEY else "party",
+                    )
+                    for page in pages
+                ],
+                "scout",
+            )
             if asked_by is not None and added:
                 await session.execute(
                     insert(Find)

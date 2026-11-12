@@ -1,0 +1,59 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Fixture//Bookstore calendar//EN
+X-WR-CALNAME:Bird & Beckett events
+BEGIN:VEVENT
+UID:jazz-1@birds.example
+DTSTAMP:20260101T000000Z
+DTSTART;TZID=America/Los_Angeles:{{ICS+1}}T193000
+DTEND;TZID=America/Los_Angeles:{{ICS+1}}T220000
+SUMMARY:George Rogers Quartet
+LOCATION:Bird & Beckett Books\, 653 Chenery St\, San Francisco\, CA
+URL:https://birds.example/event/george-rogers
+DESCRIPTION:Jazz in the bookstore.\nAll ages.
+BEGIN:VALARM
+TRIGGER:-PT15M
+DESCRIPTION:This is an alarm, not the event
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:poetry@birds.example
+DTSTAMP:20260101T000000Z
+DTSTART:{{ICS+2}}T030000Z
+SUMMARY:Poetry Night
+STATUS:CANCELLED
+END:VEVENT
+BEGIN:VEVENT
+UID:weekly-jam@birds.example
+DTSTAMP:20260101T000000Z
+DTSTART;TZID=America/Los_Angeles:{{ICS-1}}T200000
+DTEND;TZID=America/Los_Angeles:{{ICS-1}}T230000
+RRULE:FREQ=WEEKLY;COUNT=10
+EXDATE;TZID=America/Los_Angeles:{{ICS+6}}T200000
+SUMMARY:Friday Jam
+END:VEVENT
+BEGIN:VEVENT
+UID:weekly-jam@birds.example
+DTSTAMP:20260101T000000Z
+RECURRENCE-ID;TZID=America/Los_Angeles:{{ICS+13}}T200000
+DTSTART;TZID=America/Los_Angeles:{{ICS+13}}T210000
+SUMMARY:Friday Jam (late start)
+END:VEVENT
+BEGIN:VEVENT
+UID:allday@birds.example
+DTSTART;VALUE=DATE:{{ICS+3}}
+SUMMARY:Used Book Fair
+END:VEVENT
+BEGIN:VEVENT
+UID:private@birds.example
+CLASS:PRIVATE
+DTSTART;TZID=America/Los_Angeles:{{ICS+4}}T180000
+SUMMARY:Staff party
+END:VEVENT
+BEGIN:VEVENT
+UID:reading@birds.example
+DTSTART;TZID=America/Los_Angeles:{{ICS+5}}T190000
+SUMMARY:A reading with a title long enough that the calendar
+  folds it across two lines
+END:VEVENT
+END:VCALENDAR

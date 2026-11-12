@@ -43,6 +43,8 @@ class Resolved:
     updated: int = 0
     unplaced: int = 0
     skipped: int = 0
+    # Candidates that said the event is called off (cancels win, whichever source says so).
+    canceled: int = 0
 
     def summary(self) -> dict[str, int]:
         return {
@@ -51,6 +53,7 @@ class Resolved:
             "updated": self.updated,
             "unplaced": self.unplaced,
             "skipped": self.skipped,
+            "canceled": self.canceled,
         }
 
 
@@ -147,6 +150,7 @@ async def resolve(
             out.skipped += 1
             continue
         key = title_key(title)
+        out.canceled += int(c.canceled)
         src = existing.get((c.source, c.ref))
         if src is not None:
             event = await session.get(Event, src.event_id)
