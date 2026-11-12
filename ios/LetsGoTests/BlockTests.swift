@@ -101,6 +101,8 @@ struct BlockTests {
         #expect(Block.leftLine(0, unit: "pint") == "sold out")
         #expect(Block.lowerFirst("Mango") == "mango")
         #expect(Block.lowerFirst("IPA flight") == "IPA flight")
+        #expect(Block.lowerFirst("A walk") == "a walk")
+        #expect(Block.lowerFirst("Coffee") == "coffee")
     }
 
     // MARK: Today's, then it ends

@@ -108,11 +108,13 @@ enum Block {
         name?.split(separator: " ").first.map(String.init) ?? "Someone"
     }
 
-    /// "Mango ice cream" → "mango ice cream", but "IPA" and "Wei's" stay as they are.
+    /// "Mango ice cream" → "mango ice cream", "A walk" → "a walk", but "IPA flight" stays as it is.
     static func lowerFirst(_ s: String) -> String {
-        let chars = Array(s)
-        guard chars.count > 1, chars[0].isUppercase, chars[1].isLowercase else { return s }
-        return chars[0].lowercased() + String(chars.dropFirst())
+        guard let first = s.first, first.isUppercase else { return s }
+        let word = s.prefix { !$0.isWhitespace }
+        let letters = word.filter(\.isLetter)
+        if letters.count > 1, letters.allSatisfy(\.isUppercase) { return s }
+        return first.lowercased() + s.dropFirst()
     }
 
     /// "8 pints left", "1 box of 6 left", "3 left".
