@@ -338,11 +338,88 @@ class PorchLightIn(BaseModel):
 
 
 class PorchLightOut(BaseModel):
+    """The old shape of "up for something", for phones from before it was renamed. Never coordinates."""
+
     on_until: datetime
     note: str
     lat: float | None = None
     lon: float | None = None
     distance_m: float | None = None
+
+
+ActivityKey = Literal["walk", "coffee", "drink", "pickup", "cooking", ""]
+
+
+class UpForIn(BaseModel):
+    activity: ActivityKey = ""
+    words: str = Field(default="", max_length=80)
+    hours: float = Field(default=2, gt=0, le=4)
+    # Where you are, so friends see how far a walk it is. Kept on the server; nobody gets it.
+    lat: float | None = Field(default=None, ge=-90, le=90)
+    lon: float | None = Field(default=None, ge=-180, le=180)
+
+
+class UpForOut(BaseModel):
+    """What someone's up for: "A walk" for the next hour, 6 minutes away. Never where they are."""
+
+    activity: str
+    label: str
+    words: str
+    until: datetime
+    # The little speech bubble on their pin: "walk?".
+    bubble: str
+    # How far a walk, rounded; None when either of you has no location.
+    walk_min: int | None = None
+
+
+class Point(BaseModel):
+    lat: float
+    lon: float
+
+
+class SpotIn(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    lat: float = Field(ge=-90, le=90)
+    lon: float = Field(ge=-180, le=180)
+
+
+class SpotOut(BaseModel):
+    name: str
+    lat: float
+    lon: float
+
+
+class ImInIn(BaseModel):
+    lat: float | None = Field(default=None, ge=-90, le=90)
+    lon: float | None = Field(default=None, ge=-180, le=180)
+
+
+class MeetupUpdate(BaseModel):
+    lat: float | None = Field(default=None, ge=-90, le=90)
+    lon: float | None = Field(default=None, ge=-180, le=180)
+    on_my_way: bool | None = None
+    says: str | None = Field(default=None, max_length=40)
+
+
+class MeetupOut(BaseModel):
+    """You and one other person, meeting. Seen only by the two of you, until Done."""
+
+    id: uuid.UUID
+    other: PersonOut
+    is_mine: bool  # it was your "up for" they said I'm in to
+    activity: str
+    label: str
+    headline: str
+    spot: SpotOut | None
+    # Roughly halfway, rounded to a few hundred metres: where a phone looks for a spot.
+    area: Point | None
+    meet_at: datetime
+    ends_at: datetime
+    my_walk_min: int | None
+    their_walk_min: int | None
+    i_am_on_my_way: bool
+    they_are_on_their_way: bool
+    they_say: str
 
 
 class OutNow(BaseModel):
@@ -362,6 +439,7 @@ class FriendOut(BaseModel):
     id: uuid.UUID
     display_name: str
     porch_light: PorchLightOut | None = None
+    up_for: UpForOut | None = None
     out: OutNow | None = None
     # When they last waved at you, within the last two hours.
     waved_at: datetime | None = None
@@ -372,11 +450,21 @@ class CrewCreate(BaseModel):
     member_ids: list[uuid.UUID] = Field(default_factory=list, max_length=30)
 
 
+class CrewNext(BaseModel):
+    """The next thing at least two of the crew said they're in for."""
+
+    gathering_id: uuid.UUID
+    title: str
+    starts_at: datetime
+    going: int
+
+
 class CrewOut(BaseModel):
     id: uuid.UUID
     name: str
     is_mine: bool
     members: list[PersonOut]
+    next: CrewNext | None = None
 
 
 class InviteFriends(BaseModel):
@@ -404,6 +492,9 @@ class IntroOut(BaseModel):
     person: PersonOut
     together: list[SharedNight]
     said_hi: bool
+    # People you've met see what you're up for, and you theirs.
+    up_for: UpForOut | None = None
+    waved_at: datetime | None = None
 
 
 class IntroResult(BaseModel):
@@ -412,10 +503,12 @@ class IntroResult(BaseModel):
 
 class People(BaseModel):
     porch_light: PorchLightOut | None
+    up_for: UpForOut | None = None
     friends: list[FriendOut]
     crews: list[CrewOut]
     invites: list[GatheringInviteOut]
     intros: list[IntroOut] = []
+    meetup: MeetupOut | None = None
 
 
 # GatheringOut names PersonOut before it's defined.

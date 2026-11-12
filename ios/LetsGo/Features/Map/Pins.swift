@@ -75,6 +75,8 @@ enum Pins {
     /// ("walk?", "tacos?"), or "up for it?" when they didn't write one.
     static func bubble(_ f: Friend, now: Date) -> String? {
         guard f.porchOn(at: now) else { return nil }
+        // Up for one of the chips (`up_for` on the people DTO): its own short word.
+        if UpFor.activity(f.upActivity) != nil { return UpFor.bubble(activity: f.upActivity, words: "") }
         let note = f.porchNote.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !note.isEmpty else { return "up for it?" }
         return shortName(note, limit: bubbleLimit)

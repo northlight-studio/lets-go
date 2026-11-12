@@ -114,13 +114,14 @@ struct FriendPin: View {
     }
 
     private var label: String {
-        if friend.porchOn(at: now) && friend.out == nil { return "Porch light" }
+        // The little speech bubble: "walk?".
+        if friend.porchOn(at: now) && friend.out == nil { return UpFor.bubble(activity: friend.upActivity, words: friend.porchNote) }
         return friend.firstName
     }
 
     private func accessibility(porch: Bool) -> String {
         var parts = [friend.name]
-        if porch { parts.append("porch light on") }
+        if porch { parts.append("up for \(UpFor.label(activity: friend.upActivity, words: friend.porchNote).lowercasedFirst)") }
         if let out = friend.out { parts.append(out.state == .there ? "at \(out.title)" : "heading to \(out.title)") }
         return parts.joined(separator: ", ")
     }

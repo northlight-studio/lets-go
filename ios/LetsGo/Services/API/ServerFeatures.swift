@@ -16,6 +16,8 @@ final class ServerFeatures {
     nonisolated enum Feature: String, CaseIterable, Sendable {
         /// Friends, porch lights, crews, intros and invites.
         case people
+        /// Up for something by activity, I'm in and meeting up halfway.
+        case upFor
         /// The lamppost poster.
         case posters
         /// The city's listings.
@@ -27,6 +29,7 @@ final class ServerFeatures {
         var routes: [String] {
             switch self {
             case .people: ["/v1/people", "/v1/friends/code", "/v1/me/porch-light", "/v1/gatherings/{gathering_id}/invites"]
+            case .upFor: ["/v1/me/up-for", "/v1/up-for/{other_id}/in", "/v1/meetups/{meetup_id}"]
             case .posters: ["/v1/gatherings/{gathering_id}/poster"]
             case .listings: ["/v1/listings"]
             case .discover: ["/v1/discover"]
@@ -37,6 +40,7 @@ final class ServerFeatures {
         static func owning(_ path: String) -> Feature? {
             if path.hasSuffix("/poster") || path.hasPrefix("/v1/posters") { return .posters }
             if path.hasSuffix("/invites") { return .people }
+            if ["/v1/me/up-for", "/v1/up-for", "/v1/meetups"].contains(where: { path.hasPrefix($0) }) { return .upFor }
             let people = ["/v1/people", "/v1/friends", "/v1/me/porch-light", "/v1/crews", "/v1/intros"]
             if people.contains(where: { path.hasPrefix($0) }) { return .people }
             if path.hasPrefix("/v1/listings") { return .listings }
@@ -47,7 +51,8 @@ final class ServerFeatures {
         /// One plain line for when the server doesn't have it yet.
         var comingSoon: String {
             switch self {
-            case .people: "Friends, porch lights and crews need the new server. They're coming soon."
+            case .people: "Friends, what you're up for and crews need the new server. They're coming soon."
+            case .upFor: "I'm in and meeting up halfway need the new server. They're coming soon."
             case .posters: "Posters need the new server. They're coming soon."
             case .listings: "The city's newest listings need the new server. These are the ones that came with the app."
             case .discover: "Searching the city needs the new server. It's coming soon."

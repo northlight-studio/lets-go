@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
-from app.models import Friendship, Gathering, GatheringMember
+from app.models import Friendship, Gathering, GatheringMember, Intro
 from app.schemas import OutNow
 from app.views import now
 
@@ -86,3 +86,38 @@ async def checked_in_with(
     for other, title, starts_at in rows:
         out.setdefault(other, []).append((title, starts_at))
     return out
+
+
+async def met_ids(
+    session: AsyncSession, me: uuid.UUID, friends: set[uuid.UUID] | None = None
+) -> set[uuid.UUID]:
+    """People you've met: three real check-ins at the same things, not friends yet, and neither of
+    you has said not now. They see what you're up for, and you theirs; nobody else does."""
+    if friends is None:
+        friends = await friend_ids(session, me)
+    met = {
+        other
+        for other, nights in (await checked_in_with(session, me)).items()
+        if len(nights) >= INTRO_AFTER and other not in friends
+    }
+    if not met:
+        return set()
+    declined = await session.execute(
+        select(Intro.user_id, Intro.other_id).where(
+            Intro.declined_at.is_not(None),
+            ((Intro.user_id == me) & Intro.other_id.in_(met))
+            | ((Intro.other_id == me) & Intro.user_id.in_(met)),
+        )
+    )
+    for a, b in declined:
+        met.discard(b if a == me else a)
+    return met
+
+
+async def can_see(session: AsyncSession, viewer: uuid.UUID, other: uuid.UUID) -> bool:
+    """Whether viewer may see what other is up for: friends, or people who've met."""
+    if viewer == other:
+        return False
+    if await are_friends(session, viewer, other):
+        return True
+    return other in await met_ids(session, viewer)
