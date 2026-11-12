@@ -34,10 +34,16 @@ struct PosterSheet: View {
                             .font(.system(size: 14, weight: .semibold))
                     } else if loading {
                         ProgressView("Making your link…").frame(maxWidth: .infinity).padding(.top, 60)
-                    } else {
-                        Text(PosterCopy.unavailable(gathering, now: .now) ?? "Couldn't make the poster's link.")
+                    } else if let why = PosterCopy.unavailable(gathering, now: .now) {
+                        Text(why)
                             .foregroundStyle(Palette.muted)
                             .padding(.top, 40)
+                    } else {
+                        Text("Couldn't make the poster's link.")
+                            .foregroundStyle(Palette.muted)
+                            .padding(.top, 40)
+                        Button("Try again") { Task { await makeLink() } }
+                            .buttonStyle(SecondaryButtonStyle())
                     }
                 }
                 .padding(18)

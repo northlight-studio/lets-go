@@ -26,7 +26,7 @@ struct MorningAfterView: View {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("\(Date.now.formatted(.dateTime.weekday(.wide))) \u{00B7} The morning after")
+                        Text("The morning after")
                             .eyebrow(accent)
                         Text("\(Text("\(night.evening.formatted(.dateTime.weekday(.wide))),\nlived"))\(Text(".").foregroundStyle(Palette.accent))")
                             .font(.system(size: 48, weight: .bold))
@@ -132,7 +132,7 @@ struct MorningAfterView: View {
         let city = Spots.stamped(stamps).count
         return LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
             tile(NightMath.duration(out), "out in the world", dark: true)
-            tile("\(people.count)", people.isEmpty ? "people you were with" : "with \(people.sorted().joined(separator: ", "))")
+            tile(people.isEmpty ? "Just you" : "\(people.count)", people.isEmpty ? "out on your own" : "with \(people.sorted().joined(separator: ", "))")
             tile("\(NightMath.miles(night.walkedMeters)) mi", "walked")
             tile("\(tonightStamps) stamp\(tonightStamps == 1 ? "" : "s")", "Know your city: now \(city) of \(Spots.all.count)")
         }

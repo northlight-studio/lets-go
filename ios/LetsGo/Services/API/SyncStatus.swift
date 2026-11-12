@@ -18,6 +18,10 @@ final class SyncStatus {
             try await work()
             lastSynced = .now
             problem = nil
+        } catch let error where error.isNotOnServer {
+            // An older server without that part: the feature says so where it lives.
+            lastSynced = .now
+            problem = nil
         } catch {
             problem = error.errorDescription
         }

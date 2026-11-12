@@ -34,10 +34,11 @@ enum PosterCopy {
     static let scanRest = "No app needed. See who's coming and how many spots are left."
 
     /// Why there's no poster for this, or nil when there can be one.
-    static func unavailable(_ g: Gathering, now: Date) -> String? {
+    static func unavailable(_ g: Gathering, now: Date, serverHasPosters: Bool = ServerFeatures.shared.has(.posters)) -> String? {
         if g.isListing || !g.isMine { return "Only the host can make its poster." }
         if g.hasEnded(at: now) { return "It's over." }
         if g.remoteID == nil { return "Posters need the server, and this one is only on your phone." }
+        if !serverHasPosters { return ServerFeatures.Feature.posters.comingSoon }
         return nil
     }
 

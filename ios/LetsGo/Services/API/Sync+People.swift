@@ -213,7 +213,13 @@ extension Sync {
 
     static func leave(_ crew: Crew, context: ModelContext) async throws(APIError) {
         if APIConfig.isConfigured {
-            let _: Empty = try await api.send(.delete("/v1/crews/\(crew.id.uuidString)"))
+            do {
+                let _: Empty = try await api.send(.delete("/v1/crews/\(crew.id.uuidString)"))
+            } catch .rejected(404, _) {
+                // Made on this phone before there was a server, or already gone there: only the copy is left.
+            } catch .notOnServer {
+                // A server without crews never had it.
+            }
         }
         context.delete(crew)
         Ledger.save(context, "leave crew")

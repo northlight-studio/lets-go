@@ -194,6 +194,8 @@ enum Planner {
         }
         let affordable = sameDay.filter { c in
             if r.wantsFree && !c.isFree { return false }
+            // "Under $15" means under $15.
+            if let cap = r.maxPriceCents, let price = c.priceFromCents, price > cap { return false }
             return true
         }
         let inWindow = affordable.filter { $0.start >= from && $0.start.addingTimeInterval(3600) <= until }
@@ -300,9 +302,6 @@ enum Planner {
            let h = late.freeAfterHour, at(h, on: r.day, calendar: calendar) > (stops.first?.start ?? from),
            let meetStop = stops.first(where: { $0.start >= at(h, on: r.day, calendar: calendar) }) {
             note.append("\(late.firstName)'s free after \(hourText(h)), so they'll meet you at \(meetStop.title).")
-        }
-        if let first = stops.first, !group.isEmpty {
-            note.append("I'll nudge everyone at \(clock(first.start.addingTimeInterval(-30 * 60))).")
         }
 
         let title = "\(holiday ?? dayName), sorted."

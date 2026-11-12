@@ -29,6 +29,14 @@ struct PeopleView: View {
     @State private var makingCrew = false
     @State private var openIntro: Intro?
 
+    /// Friends need routes an older server doesn't have.
+    private var friendsOnServer: Bool { APIConfig.isConfigured && ServerFeatures.shared.has(.people) }
+    /// Why friends can't work right now, in one plain line.
+    private var friendsUnavailable: String? {
+        if !APIConfig.isConfigured { return "Friends need a server. Add one at the bottom of Passport, under Server." }
+        return ServerFeatures.shared.has(.people) ? nil : ServerFeatures.Feature.people.comingSoon
+    }
+
     var body: some View {
         @Bindable var model = model
         NavigationStack(path: $path) {
@@ -156,7 +164,10 @@ struct PeopleView: View {
 
     @ViewBuilder
     private func friendsList(_ friends: [Friend], now: Date) -> some View {
-        PorchLightCard(until: porchUntil > 0 ? Date(timeIntervalSince1970: porchUntil) : nil, now: now, busy: busy) { on in
+        PorchLightCard(
+            until: porchUntil > 0 ? Date(timeIntervalSince1970: porchUntil) : nil, now: now, busy: busy,
+            unavailable: friendsUnavailable
+        ) { on in
             toggle(on)
         }
         if let intro = intros.first(where: { !$0.saidHi }) ?? intros.first {
@@ -183,7 +194,7 @@ struct PeopleView: View {
             }
         }
         if friends.isEmpty {
-            Text("No friends yet. Add one with a code: trade codes with someone you go out with, and they'll see your porch light and you'll see when they're out.")
+            Text(friendsUnavailable ?? "No friends yet. Add one with a code: trade codes with someone you go out with, and they'll see your porch light and you'll see when they're out.")
                 .font(.system(size: 14))
                 .foregroundStyle(Palette.muted)
                 .padding(.top, 20)
@@ -191,6 +202,7 @@ struct PeopleView: View {
         Button { model.addingFriend = true } label: { Label("Add a friend", systemImage: "person.badge.plus") }
             .buttonStyle(SecondaryButtonStyle())
             .padding(.top, 20)
+            .disabled(!friendsOnServer)
     }
 
     @ViewBuilder
@@ -318,7 +330,12 @@ struct PeopleView: View {
             ThirdTimeRow(intro: intro) { openIntro = intro }
                 .padding(.top, 12)
         }
-        if intros.isEmpty {
+        if intros.isEmpty, let why = friendsUnavailable {
+            Text(why)
+                .font(.system(size: 14))
+                .foregroundStyle(Palette.muted)
+                .padding(.top, 16)
+        } else if intros.isEmpty {
             Text("Nobody yet. Keep showing up.")
                 .font(.system(size: 15, weight: .semibold))
                 .padding(.top, 16)
@@ -331,7 +348,9 @@ struct PeopleView: View {
     private var crewsList: some View {
         let byID = Dictionary(people.map { ($0.id, $0.snapshot) }, uniquingKeysWith: { a, _ in a })
         if crews.isEmpty {
-            Text("A crew is the people you keep going out with. Wren can plan for a whole crew at once.")
+            Text(people.isEmpty
+                 ? "A crew is the people you keep going out with, so Wren can plan for all of you at once. Add a friend first, then make one."
+                 : "A crew is the people you keep going out with. Wren can plan for a whole crew at once.")
                 .font(.system(size: 14))
                 .foregroundStyle(Palette.muted)
                 .padding(.top, 8)
@@ -357,7 +376,7 @@ struct PeopleView: View {
         Button { makingCrew = true } label: { Label("New crew", systemImage: "plus") }
             .buttonStyle(SecondaryButtonStyle())
             .padding(.top, 16)
-            .disabled(people.isEmpty)
+            .disabled(people.isEmpty || !friendsOnServer)
     }
 
     // MARK: Actions
@@ -397,6 +416,8 @@ struct PorchLightCard: View {
     var until: Date?
     var now: Date
     var busy: Bool
+    /// Why it can't be turned on right now (no server, or one without friends yet).
+    var unavailable: String? = nil
     var onToggle: (Bool) -> Void
 
     var body: some View {
@@ -419,7 +440,7 @@ struct PorchLightCard: View {
                 Text("Porch light").font(.system(size: 17, weight: .bold))
                 Text(on
                      ? "On till \(HomeLine.clock(until ?? now)). Friends close by can see you're up for something."
-                     : "Off. Turn it on when you're up for something.")
+                     : unavailable ?? "Tells your friends you're up for something, for the next two hours. Only friends see it.")
                     .font(.system(size: 13))
                     .foregroundStyle(Palette.muted)
                     .fixedSize(horizontal: false, vertical: true)
@@ -428,7 +449,7 @@ struct PorchLightCard: View {
             Toggle("Porch light", isOn: Binding(get: { on }, set: { onToggle($0) }))
                 .labelsHidden()
                 .tint(Palette.porch)
-                .disabled(busy)
+                .disabled(busy || (unavailable != nil && !on))
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)

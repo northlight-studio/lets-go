@@ -10,6 +10,7 @@ struct NearbySheet: View {
     @Environment(LocationService.self) private var location
     @Query(sort: \Gathering.start) private var gatherings: [Gathering]
     @Query private var kitchens: [Kitchen]
+    @Query private var people: [Person]
 
     @FocusState private var searching: Bool
     @State private var hosting: GatheringDraft?
@@ -96,7 +97,7 @@ struct NearbySheet: View {
         if model.query.isEmpty {
             VStack(alignment: .leading, spacing: 0) {
                 header("Try")
-                ForEach(["Farmers market", "Trivia", "Run", "Salsa", "Free this weekend", "Pizza", "Halloween"], id: \.self) { s in
+                ForEach(["Farmers market", "Trivia", "Run", "Salsa", "Free this weekend", "Pizza", "Comedy"], id: \.self) { s in
                     Button { model.query = s } label: {
                         HStack(spacing: 12) {
                             Image(systemName: "magnifyingglass")
@@ -141,7 +142,8 @@ struct NearbySheet: View {
     /// The same window as the map: the rail's day, until the thumb, narrowed by the filters.
     private func nearby(now: Date) -> some View {
         let all = Nearby.candidates(gatherings: gatherings, kitchens: kitchens, from: location.center, now: now)
-        let shown = model.shown(all, now: now)
+        // Narrowed the same way as the map, so the two agree.
+        let shown = model.narrowed(model.shown(all, now: now), friends: people.map(\.snapshot))
         let span = model.span(now: now)
         let day = Timetable.label(model.railDay(now: now), now: now)
         return VStack(alignment: .leading, spacing: 0) {
@@ -155,10 +157,11 @@ struct NearbySheet: View {
             if shown.isEmpty {
                 VStack(alignment: .leading, spacing: 12) {
                     let inCity = CityListings.covers(location.center)
-                    Text(inCity ? "Nothing starts by then." : "Let's Go only knows San Francisco so far.")
+                    Text(model.isFiltered ? "Nothing matches." : inCity ? "Nothing starts by then." : "Let's Go only knows San Francisco so far.")
                         .font(.headline)
-                    Text(inCity ? "Drag the rail later or look at another day, or start something yourself."
-                                : "There are no listings here yet. Start something and it shows up for people nearby.")
+                    Text(model.isFiltered ? model.emptyReason(inCity: inCity, hasFriends: !people.isEmpty)
+                         : inCity ? "Drag the rail later or look at another day, or start something yourself."
+                                  : "There are no listings here yet. Start something and it shows up for people nearby.")
                         .font(.subheadline).foregroundStyle(Palette.muted)
                     Button { hosting = GatheringDraft.from(SearchQuery.parse("")) } label: {
                         Label("Host something", systemImage: "plus")
