@@ -1,10 +1,16 @@
 import SwiftUI
 import SwiftData
+import UserNotifications
 
 @main
 struct LetsGoApp: App {
     @State private var location = LocationService()
     @State private var sync = SyncStatus()
+
+    init() {
+        // Taps on the evening digest open Your block.
+        UNUserNotificationCenter.current().delegate = NotificationRouter.shared
+    }
 
     var body: some Scene {
         WindowGroup {

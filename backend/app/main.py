@@ -9,6 +9,7 @@ from app.config import settings
 from app.routes import (
     admin,
     batches,
+    block,
     discover,
     gatherings,
     kitchens,
@@ -44,6 +45,7 @@ app.include_router(gatherings.router)
 app.include_router(kitchens.router)
 app.include_router(orders.router)
 app.include_router(batches.router)
+app.include_router(block.router)
 app.include_router(payments.router)
 app.include_router(listings.router)
 app.include_router(people.router)

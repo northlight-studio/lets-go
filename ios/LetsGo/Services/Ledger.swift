@@ -20,6 +20,18 @@ enum Ledger {
         }
     }
 
+    // MARK: Your block
+
+    /// What you've seen on Your block (and what an evening digest told you), so nothing comes back
+    /// on another day. Kept on the phone only.
+    static func sawBlock(_ memory: Block.Memory, defaults: UserDefaults = .standard) {
+        do {
+            defaults.set(try JSONEncoder().encode(memory), forKey: BlockFeed.memoryKey)
+        } catch {
+            log.error("Save failed (block memory): \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
     // MARK: Gatherings
 
     static func join(_ g: Gathering, context: ModelContext) {

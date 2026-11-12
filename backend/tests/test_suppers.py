@@ -517,3 +517,24 @@ async def test_the_table_adds_each_other_as_friends(client, engine):
 async def test_unknown_supper(client):
     you = await make_user(client, "You")
     assert (await client.get(f"/v1/suppers/{uuid.uuid4()}", headers=you)).status_code == 404
+
+
+async def test_your_block_lists_a_supper_with_seats(client):
+    ana = await make_user(client, "Ana")
+    you = await make_user(client, "You")
+    s = await host(client, ana, seats=1)
+    q = {"lat": HERE[0], "lon": HERE[1]}
+    [row] = [
+        i
+        for i in (await client.get("/v1/me/block", params=q, headers=you)).json()["items"]
+        if i["kind"] == "supper"
+    ]
+    assert row["id"] == s["id"] and row["seats_left"] == 1 and row["price_cents"] == 1800
+    assert row["name"] == "Ana's kitchen" and row["title"] == s["title"] and row["walk_min"] is not None
+    # Not for the host, and gone once the seat is given.
+    host_rows = (await client.get("/v1/me/block", params=q, headers=ana)).json()["items"]
+    assert "supper" not in [i["kind"] for i in host_rows]
+    other = await make_user(client, "Other")
+    await accept(client, ana, (await ask(client, other, s))["my_seat"]["id"])
+    rows = (await client.get("/v1/me/block", params=q, headers=you)).json()["items"]
+    assert "supper" not in [i["kind"] for i in rows]
