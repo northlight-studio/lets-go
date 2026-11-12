@@ -28,13 +28,13 @@ struct PosterTests {
 
     @Test func onlyARealGatheringYouHostGetsAPoster() {
         let before = thursday(12)
-        #expect(PosterCopy.unavailable(game(), now: before) == nil)
-        #expect(PosterCopy.unavailable(game(mine: false), now: before) != nil)
-        #expect(PosterCopy.unavailable(game(onServer: false), now: before) != nil)
-        #expect(PosterCopy.unavailable(game(), now: thursday(21)) == "It's over.")
+        #expect(PosterCopy.unavailable(game(), now: before, serverHasPosters: true) == nil)
+        #expect(PosterCopy.unavailable(game(mine: false), now: before, serverHasPosters: true) != nil)
+        #expect(PosterCopy.unavailable(game(onServer: false), now: before, serverHasPosters: true) != nil)
+        #expect(PosterCopy.unavailable(game(), now: thursday(21), serverHasPosters: true) == "It's over.")
         let listing = game()
         listing.listingKey = "Pickup soccer|x"
-        #expect(PosterCopy.unavailable(listing, now: before) != nil)
+        #expect(PosterCopy.unavailable(listing, now: before, serverHasPosters: true) != nil)
     }
 
     @Test func theWordsMatchTheDrawing() {

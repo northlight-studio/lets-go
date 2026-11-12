@@ -17,7 +17,7 @@ struct BatchView: View {
             let now = timeline.date
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    BatchPhoto(path: drop.photoPath, title: drop.title, height: 300)
+                    BatchPhoto(path: drop.photoURL, title: drop.title, height: 300)
                     VStack(alignment: .leading, spacing: 16) {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(drop.isLive(at: now) ? "On now · until \(BatchCopy.hour(drop.end))" : BatchCopy.window(drop.start, drop.end, now: now))
@@ -221,7 +221,7 @@ struct ReserveBatchView: View {
         return ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 HStack(spacing: 12) {
-                    BatchPhoto(path: drop.photoPath, title: drop.title, height: 64, radius: 14)
+                    BatchPhoto(path: drop.photoURL, title: drop.title, height: 64, radius: 14)
                         .frame(width: 64)
                     VStack(alignment: .leading, spacing: 3) {
                         Text(drop.title).font(.system(size: 17, weight: .semibold)).lineLimit(2)

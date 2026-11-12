@@ -20,23 +20,13 @@ extension Sync {
         }
         let address = draft.address.trimmingCharacters(in: .whitespaces)
         let note = draft.pickupNote.trimmingCharacters(in: .whitespaces)
-        let dto: BatchDTO
-        do {
-            dto = try await api.send(.post("/v1/batches", NewBatchDTO(
-                title: draft.title.trimmingCharacters(in: .whitespaces), priceCents: price, total: draft.count,
-                unit: draft.unit.trimmingCharacters(in: .whitespaces), startsAt: w.start, endsAt: w.end,
-                pickupSpot: draft.spot.rawValue, tags: BatchDraft.tagOptions.filter { draft.tags.contains($0) },
-                permitConfirmed: draft.permitConfirmed, address: address.isEmpty ? nil : address,
-                pickupNote: note.isEmpty ? nil : note, lat: here.latitude, lon: here.longitude
-            )))
-        } catch {
-            // A server from before selling existed has no such route.
-            let e = (error as? APIError) ?? .offline(error.localizedDescription)
-            if case .rejected(404, _) = e {
-                throw .rejected(status: 404, reason: "The server doesn't have selling yet. It needs its latest update.")
-            }
-            throw e
-        }
+        let dto: BatchDTO = try await api.send(.post("/v1/batches", NewBatchDTO(
+            title: draft.title.trimmingCharacters(in: .whitespaces), priceCents: price, total: draft.count,
+            unit: draft.unit.trimmingCharacters(in: .whitespaces), startsAt: w.start, endsAt: w.end,
+            pickupSpot: draft.spot.rawValue, tags: BatchDraft.tagOptions.filter { draft.tags.contains($0) },
+            permitConfirmed: draft.permitConfirmed, address: address.isEmpty ? nil : address,
+            pickupNote: note.isEmpty ? nil : note, lat: here.latitude, lon: here.longitude
+        )))
 
         let kitchen: Kitchen
         if let mine {
@@ -62,7 +52,7 @@ extension Sync {
     static func upload(_ jpeg: Data, for drop: Drop, context: ModelContext) async throws(APIError) {
         guard let id = drop.remoteID else { throw .notConfigured }
         let p: PhotoDTO = try await api.send(.upload("/v1/drops/\(id.uuidString)/photo", jpeg: jpeg))
-        drop.photoPath = p.photoUrl
+        drop.photoURL = p.photoUrl
         Ledger.save(context, "batch photo")
     }
 
@@ -131,7 +121,7 @@ extension Sync {
         if let t = dto.title { order.title = t }
         if let u = dto.unit { order.unit = u }
         if let s = dto.pickupSpot { order.pickupSpot = s }
-        if dto.photoUrl != nil { order.photoPath = dto.photoUrl }
+        if dto.photoUrl != nil { order.photoURL = dto.photoUrl }
         if let a = dto.address { order.address = a }
         if let lat = dto.lat, let lon = dto.lon {
             order.exactLatitude = lat
@@ -170,12 +160,6 @@ extension Sync {
     }
 
     // MARK: The cook's side
-
-    /// Every confirmed order on your kitchen, with the buyer's name and code. Read straight from the
-    /// server; nothing of other people's orders is kept on this phone.
-    static func kitchenOrders() async throws(APIError) -> [OrderDTO] {
-        try await api.send(.get("/v1/kitchens/me/orders"))
-    }
 
     /// Hands an order over: marks it picked up (and checks the code, if one was typed).
     static func handOver(_ orderID: UUID, code: String?) async throws(APIError) -> OrderDTO {

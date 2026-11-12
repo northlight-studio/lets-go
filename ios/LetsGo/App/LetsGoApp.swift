@@ -17,6 +17,7 @@ struct LetsGoApp: App {
         .modelContainer(for: [
             Gathering.self, Kitchen.self, MenuItem.self, Drop.self,
             Order.self, Review.self, Stamp.self, TasteNote.self, Person.self, Crew.self, SavedPlan.self, Night.self, Intro.self,
+            UpMatch.self,
         ])
     }
 }

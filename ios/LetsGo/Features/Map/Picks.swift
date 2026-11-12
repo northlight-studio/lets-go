@@ -31,6 +31,10 @@ struct Candidate: Identifiable, Hashable, Sendable {
     var lon: Double = 0
     /// Friends the server says are going (`Person.id`s).
     var friendIDs: [UUID] = []
+    /// A kitchen's drop photo, when the cook has posted one.
+    var photoURL: URL?
+    /// A kitchen's dish, for its pin until there's a photo: "🍕".
+    var glyph: String = ""
     var isFree: Bool { kind == .gathering && (priceText.isEmpty || priceText.lowercased().hasPrefix("free")) }
 }
 
@@ -49,15 +53,19 @@ extension Candidate {
 
     init?(_ k: Kitchen, from here: CLLocationCoordinate2D, now: Date) {
         guard let drop = k.nextDrop(after: now) else { return nil }
+        // A batch ("Sell something") is one thing: its title, its price, and the kitchen as the place.
         self.init(
-            id: k.id, kind: .drop, title: k.name, category: .food,
+            id: k.id, kind: .drop, title: drop.isBatch ? drop.title : k.name, category: .food,
             start: drop.start, end: drop.end, meters: here.distance(to: k.coordinate),
             dropLeft: drop.left, dropTotal: drop.total,
-            priceFromCents: k.menu.map(\.priceCents).min(),
-            place: k.cuisine,
-            searchText: ([k.name, k.cookName, k.cuisine, k.story, "food home cooking kitchen"] + k.menu.map { "\($0.name) \($0.note)" })
+            priceFromCents: drop.isBatch ? drop.priceCents : k.menu.map(\.priceCents).min(),
+            place: drop.isBatch ? k.name : k.cuisine,
+            searchText: ([drop.title, k.name, k.cookName, k.cuisine, k.story, "food home cooking kitchen"] + drop.tags + k.menu.map { "\($0.name) \($0.note)" })
                 .joined(separator: " ").lowercased(),
-            lat: k.latitude, lon: k.longitude
+            lat: k.latitude, lon: k.longitude,
+            // The server sends it relative to itself ("/v1/photos/…").
+            photoURL: APIConfig.resolve(drop.photoURL),
+            glyph: KitchenLook.glyph(for: drop.isBatch ? drop.title : k.cuisine)
         )
     }
 }

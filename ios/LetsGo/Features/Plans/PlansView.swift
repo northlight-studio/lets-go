@@ -62,7 +62,7 @@ struct PlansView: View {
         }
         .sheet(isPresented: $hosting) { NewGatheringView(draft: nil) }
         .sheet(isPresented: $selling) { SellView() }
-        .task { if let n = try? await Sync.notes() { notes = n } }
+        .task { if ServerFeatures.shared.has(.selling), let n = try? await Sync.notes() { notes = n } }
     }
 
     // MARK: Kitchens you follow
@@ -115,8 +115,8 @@ struct PlansView: View {
 
     @ViewBuilder
     private func planned(now: Date) -> some View {
-        let today = Calendar.current.startOfDay(for: now)
-        let upcoming = plans.filter { $0.day >= today }
+        // Over two hours after its last stop starts, a plan is history, not something to go to.
+        let upcoming = plans.filter { ($0.stops.last?.start ?? $0.day.addingTimeInterval(86_400)).addingTimeInterval(2 * 3600) > now }
         if !upcoming.isEmpty {
             sectionHeader("Your plans", detail: "Wren does the logistics. You show up.")
             VStack(spacing: 10) {
@@ -269,7 +269,7 @@ struct PlansView: View {
         var parts: [String] = []
         if taste.weight(c.category) >= 0.5 { parts.append("You keep showing up to \(c.category.noun).") }
         if let spots = c.spotsLeft, spots <= 3 { parts.append(spots == 1 ? "One spot left." : "\(spots) spots left.") }
-        if let left = c.dropLeft, left <= 10 { parts.append("\(left) left in the drop.") }
+        if let left = c.dropLeft, left <= 10 { parts.append("\(left) left in this batch.") }
         if c.walkMinutes <= 10 { parts.append("It's a \(c.walkMinutes)-minute walk.") }
         if parts.isEmpty {
             let reason = Picks.reason(c, now: now)
@@ -310,7 +310,8 @@ struct PlansView: View {
     private func week(now: Date) -> some View {
         let cal = Calendar.current
         let today = cal.startOfDay(for: now)
-        let selected = day ?? today
+        // A day picked earlier that has since passed falls back to today.
+        let selected = day.flatMap { $0 >= today ? $0 : nil } ?? today
         let real = gatherings.filter { $0.isShown(at: now) }.map { Candidate($0, from: location.center) }
         let items = Today.happening(real, on: selected, now: now)
         let shown = showWholeDay ? items : Array(items.prefix(8))
@@ -406,8 +407,14 @@ struct PlansView: View {
             }
             .scrollIndicators(.hidden)
         } else {
-            sectionHeader("Home kitchens near you", detail: "No kitchens nearby yet. When a neighbor posts a batch, it shows up here.",
-                          action: "Open yours") { path.append(MyKitchenRoute()) }
+            if orders.contains(where: { $0.status == .pickedUp }) {
+                // A pickup still waiting for its review lives in All kitchens → Your orders.
+                sectionHeader("Home kitchens near you", detail: "No drops coming up nearby. Your orders are in here.",
+                              action: "All kitchens") { path.append(KitchensRoute()) }
+            } else {
+                sectionHeader("Home kitchens near you", detail: "No kitchens nearby yet. When a neighbor posts a batch, it shows up here.",
+                              action: "Open yours") { path.append(MyKitchenRoute()) }
+            }
         }
         sellCard
     }

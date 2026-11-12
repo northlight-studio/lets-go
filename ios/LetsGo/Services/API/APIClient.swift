@@ -34,16 +34,25 @@ nonisolated enum APIError: LocalizedError, Equatable {
     case server(status: Int)
     case offline(String)
     case decoding(String)
+    /// The server is an older build without this route ("Not Found" from FastAPI itself, not from us).
+    case notOnServer(path: String)
 
     var errorDescription: String? {
         switch self {
         case .notConfigured: "No server is set up."
         case .unauthorized: "Your session expired. Try again."
         case .rejected(_, let reason): reason
-        case .server(let status): "The server had a problem (\(status)). Try again in a bit."
-        case .offline(let message): "Couldn't reach the server: \(message)"
-        case .decoding: "The server sent something this version doesn't understand."
+        case .server: "Something went wrong on the server. Try again in a bit."
+        case .offline: "Couldn't reach Let's Go. Check your connection and try again."
+        case .decoding: "The server sent something this version doesn't understand. Try again after the next update."
+        case .notOnServer(let path):
+            ServerFeatures.Feature.owning(path)?.comingSoon ?? "That needs the new server. It's coming soon."
         }
+    }
+
+    /// The server doesn't have this yet: say so where the feature is, not as a failure.
+    var isNotOnServer: Bool {
+        if case .notOnServer = self { true } else { false }
     }
 }
 
@@ -154,6 +163,15 @@ final class APIClient {
     }
 
     func send<R>(_ endpoint: Endpoint<R>) async throws(APIError) -> R {
+        do {
+            return try await sendOnce(endpoint)
+        } catch {
+            if case .notOnServer(let path) = error { ServerFeatures.shared.noteMissing(path: path) }
+            throw error
+        }
+    }
+
+    private func sendOnce<R>(_ endpoint: Endpoint<R>) async throws(APIError) -> R {
         guard let base = APIConfig.baseURL else { throw .notConfigured }
         let token = try await ensureToken(base: base)
         do {
@@ -204,7 +222,10 @@ final class APIClient {
                 case 401:
                     throw APIError.unauthorized
                 case 400..<500:
-                    throw APIError.rejected(status: status, reason: Self.reason(from: data) ?? "That didn't work (\(status)).")
+                    let reason = Self.reason(from: data)
+                    // FastAPI's own answer for a route it doesn't have. Ours always say more.
+                    if Self.isMissingRoute(status: status, reason: reason) { throw APIError.notOnServer(path: e.path) }
+                    throw APIError.rejected(status: status, reason: reason ?? "That didn't work. Try again.")
                 default:
                     if attempt < e.retries { attempt += 1; try? await Task.sleep(for: .seconds(attempt)); continue }
                     throw APIError.server(status: status)
@@ -217,6 +238,11 @@ final class APIClient {
                 throw APIError.offline(error.localizedDescription)
             }
         }
+    }
+
+    /// True for FastAPI's default answer to a path or method it has no route for.
+    nonisolated static func isMissingRoute(status: Int, reason: String?) -> Bool {
+        (status == 404 && reason == "Not Found") || (status == 405 && reason == "Method Not Allowed")
     }
 
     /// FastAPI errors look like {"detail": "It's full"} or {"detail": [{"msg": …}]}.

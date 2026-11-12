@@ -161,6 +161,20 @@ struct BatchTests {
         #expect(PayMode(rawValue: "in_app") == .inApp)
     }
 
+    // MARK: An older server
+
+    @Test func sellingRoutesBelongToSelling() {
+        typealias F = ServerFeatures.Feature
+        #expect(F.owning("/v1/batches") == .selling)
+        #expect(F.owning("/v1/drops/\(UUID().uuidString)/photo") == .selling)
+        #expect(F.owning("/v1/orders/\(UUID().uuidString)/pay") == .selling)
+        #expect(F.owning("/v1/kitchens/\(UUID().uuidString)/follow") == .selling)
+        #expect(F.owning("/v1/kitchens/me/orders/\(UUID().uuidString)/picked-up") == .selling)
+        #expect(F.owning("/v1/kitchens/me/orders") == nil)
+        #expect(F.owning("/v1/orders/\(UUID().uuidString)/picked-up") == nil)
+        #expect(F.missing(in: ["/v1/nearby"]).contains(.selling))
+    }
+
     // MARK: Slots
 
     @Test func openSlotsSkipFullAndPast() {

@@ -74,6 +74,13 @@ enum Ledger {
 
     // MARK: Posters
 
+    /// A gathering that's gone: cancelled here, or by its host on the server.
+    /// Kept if you showed up, so its stamp keeps a home.
+    static func cancel(_ g: Gathering, context: ModelContext) {
+        if g.checkedInAt == nil { context.delete(g) } else { g.isJoined = false }
+        save(context, "cancel gathering")
+    }
+
     static func poster(_ g: Gathering, code: String, url: String, shortText: String, context: ModelContext) {
         g.posterCode = code
         g.posterURL = url

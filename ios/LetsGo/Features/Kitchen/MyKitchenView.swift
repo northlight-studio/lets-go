@@ -34,7 +34,7 @@ private struct OpenKitchenForm: View {
     var body: some View {
         Form {
             Section {
-                Text("Sell what you're good at making to people a few blocks away. You set the batch, the time and the price; people reserve and pick up at your door.")
+                Text("Sell what you're good at making to people a few blocks away. You post a drop (a set batch, ready at a set time, at your price); people reserve a pickup slot and collect it at your door.")
                     .font(.system(size: 14)).foregroundStyle(Palette.muted)
                 Button { selling = true } label: { Label("Sell something", systemImage: "camera") }
                     .fontWeight(.semibold)
@@ -46,13 +46,19 @@ private struct OpenKitchenForm: View {
                 TextField("What you make, like \"Ice cream\"", text: $cuisine)
                 TextField("A line about it", text: $story, axis: .vertical).lineLimit(2...4)
             }
+            .onChange(of: name) { _, v in name = KitchenLimits.clip(v, KitchenLimits.name) }
+            .onChange(of: cuisine) { _, v in cuisine = KitchenLimits.clip(v, KitchenLimits.cuisine) }
+            .onChange(of: story) { _, v in story = KitchenLimits.clip(v, KitchenLimits.story) }
+            .onChange(of: pickupNote) { _, v in pickupNote = KitchenLimits.clip(v, KitchenLimits.pickupNote) }
             Section {
                 TextField("Where to pick up, like \"Blue back gate off the alley\"", text: $pickupNote, axis: .vertical)
                 Stepper(porchTables == 0 ? "No seating" : "\(porchTables) porch tables", value: $porchTables, in: 0...8)
             } header: {
                 Text("Pickup")
             } footer: {
-                Text("Your kitchen sits on the map where you are now. The pickup note only shows to people who've reserved.")
+                Text(location.isUsingFallback
+                     ? "Your kitchen sits on the map where you are now, so Let's Go needs your location first. Turn it on in Settings."
+                     : "Your kitchen sits on the map where you are now. The pickup note only shows to people who've reserved.")
             }
             Section {
                 Toggle("I have a home kitchen permit for my county", isOn: $permit)
@@ -60,12 +66,12 @@ private struct OpenKitchenForm: View {
             } header: {
                 Text("Permits")
             } footer: {
-                Text("Selling food from home needs a permit in most places. In California that's a MEHKO permit, where your county offers one; cottage-food rules elsewhere usually don't cover dairy or full meals.")
+                Text("Selling food from home needs a permit in most places. In California that's a MEHKO (microenterprise home kitchen) permit, where your county offers one; cottage-food rules elsewhere usually don't cover dairy or full meals.")
             }
             Section {
                 Button("Open my kitchen") { open() }
                     .fontWeight(.bold)
-                    .disabled(opening || name.trimmingCharacters(in: .whitespaces).isEmpty || cuisine.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .disabled(opening || location.isUsingFallback || name.trimmingCharacters(in: .whitespaces).isEmpty || cuisine.trimmingCharacters(in: .whitespaces).isEmpty)
             }
         }
         .scrollContentBackground(.hidden)
@@ -102,8 +108,9 @@ private struct KitchenDashboard: View {
     @State private var postingDrop = false
     @State private var selling = false
     @State private var problem: String?
-    /// Every confirmed order on the kitchen, from the server, with names and codes.
-    @State private var orders: [OrderDTO] = []
+    /// Everyone's orders here, from the server, with names and pickup codes.
+    @State private var orders: [OrderDTO]?
+    @State private var ordersProblem: String?
     @State private var handing: Set<UUID> = []
     @State private var payouts: PayoutsDTO?
     @Environment(\.openURL) private var openURL
@@ -129,6 +136,9 @@ private struct KitchenDashboard: View {
                 ForEach(batches(now: now)) { batchCard($0, now: now) }
                 payoutsCard
                 stats
+                if let ordersProblem {
+                    Text(ordersProblem).font(.system(size: 13)).foregroundStyle(Palette.muted)
+                }
                 dropSection(now: now)
                 if let tip = tip(now: now) { TipNote(text: tip) }
                 menuSection
@@ -138,18 +148,23 @@ private struct KitchenDashboard: View {
         }
         .sheet(isPresented: $addingItem) { AddMenuItemView(kitchen: kitchen) }
         .sheet(isPresented: $postingDrop) { PostDropView(kitchen: kitchen) }
-        .sheet(isPresented: $selling, onDismiss: { Task { await load() } }) { SellView() }
+        .sheet(isPresented: $selling, onDismiss: { Task { await loadOrders() } }) { SellView() }
         .errorAlert($problem)
-        .refreshable { await load() }
+        .refreshable { await loadOrders() }
         .task {
-            try? await Sync.refresh(kitchen, context: context)
-            await load()
+            await Sync.refreshQuietly(kitchen, context: context)
+            await loadOrders()
         }
     }
 
-    private func load() async {
+    private func loadOrders() async {
+        do {
+            orders = try await Sync.kitchenOrders(kitchen)
+            ordersProblem = nil
+        } catch {
+            ordersProblem = "Couldn't load your orders. \(error.localizedDescription)"
+        }
         guard kitchen.remoteID != nil else { return }
-        if let o = try? await Sync.kitchenOrders() { orders = o }
         if let p = try? await Sync.payouts() { payouts = p }
         for d in batches(now: .now) { try? await Sync.refresh(batch: d, context: context) }
     }
@@ -162,11 +177,11 @@ private struct KitchenDashboard: View {
     }
 
     private func batchCard(_ drop: Drop, now: Date) -> some View {
-        let mine = orders.filter { $0.dropId == drop.remoteID }
+        let mine = (orders ?? []).filter { $0.dropId == drop.remoteID }
         let waiting = mine.filter { $0.status == "reserved" }
         return VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
-                BatchPhoto(path: drop.photoPath, title: drop.title, height: 64, radius: 14).frame(width: 64)
+                BatchPhoto(path: drop.photoURL, title: drop.title, height: 64, radius: 14).frame(width: 64)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(drop.isLive(at: now) ? "Live now" : BatchCopy.window(drop.start, drop.end, now: now))
                         .eyebrow(drop.isLive(at: now) ? Palette.accentSoft : Palette.muted)
@@ -196,13 +211,14 @@ private struct KitchenDashboard: View {
     }
 
     private func orderRow(_ o: OrderDTO) -> some View {
-        let qty = o.lines.reduce(0) { $0 + $1.quantity }
+        let qty = o.lines.reduce(0) { total, line in total + line.quantity }
         let done = o.status != "reserved"
+        let paid = o.payment == PaymentState.paid.rawValue
         return HStack(spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(o.buyerName ?? "Someone") · \(BatchCopy.count(qty, o.unit ?? ""))")
                     .font(.system(size: 15, weight: .semibold))
-                Text("\(o.pickupAt.formatted(date: .omitted, time: .shortened)) · \(o.payment == PaymentState.paid.rawValue ? "paid" : "pays \(Pricing.format(o.totalCents)) at pickup")")
+                Text("\(o.pickupAt.formatted(date: .omitted, time: .shortened)) · \(paid ? "paid" : "pays \(Pricing.format(o.totalCents)) at pickup")")
                     .font(.system(size: 12)).foregroundStyle(Palette.muted)
             }
             Spacer(minLength: 6)
@@ -230,7 +246,7 @@ private struct KitchenDashboard: View {
         Task {
             await attempt($problem) { () throws(APIError) in
                 let done = try await Sync.handOver(o.id, code: nil)
-                if let i = orders.firstIndex(where: { $0.id == done.id }) { orders[i] = done }
+                if let i = orders?.firstIndex(where: { $0.id == done.id }) { orders?[i] = done }
             }
             handing.remove(o.id)
         }
@@ -268,15 +284,16 @@ private struct KitchenDashboard: View {
             await attempt($problem) { () throws(APIError) in
                 let p = try await Sync.setUpPayouts()
                 payouts = p
-                if let link = p.onboardingUrl.flatMap { URL(string: $0) } { openURL(link) }
+                if let link = p.onboardingUrl.flatMap({ URL(string: $0) }) { openURL(link) }
             }
         }
     }
 
-    /// Handed over so far, from the server's orders (what the cook gets: the food, not the service fee).
+    /// Picked up (or reviewed): sold. From the server when it has your kitchen; a phone-only
+    /// kitchen has nobody else ordering from it.
     private var stats: some View {
-        let done = orders.filter { $0.status != "reserved" }
-        let items = done.reduce(0) { $0 + $1.lines.reduce(0) { $0 + $1.quantity } }
+        let done = (orders ?? []).filter { $0.status != "reserved" }
+        let items = done.reduce(0) { total, o in total + o.lines.reduce(0) { $0 + $1.quantity } }
         let paid = done.reduce(0) { $0 + $1.subtotalCents }
         return HStack(spacing: 8) {
             stat("\(items)", "sold")
@@ -308,8 +325,12 @@ private struct KitchenDashboard: View {
                         Text("\(drop.sold) / \(drop.total) reserved").font(.label).foregroundStyle(Genre.food.color)
                     }
                     LeftBar(left: drop.left, total: drop.total)
-                    let upcoming = kitchen.orders.filter { $0.status == .reserved }.sorted { $0.pickupAt < $1.pickupAt }
-                    ForEach(upcoming) { o in
+                    let upcoming = (orders ?? []).filter { $0.status == "reserved" && $0.dropId == drop.remoteID }
+                        .sorted { $0.pickupAt < $1.pickupAt }
+                    if upcoming.isEmpty {
+                        Text("No pickups reserved yet.").font(.system(size: 13)).foregroundStyle(Palette.muted)
+                    }
+                    ForEach(upcoming, id: \.id) { o in
                         HStack {
                             Text(o.pickupAt.formatted(date: .omitted, time: .shortened)).font(.system(size: 13, design: .monospaced))
                             Text(o.lines.map { "\($0.quantity)× \($0.name)" }.joined(separator: ", ")).font(.system(size: 13)).lineLimit(1)
@@ -326,9 +347,14 @@ private struct KitchenDashboard: View {
                 Label("Post a drop from the menu", systemImage: "plus")
             }
             .buttonStyle(SecondaryButtonStyle())
-            .disabled(kitchen.menu.isEmpty)
+            .disabled(kitchen.menu.isEmpty || !permitted)
             if kitchen.menu.isEmpty {
                 Text("Add something to the menu first.").font(.system(size: 12)).foregroundStyle(Palette.muted)
+            } else if !permitted {
+                Text("Tick your permit and food handler card in the checklist first.").font(.system(size: 12)).foregroundStyle(Palette.muted)
+            } else {
+                Text("A drop is a set batch, ready at a set time. Neighbors reserve a 15-minute pickup slot.")
+                    .font(.system(size: 12)).foregroundStyle(Palette.muted)
             }
         }
     }
@@ -361,8 +387,12 @@ private struct KitchenDashboard: View {
     private var checklist: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Checklist").eyebrow()
-            check("Home kitchen permit", kitchen.permitConfirmed) { kitchen.permitConfirmed.toggle(); savePermits() }
-            check("Food handler card", kitchen.handlerCardConfirmed) { kitchen.handlerCardConfirmed.toggle(); savePermits() }
+            check("Home kitchen permit", kitchen.permitConfirmed) {
+                savePermits(permit: !kitchen.permitConfirmed, card: kitchen.handlerCardConfirmed)
+            }
+            check("Food handler card", kitchen.handlerCardConfirmed) {
+                savePermits(permit: kitchen.permitConfirmed, card: !kitchen.handlerCardConfirmed)
+            }
             check("Something on the menu", !kitchen.menu.isEmpty, action: nil)
         }
     }
@@ -380,8 +410,16 @@ private struct KitchenDashboard: View {
         .disabled(action == nil)
     }
 
-    private func savePermits() {
-        Task { await attempt($problem) { () throws(APIError) in try await Sync.savePermits(kitchen, context: context) } }
+    /// Only a kitchen with both can post drops (the server checks too).
+    private var permitted: Bool { kitchen.permitConfirmed && kitchen.handlerCardConfirmed }
+
+    /// Ticks on the phone only once the server has them, so a failed save doesn't leave a box ticked.
+    private func savePermits(permit: Bool, card: Bool) {
+        Task {
+            await attempt($problem) { () throws(APIError) in
+                try await Sync.savePermits(kitchen, permit: permit, card: card, context: context)
+            }
+        }
     }
 
     /// One suggestion from how the last finished drop went.
@@ -407,12 +445,15 @@ private struct AddMenuItemView: View {
     @State private var note = ""
     @State private var price = 10.0
     @State private var problem: String?
+    @State private var saving = false
 
     var body: some View {
         NavigationStack {
             Form {
                 TextField("Name", text: $name)
+                    .onChange(of: name) { _, v in name = KitchenLimits.clip(v, KitchenLimits.itemName) }
                 TextField("A short note (optional)", text: $note)
+                    .onChange(of: note) { _, v in note = KitchenLimits.clip(v, KitchenLimits.itemNote) }
                 Stepper("Price: \(Pricing.format(Int(price * 100)))", value: $price, in: 1...200, step: 0.5)
             }
             .scrollContentBackground(.hidden)
@@ -424,14 +465,16 @@ private struct AddMenuItemView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
                         let item = MenuItem(name: name.trimmingCharacters(in: .whitespaces), note: note, priceCents: Int(price * 100), sortIndex: kitchen.menu.count)
+                        saving = true
                         Task {
                             await attempt($problem) { () throws(APIError) in
                                 try await Sync.add(item, to: kitchen, context: context)
                                 dismiss()
                             }
+                            saving = false
                         }
                     }
-                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .disabled(saving || name.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
             .errorAlert($problem)
@@ -449,6 +492,7 @@ private struct PostDropView: View {
     @State private var total = 12
     @State private var perSlot = 4
     @State private var problem: String?
+    @State private var saving = false
 
     var body: some View {
         NavigationStack {
@@ -467,13 +511,16 @@ private struct PostDropView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Post") {
                         let d = Drop(start: start, end: start.addingTimeInterval(hours * 3600), total: total, perSlot: perSlot)
+                        saving = true
                         Task {
                             await attempt($problem) { () throws(APIError) in
                                 try await Sync.post(d, to: kitchen, context: context)
                                 dismiss()
                             }
+                            saving = false
                         }
                     }
+                    .disabled(saving)
                 }
             }
             .errorAlert($problem)

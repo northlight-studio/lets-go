@@ -355,7 +355,6 @@ struct PlanView: View {
 
     private func confirm() {
         plan.confirmed = true
-        if plan.askedAt == nil { plan.askedAt = .now }
         Ledger.save(context, "confirm plan")
         if let e = plan.event, let g = gatherings.first(where: { $0.id == e.gatheringID }), !g.isJoined { join(g) }
     }

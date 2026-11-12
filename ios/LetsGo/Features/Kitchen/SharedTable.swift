@@ -112,7 +112,7 @@ struct SharedTableCard: View {
     }
 }
 
-/// Kenji's garage with the door up: a long table lit from inside, string lights, steam.
+/// a garage with the door up: a long table lit from inside, string lights, steam.
 struct GarageArt: View {
     var sign: String
     @State private var on = false

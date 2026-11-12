@@ -27,7 +27,7 @@ struct PickupView: View {
                         .display(30)
                 }
                 HStack(spacing: 12) {
-                    BatchPhoto(path: order.photoPath, title: order.title, height: 56, radius: 12)
+                    BatchPhoto(path: order.photoURL, title: order.title, height: 56, radius: 12)
                         .frame(width: 56)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(order.title.isEmpty ? order.lines.map(\.name).joined(separator: ", ") : order.title)

@@ -26,6 +26,8 @@ struct SellView: View {
     @FocusState private var focused: Bool
 
     private var kitchen: Kitchen? { mine.first }
+    /// The live server may be an older build without selling: say so instead of failing at Post.
+    private var serverReady: Bool { ServerFeatures.shared.has(.selling) }
     private var needsAddress: Bool { kitchen?.address.isEmpty ?? true }
     private var needsPermit: Bool { !(kitchen.map { $0.permitConfirmed && $0.handlerCardConfirmed } ?? false) }
 
@@ -45,7 +47,7 @@ struct SellView: View {
                 if posted == nil {
                     ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("Post") { post() }.disabled(posting)
+                        Button("Post") { post() }.disabled(posting || !serverReady)
                     }
                 }
             }
@@ -74,6 +76,7 @@ struct SellView: View {
     private var form: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
+                if !serverReady { TipNote(text: ServerFeatures.Feature.selling.comingSoon) }
                 photo
                 VStack(spacing: 0) {
                     row("What") {
@@ -116,7 +119,7 @@ struct SellView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Button(posting ? "Posting…" : "Put it on the map") { post() }
                         .buttonStyle(PrimaryButtonStyle())
-                        .disabled(posting)
+                        .disabled(posting || !serverReady)
                     Text("Neighbors within a 15-minute walk see it first. People who follow your kitchen get a note.")
                         .font(.system(size: 13))
                         .foregroundStyle(Palette.muted)
@@ -287,7 +290,7 @@ struct SellView: View {
 
     private func postedView(_ drop: Drop) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            BatchPhoto(path: drop.photoPath, title: drop.title, height: 220, radius: 20)
+            BatchPhoto(path: drop.photoURL, title: drop.title, height: 220, radius: 20)
             Text("It's on the map").display(30)
             Text("\(drop.title), \(BatchCopy.left(drop.left, of: drop.total, unit: drop.unit).lowercased()). \(BatchCopy.window(drop.start, drop.end, now: .now)).")
                 .font(.system(size: 16))

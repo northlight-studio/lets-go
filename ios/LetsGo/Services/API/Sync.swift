@@ -40,9 +40,10 @@ enum Sync {
                 context.insert(g)
             }
         }
-        // Gone from the server's answer: cancelled, ended or out of range.
-        // Keep the ones you showed up to, so their stamps keep a home.
-        for g in byID.values where g.checkedInAt == nil { context.delete(g) }
+        // Gone from the server's answer: cancelled, ended or out of range. Nearby only looks a day
+        // and a half ahead and a walk around you, so keep what you host or joined (pruning takes
+        // those off once they end) and the ones you showed up to, so their stamps keep a home.
+        for g in byID.values where g.checkedInAt == nil && !g.isMine && !g.isJoined { context.delete(g) }
 
         let localKitchens = fetch(context, FetchDescriptor<Kitchen>(predicate: #Predicate { $0.remoteID != nil }))
         let kitchensByID = Dictionary(localKitchens.compactMap { k in k.remoteID.map { ($0, k) } }, uniquingKeysWith: { a, _ in a })
@@ -58,7 +59,27 @@ enum Sync {
         guard let id = kitchen.remoteID else { return }
         let dto: KitchenDTO = try await api.send(.get("/v1/kitchens/\(id.uuidString)"))
         update(kitchen, from: dto, context: context)
+        if dto.table == nil {
+            // No porch table for the next drop: last drop's seats and friends don't carry over.
+            kitchen.tableTaken = 0
+            kitchen.tableFriends = []
+        }
         Ledger.save(context, "refresh kitchen")
+    }
+
+    /// Like `refresh`, for a screen opening: a failure is logged and the phone's copy stays.
+    static func refreshQuietly(_ kitchen: Kitchen, context: ModelContext) async {
+        do {
+            try await refresh(kitchen, context: context)
+        } catch {
+            log.error("Refreshing \(kitchen.name, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    /// Every order at your kitchen, from the server: what sold, and who's picking up when.
+    static func kitchenOrders(_ k: Kitchen) async throws(APIError) -> [OrderDTO]? {
+        guard k.isMine, k.remoteID != nil else { return nil }
+        return try await api.send(.get("/v1/kitchens/me/orders"))
     }
 
     static func saveName(_ name: String) async throws(APIError) {
@@ -84,22 +105,34 @@ enum Sync {
 
     static func cancel(_ g: Gathering, context: ModelContext) async throws(APIError) {
         if let id = g.remoteID {
-            let _: Empty = try await api.send(.delete("/v1/gatherings/\(id.uuidString)"))
+            do {
+                let _: Empty = try await api.send(.delete("/v1/gatherings/\(id.uuidString)"))
+            } catch .rejected(404, _) {
+                // Already gone on the server.
+            }
         }
-        context.delete(g)
-        Ledger.save(context, "cancel gathering")
+        Ledger.cancel(g, context: context)
     }
 
     static func join(_ g: Gathering, context: ModelContext) async throws(APIError) {
         if let id = g.remoteID {
-            update(g, from: try await api.send(.post("/v1/gatherings/\(id.uuidString)/join")))
+            do {
+                update(g, from: try await api.send(.post("/v1/gatherings/\(id.uuidString)/join")))
+            } catch .rejected(404, _) {
+                // The next pull takes it off the map; deleting it here would pull it out from under its page.
+                throw .rejected(status: 404, reason: "It's been called off.")
+            }
         }
         Ledger.join(g, context: context)
     }
 
     static func leave(_ g: Gathering, context: ModelContext) async throws(APIError) {
         if let id = g.remoteID {
-            update(g, from: try await api.send(.delete("/v1/gatherings/\(id.uuidString)/join")))
+            do {
+                update(g, from: try await api.send(.delete("/v1/gatherings/\(id.uuidString)/join")))
+            } catch .rejected(404, _) {
+                // Called off on the server: nothing left to leave there.
+            }
         }
         Ledger.leave(g, context: context)
     }
@@ -139,22 +172,41 @@ enum Sync {
 
     static func open(_ k: Kitchen, context: ModelContext) async throws(APIError) {
         if APIConfig.isConfigured {
-            let dto: KitchenDTO = try await api.send(.post("/v1/kitchens", NewKitchenDTO(
-                name: k.name, cuisine: k.cuisine, story: k.story, lat: k.latitude, lon: k.longitude,
-                pickupNote: k.pickupNote, porchTables: k.porchTables,
-                permitConfirmed: k.permitConfirmed, handlerCardConfirmed: k.handlerCardConfirmed
-            )))
+            let dto: KitchenDTO
+            do {
+                dto = try await api.send(.post("/v1/kitchens", NewKitchenDTO(
+                    name: k.name, cuisine: k.cuisine, story: k.story, lat: k.latitude, lon: k.longitude,
+                    pickupNote: k.pickupNote, porchTables: k.porchTables,
+                    permitConfirmed: k.permitConfirmed, handlerCardConfirmed: k.handlerCardConfirmed
+                )))
+            } catch .rejected(409, _) {
+                // You opened one before (another phone, or before a reinstall): take that one back.
+                let existing: KitchenDTO = try await api.send(.get("/v1/kitchens/me"))
+                if let local = fetch(context, FetchDescriptor<Kitchen>()).first(where: { $0.remoteID == existing.id }) {
+                    update(local, from: existing, context: context)
+                    Ledger.save(context, "adopt kitchen")
+                    return
+                }
+                let adopted = insertKitchen(existing, context: context)
+                update(adopted, from: existing, context: context)
+                adopted.permitConfirmed = existing.permitted || k.permitConfirmed
+                adopted.handlerCardConfirmed = existing.permitted || k.handlerCardConfirmed
+                Ledger.openKitchen(adopted, context: context)
+                return
+            }
             k.remoteID = dto.id
         }
         Ledger.openKitchen(k, context: context)
     }
 
-    static func savePermits(_ k: Kitchen, context: ModelContext) async throws(APIError) {
+    static func savePermits(_ k: Kitchen, permit: Bool, card: Bool, context: ModelContext) async throws(APIError) {
         if k.remoteID != nil {
             let _: KitchenDTO = try await api.send(.patch("/v1/kitchens/me", KitchenPermitsDTO(
-                permitConfirmed: k.permitConfirmed, handlerCardConfirmed: k.handlerCardConfirmed
+                permitConfirmed: permit, handlerCardConfirmed: card
             )))
         }
+        k.permitConfirmed = permit
+        k.handlerCardConfirmed = card
         Ledger.save(context, "permits")
     }
 
@@ -211,6 +263,10 @@ enum Sync {
                 clientId: order.id, dropId: dropID, pickupAt: order.pickupAt, lines: lines, eatOnPorch: order.eatOnPorch
             )))
             order.remoteID = dto.id
+            // A retry returns the order as first placed: keep the server's slot and lines.
+            order.pickupAt = dto.pickupAt
+            order.eatOnPorch = dto.eatOnPorch
+            order.lines = dto.lines.map { OrderLine(name: $0.name, priceCents: $0.priceCents, quantity: $0.quantity) }
             apply(dto, to: order)
             if !dto.pickupNote.isEmpty { k.pickupNote = dto.pickupNote }
         }
@@ -277,8 +333,11 @@ enum Sync {
         k.longitude = dto.lon
         k.porchTables = dto.porchTables
         k.isMine = dto.isMine
-        k.permitConfirmed = dto.permitted
-        k.handlerCardConfirmed = dto.permitted
+        // The server only says whether both are confirmed. Your own boxes stay as you ticked them.
+        if !dto.isMine || dto.permitted {
+            k.permitConfirmed = dto.permitted
+            k.handlerCardConfirmed = dto.permitted
+        }
         if let r = dto.regulars { k.regulars = r }
         if let f = dto.followers { k.followers = f }
         if let f = dto.isFollowing { k.isFollowing = f }
@@ -342,7 +401,7 @@ enum Sync {
         if let p = d.priceCents { drop.priceCents = p }
         if let t = d.tags { drop.tags = t }
         if let s = d.pickupSpot { drop.pickupSpot = s }
-        if d.photoUrl != nil || d.title != nil { drop.photoPath = d.photoUrl }
+        drop.photoURL = d.photoUrl
         return drop
     }
 

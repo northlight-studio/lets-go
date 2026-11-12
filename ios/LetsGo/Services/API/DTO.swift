@@ -380,6 +380,66 @@ nonisolated struct PorchLightDTO: Codable, Sendable {
     var distanceM: Double?
 }
 
+/// Up for something (`/v1/me/up-for`). Never anyone's coordinates.
+nonisolated struct UpForDTO: Codable, Sendable {
+    var activity: String
+    var label: String
+    var words: String
+    var until: Date
+    var bubble: String
+    var walkMin: Int?
+}
+
+nonisolated struct UpForInDTO: Encodable, Sendable {
+    var activity: String
+    var words: String
+    var hours: Double
+    var lat: Double?
+    var lon: Double?
+}
+
+nonisolated struct PointDTO: Codable, Sendable {
+    var lat: Double
+    var lon: Double
+}
+
+nonisolated struct SpotDTO: Codable, Sendable {
+    var name: String
+    var lat: Double
+    var lon: Double
+}
+
+nonisolated struct ImInDTO: Encodable, Sendable {
+    var lat: Double?
+    var lon: Double?
+}
+
+nonisolated struct MeetupUpdateDTO: Encodable, Sendable {
+    var lat: Double?
+    var lon: Double?
+    var onMyWay: Bool?
+    var says: String?
+}
+
+/// You and one other person meeting (`/v1/up-for/{id}/in`, `/v1/meetups/…`).
+nonisolated struct MeetupDTO: Codable, Sendable {
+    var id: UUID
+    var other: PersonDTO
+    var isMine: Bool
+    var activity: String
+    var label: String
+    var headline: String
+    var spot: SpotDTO?
+    var area: PointDTO?
+    var meetAt: Date
+    var endsAt: Date
+    var myWalkMin: Int?
+    var theirWalkMin: Int?
+    var iAmOnMyWay: Bool
+    var theyAreOnTheirWay: Bool
+    var theySay: String
+}
+
 nonisolated struct OutNowDTO: Codable, Sendable {
     var gatheringId: UUID
     var title: String
@@ -395,6 +455,8 @@ nonisolated struct FriendDTO: Codable, Sendable {
     var id: UUID
     var displayName: String
     var porchLight: PorchLightDTO?
+    /// Older servers don't send it; `porchLight` stands in.
+    var upFor: UpForDTO?
     var out: OutNowDTO?
     var wavedAt: Date?
 }
@@ -404,6 +466,14 @@ nonisolated struct CrewDTO: Codable, Sendable {
     var name: String
     var isMine: Bool
     var members: [PersonDTO]
+    var next: CrewNextDTO?
+}
+
+nonisolated struct CrewNextDTO: Codable, Sendable {
+    var gatheringId: UUID
+    var title: String
+    var startsAt: Date
+    var going: Int
 }
 
 nonisolated struct NewCrewDTO: Encodable, Sendable {
@@ -427,6 +497,8 @@ nonisolated struct GatheringInviteDTO: Codable, Sendable {
 
 nonisolated struct PeopleDTO: Codable, Sendable {
     var porchLight: PorchLightDTO?
+    var upFor: UpForDTO?
+    var meetup: MeetupDTO?
     var friends: [FriendDTO]
     var crews: [CrewDTO]
     var invites: [GatheringInviteDTO]
@@ -443,6 +515,8 @@ nonisolated struct IntroDTO: Codable, Sendable {
     var person: PersonDTO
     var together: [SharedNightDTO]
     var saidHi: Bool
+    var upFor: UpForDTO?
+    var wavedAt: Date?
 }
 
 nonisolated struct IntroResultDTO: Codable, Sendable {

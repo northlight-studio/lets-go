@@ -125,6 +125,8 @@ final class Drop {
     var perSlot: Int
     var kitchen: Kitchen?
     var remoteID: UUID?
+    /// The cook's photo of this drop, from the server (`photo_url`), when there is one. Relative to the server ("/v1/photos/…"); `APIConfig.resolve` makes it a URL.
+    var photoURL: String?
     /// A batch (one thing, posted with "Sell something"): what it is, its price and its photo.
     var title: String = ""
     var unit: String = ""
@@ -132,8 +134,6 @@ final class Drop {
     var tags: [String] = []
     /// "porch" or "door".
     var pickupSpot: String = ""
-    /// The server's path for the photo ("/v1/photos/…"); `APIConfig.resolve` makes it a URL.
-    var photoPath: String?
     /// Pickup slots already full, from the server.
     var fullSlots: [Date] = []
 
@@ -199,7 +199,7 @@ final class Order {
     /// A batch order: what it is and its photo.
     var title: String = ""
     var unit: String = ""
-    var photoPath: String?
+    var photoURL: String?
     var pickupSpot: String = ""
 
     init(pickupAt: Date, lines: [OrderLine], eatOnPorch: Bool) {
