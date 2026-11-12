@@ -516,5 +516,118 @@ class WebGuest(Base):
     created_at: Mapped[datetime] = _created()
 
 
+# Supper club: dinner for a few neighbors at the host's place, for a set price a seat.
+
+
+class Supper(Base):
+    """Dinner at the host's for a set number of seats at a set price that covers the food. Neighbors
+    ask for a seat and the host says yes or no. It's at the host's kitchen (their address, where it
+    sits on the map and their payouts); the address goes only to the host and accepted guests."""
+
+    __tablename__ = "suppers"
+    __table_args__ = (
+        CheckConstraint("ends_at > starts_at", name="supper_ends_after_start"),
+        CheckConstraint("seats BETWEEN 1 AND 20", name="supper_seats_range"),
+        CheckConstraint("price_cents > 0", name="supper_price_positive"),
+    )
+    id: Mapped[uuid.UUID] = _uuid()
+    host_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    kitchen_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("kitchens.id", ondelete="CASCADE"), nullable=False
+    )
+    title: Mapped[str] = mapped_column(String(80), nullable=False)
+    starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    ends_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    # Guests' seats; the host isn't counted.
+    seats: Mapped[int] = mapped_column(Integer, nullable=False)
+    price_cents: Mapped[int] = mapped_column(Integer, nullable=False)
+    # The courses, in order: [{"name": "Tlayudas", "note": "black beans, quesillo"}].
+    menu: Mapped[list[dict]] = mapped_column(JSONB, nullable=False, default=list)
+    # Diets and allergens: "Vegetarian option", "Contains nuts".
+    tags: Mapped[list[str]] = mapped_column(ARRAY(String(30)), nullable=False, default=list)
+    # "Shoes off, we have a cat." Shown to anyone looking, so a guest knows before asking.
+    house_notes: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    photo_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("photos.id", ondelete="SET NULL"))
+    canceled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = _created()
+
+    host: Mapped[User] = relationship(lazy="joined", innerjoin=True)
+    kitchen: Mapped[Kitchen] = relationship(lazy="joined", innerjoin=True)
+    requests: Mapped[list["SupperSeat"]] = relationship(
+        back_populates="supper",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+        order_by="SupperSeat.created_at",
+    )
+
+    @property
+    def taken(self) -> int:
+        """Seats the host has given: accepted guests, paid or not yet."""
+        return sum(1 for s in self.requests if s.status == "accepted")
+
+
+class SupperSeat(Base):
+    """One neighbor asking for a seat, and what came of it. One per person per supper.
+
+    status: asked → accepted (or declined); withdrawn when the guest backs out, canceled when the host
+    cancels the supper, lapsed when an accepted seat isn't paid in time.
+    payment: none while asking; on accepting, at_door (no payments in the app) or unpaid → paid;
+    refunded when the money went back."""
+
+    __tablename__ = "supper_seats"
+    __table_args__ = (UniqueConstraint("supper_id", "guest_id", name="supper_seat_once"),)
+    id: Mapped[uuid.UUID] = _uuid()
+    supper_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("suppers.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    guest_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    # A line to the host: "We just moved in on 24th, my partner's vegetarian."
+    note: Mapped[str] = mapped_column(String(200), nullable=False, default="")
+    status: Mapped[str] = mapped_column(String(12), nullable=False, default="asked")
+    payment: Mapped[str] = mapped_column(String(12), nullable=False, default="none")
+    # The price when accepted, so a later change doesn't rewrite it.
+    price_cents: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    service_cents: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    payment_intent_id: Mapped[str | None] = mapped_column(String(64), unique=True)
+    paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = _created()
+
+    supper: Mapped[Supper] = relationship(back_populates="requests")
+    guest: Mapped[User] = relationship(lazy="joined", innerjoin=True)
+
+    @property
+    def confirmed(self) -> bool:
+        """Accepted, and paid (or paying at the door): the address is theirs to see."""
+        return self.status == "accepted" and self.payment in ("at_door", "paid")
+
+
+class SupperReview(Base):
+    """After the supper, guests review the host and the host reviews each guest. One per pair."""
+
+    __tablename__ = "supper_reviews"
+    __table_args__ = (
+        UniqueConstraint("supper_id", "author_id", "subject_id", name="supper_review_once"),
+        CheckConstraint("stars BETWEEN 1 AND 5", name="supper_review_stars_range"),
+        CheckConstraint("author_id <> subject_id", name="supper_review_not_self"),
+    )
+    id: Mapped[uuid.UUID] = _uuid()
+    supper_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("suppers.id", ondelete="CASCADE"), nullable=False)
+    author_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    subject_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    stars: Mapped[int] = mapped_column(Integer, nullable=False)
+    text: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    created_at: Mapped[datetime] = _created()
+
+    author: Mapped[User] = relationship(foreign_keys=[author_id], lazy="joined", innerjoin=True)
+
+
 # The city catalog lives in its own module; importing it here registers its tables on Base.metadata.
 from app.catalog import tables as _catalog_tables  # noqa: E402, F401

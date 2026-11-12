@@ -130,6 +130,11 @@ struct EventCard: View {
                 .buttonStyle(.glassProminent)
                 .tint(Palette.prominent)
                 .foregroundStyle(Palette.onProminent)
+        case .supper:
+            Button(action: onOpen) { Text(item.isJoined ? "Your seat" : "See the supper").frame(maxWidth: .infinity) }
+                .buttonStyle(.glassProminent)
+                .tint(Palette.prominent)
+                .foregroundStyle(Palette.onProminent)
         }
     }
 }

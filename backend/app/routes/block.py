@@ -17,7 +17,7 @@ from app import block, upfor
 from app.auth import current_user
 from app.db import get_session
 from app.geo import bbox, distance_m
-from app.models import Drop, Follow, Gathering, Intro, Kitchen, PorchLight, User
+from app.models import Drop, Follow, Gathering, Intro, Kitchen, PorchLight, Supper, User
 from app.schemas import BlockItemOut, BlockOut
 from app.social import checked_in_with, friend_ids, met_ids
 from app.views import now, photo_url, public_point
@@ -96,10 +96,54 @@ async def _batches(session: AsyncSession, me: uuid.UUID, here: Here, t: datetime
 
 
 async def _suppers(session: AsyncSession, me: uuid.UUID, here: Here, t: datetime) -> list[block.Candidate]:
-    """A supper nearby with seats left. Suppers are being built separately; once their table and
-    route land, this returns them as kind "supper" (title, name = the host kitchen's public name,
-    seats_left, price_cents, starts_at, walk_min) and the phone already knows how to show them."""
-    return []
+    """A supper a few blocks away with a seat left that hasn't started. Measured to where it shows on
+    the map (its kitchen's public point), never to the house; `id` is the supper's."""
+    if here is None:
+        return []
+    min_lat, max_lat, min_lon, max_lon = bbox(here[0], here[1], block.RADIUS_M + 200)
+    rows = await session.scalars(
+        select(Supper)
+        .join(Kitchen, Kitchen.id == Supper.kitchen_id)
+        .where(
+            Supper.canceled_at.is_(None),
+            Supper.host_id != me,
+            Supper.starts_at > t,
+            Supper.starts_at < t + block.FOLLOW_AHEAD,
+            Kitchen.lat.between(min_lat, max_lat),
+            Kitchen.lon.between(min_lon, max_lon),
+        )
+    )
+    out = []
+    for s in rows.unique():
+        lat, lon = public_point(s.kitchen)
+        left = s.seats - s.taken
+        mine = any(r.guest_id == me and r.status in ("asked", "accepted") for r in s.requests)
+        if left <= 0 or mine or not _near(here, lat, lon):
+            continue
+        out.append(
+            block.Candidate(
+                key=f"supper:{s.id}",
+                kind="supper",
+                subject=f"supper:{s.id}",
+                posted_at=s.created_at,
+                at=s.starts_at,
+                ends_at=s.ends_at,
+                walk_min=_walk(here, lat, lon),
+                payload=dict(
+                    id=s.id,
+                    kitchen_id=s.kitchen_id,
+                    title=s.title,
+                    name=s.kitchen.name,
+                    seats_left=left,
+                    price_cents=s.price_cents,
+                    starts_at=s.starts_at,
+                    ends_at=s.ends_at,
+                    posted_at=s.created_at,
+                    photo_url=photo_url(s.photo_id),
+                ),
+            )
+        )
+    return out
 
 
 async def _going(

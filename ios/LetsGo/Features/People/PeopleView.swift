@@ -56,6 +56,7 @@ struct PeopleView: View {
             .navigationDestination(for: Kitchen.self) { KitchenView(kitchen: $0) }
             .navigationDestination(for: Order.self) { OrderStatusView(order: $0) }
             .navigationDestination(for: BlockRoute.self) { _ in BlockView() }
+            .navigationDestination(for: SupperLink.self) { SupperView(id: $0.id) }
         }
         .onChange(of: BlockFeed.shared.openRequested, initial: true) { _, open in
             guard open else { return }

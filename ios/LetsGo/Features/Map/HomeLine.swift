@@ -77,6 +77,8 @@ enum HomeLine {
             else if c.going > 0 { parts.append("\(c.going) going") }
         case .drop:
             if let left = c.dropLeft, let total = c.dropTotal, total > 0 { parts.append("\(left) of \(total) left") }
+        case .supper:
+            if let left = c.spotsLeft { parts.append("\(left) of \(c.capacity) seats left") }
         }
         let walk = walkMinutes ?? c.walkMinutes
         parts.append("\(walk)-minute walk")
@@ -135,6 +137,12 @@ enum HomeLine {
             return Line(lead: lead + ".", tail: tail)
         }
         switch c.kind {
+        case .supper:
+            let lead = "\(c.title), \(c.place), starts at \(clock(c.start)), \(walk) minutes from you. "
+            if let left = c.spotsLeft, left > 0, left <= 3 {
+                return Line(lead: lead, emphasis: left == 1 ? "One seat left." : "\(left) seats left.")
+            }
+            return Line(lead: lead, tail: "The host chooses who comes.")
         case .drop:
             let lead = live
                 ? "\(c.title) is open till \(clock(c.end)), \(walk) minutes from you. "

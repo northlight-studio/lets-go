@@ -25,27 +25,40 @@ enum InAppPay {
     }
 }
 
-/// One order's trip through PaymentSheet: ask the server for the payment, show the sheet, and when it
-/// finishes, read the order back (paid, with its code and the address).
+/// One payment's trip through PaymentSheet (an order, or a seat at a supper): ask the server for the
+/// payment, show the sheet, and when it finishes, read it back from the server until it says paid.
 @Observable
 final class PayFlow {
     var sheet: PaymentSheet?
     var presenting = false
     var working = false
     var problem: String?
-    @ObservationIgnored private var order: Order?
+    /// Reads the payment back from the server; true once it's paid.
+    @ObservationIgnored private var settle: (@MainActor () async -> Bool)?
 
+    /// An order from a batch.
     func pay(_ order: Order, context: ModelContext) async {
+        await pay(
+            start: { try await Sync.checkout(order) },
+            settle: {
+                try? await Sync.refresh(order: order, context: context)
+                return order.payment == .paid
+            }
+        )
+    }
+
+    /// `start` asks the server for the payment; `settle` reads it back and says whether it's paid.
+    func pay(start: @MainActor () async throws -> PaymentDTO, settle: @escaping @MainActor () async -> Bool) async {
         working = true
         defer { working = false }
         do {
-            let p = try await Sync.checkout(order)
+            let p = try await start()
             if p.payment == PaymentState.paid.rawValue {
-                try await Sync.refresh(order: order, context: context)
+                _ = await settle()
                 return
             }
             guard let s = InAppPay.sheet(for: p) else { return }
-            self.order = order
+            self.settle = settle
             sheet = s
             presenting = true
         } catch {
@@ -55,18 +68,19 @@ final class PayFlow {
 
     func finished(_ result: PaymentSheetResult, context: ModelContext) async {
         presenting = false
-        guard let order else { return }
+        guard let settle else { return }
         switch result {
         case .completed:
             working = true
             defer { working = false }
             // The server asks Stripe if its webhook hasn't come yet; once more after a beat if needed.
+            var paid = false
             for attempt in 0..<3 {
-                try? await Sync.refresh(order: order, context: context)
-                if order.payment == .paid { break }
+                paid = await settle()
+                if paid { break }
                 try? await Task.sleep(for: .seconds(attempt + 1))
             }
-            if order.payment != .paid {
+            if !paid {
                 problem = "Your payment went through, but the server hasn't caught up. It'll show as paid shortly."
             }
         case .canceled:

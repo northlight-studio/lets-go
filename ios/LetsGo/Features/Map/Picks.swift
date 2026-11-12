@@ -4,7 +4,8 @@ import CoreLocation
 /// One thing worth showing: a gathering, or a kitchen's drop.
 /// A plain value so the scoring can be tested without a database.
 struct Candidate: Identifiable, Hashable, Sendable {
-    enum Kind: Hashable, Sendable { case gathering, drop }
+    /// A gathering, a kitchen's drop, or a supper at a neighbor's (`SupperDTO`).
+    enum Kind: Hashable, Sendable { case gathering, drop, supper }
 
     var id: UUID
     var kind: Kind

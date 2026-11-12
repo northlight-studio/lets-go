@@ -124,7 +124,9 @@ struct BlockView: View {
     @ViewBuilder
     private func link(_ row: Block.Row) -> some View {
         switch row.kind {
-        case "batch", "back", "supper":
+        case "supper":
+            NavigationLink(value: SupperLink(id: row.subject)) { BlockRow(row: row, opens: true) }.buttonStyle(.plain)
+        case "batch", "back":
             if let k = kitchen(row.kitchenID) {
                 NavigationLink(value: k) { BlockRow(row: row, opens: true) }.buttonStyle(.plain)
             } else {

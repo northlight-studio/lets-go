@@ -3,8 +3,9 @@
 Nothing here runs unless `settings.payments_enabled` (STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY).
 Tests replace `call` with a fake Stripe.
 
-Never twice: an order has at most one PaymentIntent, created with the idempotency key
-`letsgo-order-<order id>` and stored on the order, so a retried "pay" gets the same one back.
+Never twice: an order (or a supper seat) has at most one PaymentIntent, created with the idempotency
+key `letsgo-order-<order id>` (`letsgo-seat-<seat id>`) and stored on it, so a retried "pay" gets the
+same one back.
 """
 
 import hashlib
@@ -69,9 +70,17 @@ async def call(
 
 
 async def create_payment_intent(
-    *, order_id: uuid.UUID, amount_cents: int, fee_cents: int, destination: str, description: str
+    *,
+    order_id: uuid.UUID | None = None,
+    seat_id: uuid.UUID | None = None,
+    amount_cents: int,
+    fee_cents: int,
+    destination: str,
+    description: str,
 ) -> dict[str, Any]:
-    """Card only (Apple Pay is a card wallet), so nothing needs a redirect back to the app."""
+    """For an order or a supper seat. Card only (Apple Pay is a card wallet), so nothing needs a
+    redirect back to the app."""
+    kind, ref = ("seat", seat_id) if seat_id is not None else ("order", order_id)
     return await call(
         "POST",
         "/v1/payment_intents",
@@ -82,9 +91,9 @@ async def create_payment_intent(
             "application_fee_amount": fee_cents,
             "transfer_data": {"destination": destination},
             "description": description[:200],
-            "metadata": {"order_id": str(order_id)},
+            "metadata": {f"{kind}_id": str(ref)},
         },
-        idempotency_key=f"letsgo-order-{order_id}",
+        idempotency_key=f"letsgo-{kind}-{ref}",
     )
 
 

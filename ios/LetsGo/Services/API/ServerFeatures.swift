@@ -26,6 +26,8 @@ final class ServerFeatures {
         case discover
         /// Selling a batch: posting with a photo, its listing, paying in the app, follows and pickup codes.
         case selling
+        /// Supper club: hosting, asking for a seat, the host's yes, paying for a seat, reviews.
+        case suppers
         /// Your block: the short list of what's on within a few blocks.
         case block
 
@@ -38,12 +40,15 @@ final class ServerFeatures {
             case .listings: ["/v1/listings"]
             case .discover: ["/v1/discover"]
             case .selling: ["/v1/batches", "/v1/drops/{drop_id}"]
+            case .suppers: ["/v1/suppers", "/v1/suppers/{supper_id}", "/v1/supper-seats/{seat_id}/accept"]
             case .block: ["/v1/me/block"]
             }
         }
 
         /// The feature a request path belongs to, when it's one the first server didn't have.
         static func owning(_ path: String) -> Feature? {
+            // Before selling: a seat's ".../pay" is a supper's.
+            if ["/v1/suppers", "/v1/supper-seats", "/v1/me/suppers"].contains(where: { path.hasPrefix($0) }) { return .suppers }
             if path.hasPrefix("/v1/me/block") { return .block }
             if path.hasSuffix("/poster") || path.hasPrefix("/v1/posters") { return .posters }
             if path.hasSuffix("/invites") { return .people }
@@ -67,6 +72,7 @@ final class ServerFeatures {
             case .listings: "The city's newest listings need the new server. These are the ones that came with the app."
             case .discover: "Searching the city needs the new server. It's coming soon."
             case .selling: "Selling a batch needs the new server. It's coming soon."
+            case .suppers: "Suppers need the new server. They're coming soon."
             case .block: "Your block needs the new server. It's coming soon."
             }
         }
