@@ -11,7 +11,7 @@ import Foundation
 ///   (Passport, the morning after); everything else is deleted.
 /// - The app prunes on launch, on coming back, and while it's open: when the next thing on show
 ///   ends, and at midnight, when weekly listings roll on to a new day.
-enum Upcoming {
+nonisolated enum Upcoming {
     /// The parts of a thing the rules look at.
     struct Item: Sendable, Equatable {
         var start: Date
