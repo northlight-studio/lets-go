@@ -38,6 +38,10 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_IDENTIFIER)
         PRODUCT_NAME: LetsGo
+        # Only the app takes a provisioning profile. scripts/ship.sh sets this to the App Store
+        # profile; setting PROVISIONING_PROFILE_SPECIFIER itself on the command line would hit the
+        # Swift packages' resource bundles too (Stripe's), which can't have one. Empty means automatic.
+        PROVISIONING_PROFILE_SPECIFIER: $(LETSGO_PROFILE_SPECIFIER)
         TARGETED_DEVICE_FAMILY: "1"
         GENERATE_INFOPLIST_FILE: YES
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
