@@ -1,0 +1,2022 @@
+[
+ {
+  "url": "https://agriculturalinstitute.org/clement-st",
+  "kind": "organizer",
+  "name": "Agricultural Institute of Marin",
+  "venue_name": "Clement St (2nd–4th Ave)",
+  "address": "244 Clement St, San Francisco, CA 94118",
+  "lat": 37.7831,
+  "lon": -122.4618,
+  "genre": "food"
+ },
+ {
+  "url": "https://agriculturalinstitute.org/stonestown",
+  "kind": "organizer",
+  "name": "Agricultural Institute of Marin",
+  "venue_name": "Stonestown Galleria parking lot",
+  "address": "501 Buckingham Way, San Francisco, CA 94132",
+  "lat": 37.7297,
+  "lon": -122.4791,
+  "genre": "food"
+ },
+ {
+  "url": "https://americanbach.org/Handel-Messiah-2026-American-Bach.html",
+  "kind": "organizer",
+  "name": "American Bach Soloists",
+  "venue_name": "Grace Cathedral",
+  "address": "1100 California St, San Francisco, CA 94108",
+  "lat": 37.7918,
+  "lon": -122.4132,
+  "genre": "music"
+ },
+ {
+  "url": "https://billgrahamcivic.com/events/its-murph-261205",
+  "kind": "venue",
+  "name": "Bill Graham Civic Auditorium",
+  "venue_name": "Bill Graham Civic Auditorium",
+  "address": "99 Grove St, San Francisco, CA 94102",
+  "lat": 37.7781,
+  "lon": -122.4173,
+  "genre": "music"
+ },
+ {
+  "url": "https://billgrahammenorah.org/schedule",
+  "kind": "organizer",
+  "name": "Chabad of SF (Bill Graham Menorah Project)",
+  "venue_name": "Union Square",
+  "address": "Geary St & Powell St, San Francisco, CA 94108",
+  "lat": 37.788,
+  "lon": -122.4075,
+  "genre": "party"
+ },
+ {
+  "url": "https://bimbos365club.com/tm-event/an-evening-with-squirrel-nut-zippers-christmas-caravan-2026",
+  "kind": "club",
+  "name": "Bimbo's 365 Club",
+  "venue_name": "Bimbo's 365 Club",
+  "address": "1025 Columbus Ave, San Francisco, CA 94133",
+  "lat": 37.8037,
+  "lon": -122.4156,
+  "genre": "music"
+ },
+ {
+  "url": "https://bimbos365club.com/tm-event/ezra-collective-here-because-of-hope-tour",
+  "kind": "club",
+  "name": "Bimbo's 365 Club",
+  "venue_name": "Bimbo's 365 Club",
+  "address": "1025 Columbus Ave, San Francisco, CA 94133",
+  "lat": 37.8037,
+  "lon": -122.4155,
+  "genre": "music"
+ },
+ {
+  "url": "https://bimbos365club.com/tm-event/firefighters-holiday-ball",
+  "kind": "club",
+  "name": "Bimbo's 365 Club",
+  "venue_name": "Bimbo's 365 Club",
+  "address": "1025 Columbus Ave, San Francisco, CA 94133",
+  "lat": 37.8037,
+  "lon": -122.4156,
+  "genre": "music"
+ },
+ {
+  "url": "https://bimbos365club.com/tm-event/jd-mcpherson-socks-a-rock-n-roll-christmas-tour-with-special-guest-melissa-carper",
+  "kind": "club",
+  "name": "Bimbo's 365 Club",
+  "venue_name": "Bimbo's 365 Club",
+  "address": "1025 Columbus Ave, San Francisco, CA 94133",
+  "lat": 37.8037,
+  "lon": -122.4156,
+  "genre": "music"
+ },
+ {
+  "url": "https://birdbeckett.com/event/atom-ensemble_2026-12-05",
+  "kind": "bookstore",
+  "name": "Bird & Beckett Books and Records",
+  "venue_name": "Bird & Beckett Books and Records",
+  "address": "653 Chenery St, San Francisco, CA 94131",
+  "lat": 37.7344,
+  "lon": -122.433,
+  "genre": "music"
+ },
+ {
+  "url": "https://birdbeckett.com/event/macy-blackman_2026-11-27",
+  "kind": "bookstore",
+  "name": "Bird & Beckett Books and Records",
+  "venue_name": "Bird & Beckett Books and Records",
+  "address": "653 Chenery St, San Francisco, CA 94131",
+  "lat": 37.7344,
+  "lon": -122.433,
+  "genre": "music"
+ },
+ {
+  "url": "https://birdbeckett.com/event/monthly-morning-ragas_2026-11-29",
+  "kind": "bookstore",
+  "name": "Bird & Beckett Books and Records",
+  "venue_name": "Bird & Beckett Books and Records",
+  "address": "653 Chenery St, San Francisco, CA 94131",
+  "lat": 37.7344,
+  "lon": -122.433,
+  "genre": "music"
+ },
+ {
+  "url": "https://boomboomroom.com/event/live-cuban-salsa-dance-party-no-cover-charge-7pm-1130pm/client-club-demo/san-francisco-california",
+  "kind": "club",
+  "name": "Boom Boom Room",
+  "venue_name": "Boom Boom Room",
+  "address": "1601 Fillmore St, San Francisco, CA 94115",
+  "lat": 37.7846,
+  "lon": -122.4331,
+  "genre": "music"
+ },
+ {
+  "url": "https://boomboomroom.com/event/robby-d-the-efgs-no-cover-charge-9/client-club-demo/san-francisco-california",
+  "kind": "club",
+  "name": "Boom Boom Room",
+  "venue_name": "Boom Boom Room",
+  "address": "1601 Fillmore St, San Francisco, CA 94115",
+  "lat": 37.7846,
+  "lon": -122.4331,
+  "genre": "music"
+ },
+ {
+  "url": "https://boomboomroom.com/event/william-johnstons-extravagant-superband-no-cover-charge-5/client-club-demo/san-francisco-california",
+  "kind": "club",
+  "name": "Boom Boom Room",
+  "venue_name": "Boom Boom Room",
+  "address": "1601 Fillmore St, San Francisco, CA 94115",
+  "lat": 37.7846,
+  "lon": -122.4331,
+  "genre": "music"
+ },
+ {
+  "url": "https://butterlap.bike",
+  "kind": "brewery",
+  "name": "Fort Point Beer Co. (Ferry Building)",
+  "venue_name": "Fort Point Beer Co. (Ferry Building)",
+  "address": "1 Ferry Building, San Francisco, CA 94111",
+  "lat": 37.7958,
+  "lon": -122.394,
+  "genre": "move"
+ },
+ {
+  "url": "https://cclarkgallery.com/exhibitions/80-julie-heffernan-nature-morte-south-gallery/overview",
+  "kind": "venue",
+  "name": "Catharine Clark Gallery",
+  "venue_name": "Catharine Clark Gallery",
+  "address": "248 Utah St, San Francisco, CA 94103",
+  "lat": 37.7664,
+  "lon": -122.4068,
+  "genre": "party"
+ },
+ {
+  "url": "https://endgamesimprov.com/shows",
+  "kind": "theater",
+  "name": "Endgames Improv Theater & Bar",
+  "venue_name": "Endgames Improv Theater & Bar",
+  "address": "2965 Mission St, San Francisco, CA 94110",
+  "lat": 37.7484,
+  "lon": -122.4185,
+  "genre": "party"
+ },
+ {
+  "url": "https://events.humanitix.com/monster-drawing-rally-2026",
+  "kind": "platform",
+  "name": "Minnesota Street Project",
+  "venue_name": "Minnesota Street Project",
+  "address": "1275 Minnesota St, San Francisco, CA 94107",
+  "lat": 37.7543,
+  "lon": -122.3894,
+  "genre": "party"
+ },
+ {
+  "url": "https://foodwise.org/events/pop-ups-on-the-plaza-black-holiday-market",
+  "kind": "organizer",
+  "name": "Foodwise",
+  "venue_name": "Ferry Plaza Farmers Market, south arcade",
+  "address": "1 Ferry Building, San Francisco, CA 94111",
+  "lat": 37.7952,
+  "lon": -122.3934,
+  "genre": "food"
+ },
+ {
+  "url": "https://foodwise.org/markets/alemany-farmers-market",
+  "kind": "organizer",
+  "name": "Foodwise",
+  "venue_name": "Alemany Farmers Market",
+  "address": "100 Alemany Blvd, San Francisco, CA 94110",
+  "lat": 37.7369,
+  "lon": -122.4089,
+  "genre": "food"
+ },
+ {
+  "url": "https://foodwise.org/markets/mission-community-market",
+  "kind": "organizer",
+  "name": "Foodwise",
+  "venue_name": "22nd St & Bartlett St",
+  "address": "84 Bartlett St, San Francisco, CA 94110",
+  "lat": 37.7557,
+  "lon": -122.42,
+  "genre": "food"
+ },
+ {
+  "url": "https://foodwise.org/markets/visit",
+  "kind": "organizer",
+  "name": "Foodwise",
+  "venue_name": "Ferry Building",
+  "address": "1 Ferry Building, San Francisco, CA 94111",
+  "lat": 37.7955,
+  "lon": -122.3935,
+  "genre": "food"
+ },
+ {
+  "url": "https://fortmason.org/event/sunday-farmers-market",
+  "kind": "organizer",
+  "name": "California Farmers' Markets Association / Fort Mason Center",
+  "venue_name": "Fort Mason Center (parking lot)",
+  "address": "2 Marina Blvd, San Francisco, CA 94123",
+  "lat": 37.8067,
+  "lon": -122.4314,
+  "genre": "food"
+ },
+ {
+  "url": "https://gggp.org/event/after-hours-yoga-in-the-conservatory-18",
+  "kind": "organizer",
+  "name": "Gardens of Golden Gate Park",
+  "venue_name": "Conservatory of Flowers",
+  "address": "100 John F Kennedy Dr, San Francisco, CA 94118",
+  "lat": 37.7726,
+  "lon": -122.4602,
+  "genre": "move"
+ },
+ {
+  "url": "https://gggp.org/event/birding-at-the-garden-with-golden-gate-bird-alliance-26",
+  "kind": "organizer",
+  "name": "Gardens of Golden Gate Park and Golden Gate Bird Alliance",
+  "venue_name": "San Francisco Botanical Garden (Main Gate)",
+  "address": "1199 9th Ave, San Francisco, CA 94122",
+  "lat": 37.7672,
+  "lon": -122.4674,
+  "genre": "move"
+ },
+ {
+  "url": "https://gggp.org/event/blue-muse-the-celestial-voice-sound-bath-experience-6",
+  "kind": "organizer",
+  "name": "Gardens of Golden Gate Park",
+  "venue_name": "Orchid Pavilion, Conservatory of Flowers",
+  "address": "100 John F Kennedy Dr, San Francisco, CA 94118",
+  "lat": 37.7726,
+  "lon": -122.4602,
+  "genre": "party"
+ },
+ {
+  "url": "https://gggp.org/event/bug-curious-amateur-entomology-in-the-garden-4",
+  "kind": "organizer",
+  "name": "Gardens of Golden Gate Park",
+  "venue_name": "San Francisco Botanical Garden (Main Gate)",
+  "address": "1199 9th Ave, San Francisco, CA 94122",
+  "lat": 37.7672,
+  "lon": -122.4674,
+  "genre": "move"
+ },
+ {
+  "url": "https://gggp.org/event/free-day-conservatory-of-flowers-14",
+  "kind": "organizer",
+  "name": "Gardens of Golden Gate Park",
+  "venue_name": "Conservatory of Flowers",
+  "address": "100 John F Kennedy Dr, San Francisco, CA 94118",
+  "lat": 37.7726,
+  "lon": -122.4602,
+  "genre": "party"
+ },
+ {
+  "url": "https://gggp.org/event/free-day-san-francisco-botanical-garden-18",
+  "kind": "organizer",
+  "name": "Gardens of Golden Gate Park",
+  "venue_name": "San Francisco Botanical Garden (Main Gate)",
+  "address": "1199 9th Ave, San Francisco, CA 94122",
+  "lat": 37.7672,
+  "lon": -122.4674,
+  "genre": "party"
+ },
+ {
+  "url": "https://gggp.org/event/november-forest-bathing",
+  "kind": "organizer",
+  "name": "Gardens of Golden Gate Park",
+  "venue_name": "San Francisco Botanical Garden (Main Gate)",
+  "address": "1199 9th Ave, San Francisco, CA 94122",
+  "lat": 37.7672,
+  "lon": -122.4674,
+  "genre": "move"
+ },
+ {
+  "url": "https://greenapplebooks.com/event/2026-11-17/9th-ave-joey-clift-jackie-keliiaa",
+  "kind": "bookstore",
+  "name": "Books on the Park on 9th Avenue",
+  "venue_name": "Books on the Park on 9th Avenue",
+  "address": "1231 9th Ave, San Francisco, CA 94122",
+  "lat": 37.7654,
+  "lon": -122.4667,
+  "genre": "party"
+ },
+ {
+  "url": "https://greenapplebooks.com/event/2026-11-18/9th-ave-reed-turchi-jesse-nathan",
+  "kind": "bookstore",
+  "name": "Books on the Park on 9th Avenue",
+  "venue_name": "Books on the Park on 9th Avenue",
+  "address": "1231 9th Ave, San Francisco, CA 94122",
+  "lat": 37.7654,
+  "lon": -122.4667,
+  "genre": "party"
+ },
+ {
+  "url": "https://handbellmusicians.org/event/celebrating-30-years-of-building-community-through-music-bell-appeal-3",
+  "kind": "venue",
+  "name": "Noe Valley Town Square",
+  "venue_name": "Noe Valley Town Square",
+  "address": "3861 24th St, San Francisco, CA 94114",
+  "lat": 37.7515,
+  "lon": -122.4289,
+  "genre": "party"
+ },
+ {
+  "url": "https://happeningnext.com/event/hawaiian-holiday-art-craft-fair-in-san-francisco-eid3a0dspcxo5",
+  "kind": "aggregator",
+  "name": "Harvey Milk Center for the Arts",
+  "venue_name": "Harvey Milk Center for the Arts",
+  "address": "50 Scott St, San Francisco, CA 94117",
+  "lat": 37.7695,
+  "lon": -122.4346,
+  "genre": "food"
+ },
+ {
+  "url": "https://ma.to/event/midweek-jazz-jam-05-aug-2026",
+  "kind": "organizer",
+  "name": "AAACC",
+  "venue_name": "African American Art & Culture Complex",
+  "address": "762 Fulton St, San Francisco, CA 94102",
+  "lat": 37.7787,
+  "lon": -122.4293,
+  "genre": "music"
+ },
+ {
+  "url": "https://meetup.com/silicon_valley_chess",
+  "kind": "platform",
+  "name": "Rick & Roxy's",
+  "venue_name": "Rick & Roxy's",
+  "address": "2131 Lombard St, San Francisco, CA 94123",
+  "lat": 37.7996,
+  "lon": -122.4371,
+  "genre": "play"
+ },
+ {
+  "url": "https://missionlocal.org/event/1890-bryant-street-holiday-market/2026-12-05",
+  "kind": "aggregator",
+  "name": "1890 Bryant Street Studios",
+  "venue_name": "1890 Bryant Street Studios",
+  "address": "1890 Bryant St, San Francisco, CA 94110",
+  "lat": 37.7632,
+  "lon": -122.411,
+  "genre": "food"
+ },
+ {
+  "url": "https://missionlocal.org/event/mannys-bernice-ye-wuhan-clan-aint-nuthin-ta-duck-wit-live-comedy-sf",
+  "kind": "aggregator",
+  "name": "Manny's",
+  "venue_name": "Manny's",
+  "address": "3092 16th St, San Francisco, CA 94103",
+  "lat": 37.7651,
+  "lon": -122.4217,
+  "genre": "party"
+ },
+ {
+  "url": "https://museumstore.sfmoma.org/blogs/news/2026-sfmoma-holiday-makers-market",
+  "kind": "museum",
+  "name": "SFMOMA, Helen and Charles Schwab Hall",
+  "venue_name": "SFMOMA, Helen and Charles Schwab Hall",
+  "address": "151 3rd St, San Francisco, CA 94103",
+  "lat": 37.7857,
+  "lon": -122.4011,
+  "genre": "food"
+ },
+ {
+  "url": "https://natureinthecity.org/events/adahs-stairway-volunteer-workday-5x8n8-g2bab-4rxap-zkeb4-w2k96-4kltt-ljdhx-9ygbz-ay73w-zb2xs-rlzxa-phr2k-sz4bt-hm554-tfbmn-fzlbp-4lkmt-zl9s8-37yz7-2jhkt-fsgmj-xe4xa-gsgmt",
+  "kind": "organizer",
+  "name": "Nature in the City",
+  "venue_name": "Adah's Stairway",
+  "address": "101 Buena Vista Ave E, San Francisco, CA 94117",
+  "lat": 37.77,
+  "lon": -122.4388,
+  "genre": "move"
+ },
+ {
+  "url": "https://natureinthecity.org/events/event-one-byfl5-5zmpa-zxxyd-8y54j-32dyh-j9734-fj77h-r2rps-htyar-s89ex-rctjk-dhcys-cdzx2-kmjjb-bp4x3-72yxm-72ley-mhcjz-yfztn-pesdj-n2kzl-ckt3e-t2g6l-tjp57-zczm4-dfn9d-tjjs3-kmrwn-j5cbd-2tbm6",
+  "kind": "organizer",
+  "name": "Nature in the City",
+  "venue_name": "15th Ave and Quintara St",
+  "address": "15th Ave & Quintara St, San Francisco, CA 94116",
+  "lat": 37.749,
+  "lon": -122.4719,
+  "genre": "move"
+ },
+ {
+  "url": "https://natureinthecity.org/events/event-three-jlhey-t2wsz-c3es9-krbxl-68r7h-sny79-4ckkc-hzzek-l5y9z-bclpk-m9bex-5m3k5-hclex-csnrd-63ltf-gfzay-98yzg-nbfsp-pea49-l3psf-fwz3f-jx2z6-dwtnk-e2lyw",
+  "kind": "organizer",
+  "name": "Nature in the City and Friends of Palou Phelps",
+  "venue_name": "Palou Phelps Mini Park",
+  "address": "1801 Palou Ave, San Francisco, CA 94124",
+  "lat": 37.7361,
+  "lon": -122.3949,
+  "genre": "move"
+ },
+ {
+  "url": "https://noontimeconcerts.org",
+  "kind": "organizer",
+  "name": "Noontime Concerts",
+  "venue_name": "Old St. Mary's Cathedral",
+  "address": "660 California St, San Francisco, CA 94108",
+  "lat": 37.7928,
+  "lon": -122.4057,
+  "genre": "music"
+ },
+ {
+  "url": "https://november-project.com/san-francisco-ca",
+  "kind": "run_club",
+  "name": "November Project SF",
+  "venue_name": "Mission Dolores Park",
+  "address": "Dolores St & 19th St, San Francisco, CA 94114",
+  "lat": 37.7597,
+  "lon": -122.4271,
+  "genre": "move"
+ },
+ {
+  "url": "https://offbeatsf.com/venue/tupelo",
+  "kind": "venue",
+  "name": "Tupelo",
+  "venue_name": "Tupelo",
+  "address": "1337 Grant Ave, San Francisco, CA 94133",
+  "lat": 37.7994,
+  "lon": -122.4073,
+  "genre": "music"
+ },
+ {
+  "url": "https://presidio.gov/explore/events/free-yoga-in-the-park/2026-11-01",
+  "kind": "organizer",
+  "name": "Presidio Trust with Sutter Health and Sports Basement",
+  "venue_name": "Outpost Meadow, Presidio Tunnel Tops",
+  "address": "609 Mason St, San Francisco, CA 94129",
+  "lat": 37.8034,
+  "lon": -122.4581,
+  "genre": "move"
+ },
+ {
+  "url": "https://resources.sfaf.org/collections/events/santa-skivvies-2026",
+  "kind": "run_club",
+  "name": "San Francisco AIDS Foundation",
+  "venue_name": "Noe St at Market St (check-in at Lookout)",
+  "address": "3600 16th St, San Francisco, CA 94114",
+  "lat": 37.7644,
+  "lon": -122.4333,
+  "genre": "move"
+ },
+ {
+  "url": "https://roxie.com/film/american-pachuco-the-legend-of-luis-valdez",
+  "kind": "theater",
+  "name": "The Roxie",
+  "venue_name": "The Roxie",
+  "address": "3125 16th St, San Francisco, CA 94103",
+  "lat": 37.7648,
+  "lon": -122.4224,
+  "genre": "party"
+ },
+ {
+  "url": "https://roxie.com/film/new-people-an-eye-for-an-eye",
+  "kind": "theater",
+  "name": "New People Cinema",
+  "venue_name": "New People Cinema",
+  "address": "1746 Post St, San Francisco, CA 94115",
+  "lat": 37.7857,
+  "lon": -122.4306,
+  "genre": "party"
+ },
+ {
+  "url": "https://roxie.com/film/new-people-soul-patrol",
+  "kind": "theater",
+  "name": "New People Cinema",
+  "venue_name": "New People Cinema",
+  "address": "1746 Post St, San Francisco, CA 94115",
+  "lat": 37.7857,
+  "lon": -122.4306,
+  "genre": "party"
+ },
+ {
+  "url": "https://roxie.com/film/staff-pick-chicago",
+  "kind": "theater",
+  "name": "The Roxie",
+  "venue_name": "The Roxie",
+  "address": "3125 16th St, San Francisco, CA 94103",
+  "lat": 37.7648,
+  "lon": -122.4224,
+  "genre": "party"
+ },
+ {
+  "url": "https://runsignup.com/Race/CA/SanFrancisco/RunForBreastCancer5K10KSANFRANCISCO1212",
+  "kind": "platform",
+  "name": "Crissy Field",
+  "venue_name": "Crissy Field",
+  "address": "Crissy Field, San Francisco, CA 94129",
+  "lat": 37.8046,
+  "lon": -122.4666,
+  "genre": "move"
+ },
+ {
+  "url": "https://salsabachatamondays.com",
+  "kind": "organizer",
+  "name": "SalsaCrazy",
+  "venue_name": "Neck of the Woods",
+  "address": "406 Clement St, San Francisco, CA 94118",
+  "lat": 37.7832,
+  "lon": -122.4638,
+  "genre": "music"
+ },
+ {
+  "url": "https://salsacrazysf.com/events/list",
+  "kind": "venue",
+  "name": "The Ramp",
+  "venue_name": "The Ramp",
+  "address": "855 Terry A Francois Blvd, San Francisco, CA 94158",
+  "lat": 37.7642,
+  "lon": -122.3868,
+  "genre": "music"
+ },
+ {
+  "url": "https://sanfrancisco.swea.org?p=6821",
+  "kind": "organizer",
+  "name": "SWEA San Francisco",
+  "venue_name": "Cathedral of Saint Mary of the Assumption",
+  "address": "1111 Gough St, San Francisco, CA 94109",
+  "lat": 37.784,
+  "lon": -122.4253,
+  "genre": "food"
+ },
+ {
+  "url": "https://sfciviccenter.org/event/civic-center-plaza-tree-lighting-2026",
+  "kind": "organizer",
+  "name": "Civic Center Community Benefit District",
+  "venue_name": "Civic Center Plaza",
+  "address": "Civic Center Plaza, San Francisco, CA 94102",
+  "lat": 37.7792,
+  "lon": -122.4176,
+  "genre": "party"
+ },
+ {
+  "url": "https://sfpl.org/events/2026/11/22/author-annalee-newitz-conversation-soleil-ho",
+  "kind": "organizer",
+  "name": "San Francisco Public Library",
+  "venue_name": "SF Main Library, Koret Auditorium",
+  "address": "100 Larkin St, San Francisco, CA 94102",
+  "lat": 37.7792,
+  "lon": -122.4158,
+  "genre": "party"
+ },
+ {
+  "url": "https://sfplanning.org/node/3458",
+  "kind": "organizer",
+  "name": "Noe Valley Farmers Market",
+  "venue_name": "Noe Valley Town Square",
+  "address": "3861 24th St, San Francisco, CA 94114",
+  "lat": 37.7515,
+  "lon": -122.4289,
+  "genre": "food"
+ },
+ {
+  "url": "https://sfrecpark.org/calendar.aspx?EID=10857",
+  "kind": "organizer",
+  "name": "SF Recreation and Parks",
+  "venue_name": "McLaren Lodge",
+  "address": "501 Stanyan St, San Francisco, CA 94117",
+  "lat": 37.7728,
+  "lon": -122.4544,
+  "genre": "party"
+ },
+ {
+  "url": "https://sfrrc.org/content.aspx?page_id=4001&club_id=798031&action=cira&vm=Future&sif=0",
+  "kind": "run_club",
+  "name": "San Francisco Road Runners Club",
+  "venue_name": "Ferry Building",
+  "address": "1 Ferry Building, San Francisco, CA 94111",
+  "lat": 37.7955,
+  "lon": -122.3935,
+  "genre": "move"
+ },
+ {
+  "url": "https://sfrrc.org/content.aspx?page_id=4002&club_id=798031&item_id=2778539",
+  "kind": "run_club",
+  "name": "San Francisco Road Runners Club",
+  "venue_name": "Sports Basement Presidio",
+  "address": "610 Mason St, San Francisco, CA 94129",
+  "lat": 37.8029,
+  "lon": -122.4593,
+  "genre": "move"
+ },
+ {
+  "url": "https://sfstategators.com/sports/mens-basketball/schedule",
+  "kind": "organizer",
+  "name": "SF State Athletics",
+  "venue_name": "SF State Gymnasium (SFFCU Gymnasium at Don Nasser Family Plaza)",
+  "address": "1600 Holloway Ave, San Francisco, CA 94132",
+  "lat": 37.7236,
+  "lon": -122.4785,
+  "genre": "play"
+ },
+ {
+  "url": "https://thecastro.com/events/bea-arthur-261209",
+  "kind": "organizer",
+  "name": "The Castro (Another Planet Entertainment)",
+  "venue_name": "The Castro",
+  "address": "429 Castro St, San Francisco, CA 94114",
+  "lat": 37.762,
+  "lon": -122.4348,
+  "genre": "party"
+ },
+ {
+  "url": "https://thecastro.com/events/bertha-grateful-drag-261121",
+  "kind": "organizer",
+  "name": "The Castro (Another Planet Entertainment)",
+  "venue_name": "The Castro",
+  "address": "429 Castro St, San Francisco, CA 94114",
+  "lat": 37.762,
+  "lon": -122.4348,
+  "genre": "party"
+ },
+ {
+  "url": "https://thecastro.com/events/marc-maron-261205-early",
+  "kind": "organizer",
+  "name": "The Castro (Another Planet Entertainment)",
+  "venue_name": "The Castro",
+  "address": "429 Castro St, San Francisco, CA 94114",
+  "lat": 37.762,
+  "lon": -122.4348,
+  "genre": "party"
+ },
+ {
+  "url": "https://thecastro.com/events/rango-261210",
+  "kind": "organizer",
+  "name": "The Castro (Another Planet Entertainment)",
+  "venue_name": "The Castro",
+  "address": "429 Castro St, San Francisco, CA 94114",
+  "lat": 37.762,
+  "lon": -122.4348,
+  "genre": "party"
+ },
+ {
+  "url": "https://thecastro.com/events/sandra-bernhard-261203",
+  "kind": "organizer",
+  "name": "The Castro (Another Planet Entertainment)",
+  "venue_name": "The Castro",
+  "address": "429 Castro St, San Francisco, CA 94114",
+  "lat": 37.762,
+  "lon": -122.4348,
+  "genre": "party"
+ },
+ {
+  "url": "https://thecastro.com/events/small-town-gay-bar",
+  "kind": "organizer",
+  "name": "The Castro (Another Planet Entertainment)",
+  "venue_name": "The Castro",
+  "address": "429 Castro St, San Francisco, CA 94114",
+  "lat": 37.762,
+  "lon": -122.4348,
+  "genre": "party"
+ },
+ {
+  "url": "https://us.atgtickets.com/events/a-drag-queen-christmas/golden-gate-theatre",
+  "kind": "platform",
+  "name": "Golden Gate Theatre",
+  "venue_name": "Golden Gate Theatre",
+  "address": "1 Taylor St, San Francisco, CA 94102",
+  "lat": 37.7825,
+  "lon": -122.4111,
+  "genre": "party"
+ },
+ {
+  "url": "https://us.atgtickets.com/events/becky-robinson/curran-theater",
+  "kind": "platform",
+  "name": "Curran Theatre",
+  "venue_name": "Curran Theatre",
+  "address": "445 Geary St, San Francisco, CA 94102",
+  "lat": 37.7868,
+  "lon": -122.4106,
+  "genre": "party"
+ },
+ {
+  "url": "https://us.atgtickets.com/events/david-sedaris/war-memorial-opera-house",
+  "kind": "platform",
+  "name": "War Memorial Opera House",
+  "venue_name": "War Memorial Opera House",
+  "address": "301 Van Ness Ave, San Francisco, CA 94102",
+  "lat": 37.7785,
+  "lon": -122.4209,
+  "genre": "party"
+ },
+ {
+  "url": "https://us.atgtickets.com/events/golden-girls/curran-theater",
+  "kind": "platform",
+  "name": "Curran Theatre",
+  "venue_name": "Curran Theatre",
+  "address": "445 Geary St, San Francisco, CA 94102",
+  "lat": 37.7868,
+  "lon": -122.4106,
+  "genre": "party"
+ },
+ {
+  "url": "https://us.atgtickets.com/events/the-outsiders/orpheum-theatre",
+  "kind": "platform",
+  "name": "Orpheum Theatre",
+  "venue_name": "Orpheum Theatre",
+  "address": "1192 Market St, San Francisco, CA 94102",
+  "lat": 37.7792,
+  "lon": -122.4147,
+  "genre": "party"
+ },
+ {
+  "url": "https://us.atgtickets.com/events/the-wiz/orpheum-theatre",
+  "kind": "platform",
+  "name": "Orpheum Theatre",
+  "venue_name": "Orpheum Theatre",
+  "address": "1192 Market St, San Francisco, CA 94102",
+  "lat": 37.7792,
+  "lon": -122.4147,
+  "genre": "party"
+ },
+ {
+  "url": "https://usfdons.com/sports/mens-basketball/schedule",
+  "kind": "organizer",
+  "name": "University of San Francisco Athletics",
+  "venue_name": "War Memorial Gym at the Sobrato Center",
+  "address": "2335 Golden Gate Ave, San Francisco, CA 94118",
+  "lat": 37.7769,
+  "lon": -122.4495,
+  "genre": "play"
+ },
+ {
+  "url": "https://usfdons.com/sports/womens-basketball/schedule",
+  "kind": "organizer",
+  "name": "University of San Francisco Athletics",
+  "venue_name": "War Memorial Gym at the Sobrato Center",
+  "address": "2335 Golden Gate Ave, San Francisco, CA 94118",
+  "lat": 37.7769,
+  "lon": -122.4495,
+  "genre": "play"
+ },
+ {
+  "url": "https://westcoastcraft.com/attendee-calendar",
+  "kind": "organizer",
+  "name": "West Coast Craft",
+  "venue_name": "Festival Pavilion, Fort Mason Center",
+  "address": "Fort Mason Center, 2 Marina Blvd, San Francisco, CA 94123",
+  "lat": 37.8068,
+  "lon": -122.4318,
+  "genre": "food"
+ },
+ {
+  "url": "https://wl.seetickets.us/event/an-evening-with-andrew-mcmahon-and-his-piano/693369?afflky=GreatAmericanMusicHall",
+  "kind": "platform",
+  "name": "Great American Music Hall",
+  "venue_name": "Great American Music Hall",
+  "address": "859 O'Farrell St, San Francisco, CA 94109",
+  "lat": 37.7848,
+  "lon": -122.4188,
+  "genre": "music"
+ },
+ {
+  "url": "https://wl.seetickets.us/event/an-evening-with-craig-finn-and-the-band-of-forgiveness/695580?afflky=TheChapel",
+  "kind": "platform",
+  "name": "The Chapel",
+  "venue_name": "The Chapel",
+  "address": "777 Valencia St, San Francisco, CA 94110",
+  "lat": 37.7605,
+  "lon": -122.4212,
+  "genre": "music"
+ },
+ {
+  "url": "https://wl.seetickets.us/event/andre-nickatina/705864?afflky=GreatAmericanMusicHall",
+  "kind": "platform",
+  "name": "Great American Music Hall",
+  "venue_name": "Great American Music Hall",
+  "address": "859 O'Farrell St, San Francisco, CA 94109",
+  "lat": 37.7848,
+  "lon": -122.4188,
+  "genre": "music"
+ },
+ {
+  "url": "https://wl.seetickets.us/event/armored-saint-metal-church/692878?afflky=GreatAmericanMusicHall",
+  "kind": "platform",
+  "name": "Great American Music Hall",
+  "venue_name": "Great American Music Hall",
+  "address": "859 O'Farrell St, San Francisco, CA 94109",
+  "lat": 37.7848,
+  "lon": -122.4188,
+  "genre": "music"
+ },
+ {
+  "url": "https://wl.seetickets.us/event/divine-offering-celebrating-the-legacy-of-alice-coltrane/704843?afflky=GreatAmericanMusicHall",
+  "kind": "platform",
+  "name": "Great American Music Hall",
+  "venue_name": "Great American Music Hall",
+  "address": "859 O'Farrell St, San Francisco, CA 94109",
+  "lat": 37.7848,
+  "lon": -122.4188,
+  "genre": "music"
+ },
+ {
+  "url": "https://wl.seetickets.us/event/emma-ruth-rundle/699875?afflky=GreatAmericanMusicHall",
+  "kind": "platform",
+  "name": "Great American Music Hall",
+  "venue_name": "Great American Music Hall",
+  "address": "859 O'Farrell St, San Francisco, CA 94109",
+  "lat": 37.7848,
+  "lon": -122.4188,
+  "genre": "music"
+ },
+ {
+  "url": "https://wl.seetickets.us/event/jamila-woods-10-years-of-heavn/709496?afflky=RickshawStop",
+  "kind": "platform",
+  "name": "Rickshaw Stop",
+  "venue_name": "Rickshaw Stop",
+  "address": "155 Fell St, San Francisco, CA 94102",
+  "lat": 37.776,
+  "lon": -122.4205,
+  "genre": "music"
+ },
+ {
+  "url": "https://wl.seetickets.us/event/jayski-and-the-dawn-featuring-jay-lane-and-dave-ellis/705754?afflky=GreatAmericanMusicHall",
+  "kind": "platform",
+  "name": "Great American Music Hall",
+  "venue_name": "Great American Music Hall",
+  "address": "859 O'Farrell St, San Francisco, CA 94109",
+  "lat": 37.7848,
+  "lon": -122.4188,
+  "genre": "music"
+ },
+ {
+  "url": "https://wl.seetickets.us/event/john-carroll-kirby/700565?afflky=TheChapel",
+  "kind": "platform",
+  "name": "The Chapel",
+  "venue_name": "The Chapel",
+  "address": "777 Valencia St, San Francisco, CA 94110",
+  "lat": 37.7605,
+  "lon": -122.4212,
+  "genre": "music"
+ },
+ {
+  "url": "https://wl.seetickets.us/event/lrain/697892?afflky=RickshawStop",
+  "kind": "platform",
+  "name": "Rickshaw Stop",
+  "venue_name": "Rickshaw Stop",
+  "address": "155 Fell St, San Francisco, CA 94102",
+  "lat": 37.776,
+  "lon": -122.4205,
+  "genre": "music"
+ },
+ {
+  "url": "https://wl.seetickets.us/event/margaret-glaspy/693371?afflky=TheChapel",
+  "kind": "platform",
+  "name": "The Chapel",
+  "venue_name": "The Chapel",
+  "address": "777 Valencia St, San Francisco, CA 94110",
+  "lat": 37.7605,
+  "lon": -122.4212,
+  "genre": "music"
+ },
+ {
+  "url": "https://wl.seetickets.us/event/moonalice/708306?afflky=TheChapel",
+  "kind": "platform",
+  "name": "The Chapel",
+  "venue_name": "The Chapel",
+  "address": "777 Valencia St, San Francisco, CA 94110",
+  "lat": 37.7605,
+  "lon": -122.4212,
+  "genre": "music"
+ },
+ {
+  "url": "https://wl.seetickets.us/event/poi-dog-pondering/705787?afflky=TheChapel",
+  "kind": "platform",
+  "name": "The Chapel",
+  "venue_name": "The Chapel",
+  "address": "777 Valencia St, San Francisco, CA 94110",
+  "lat": 37.7605,
+  "lon": -122.4212,
+  "genre": "music"
+ },
+ {
+  "url": "https://wl.seetickets.us/event/the-cactus-blossoms/697167?afflky=TheChapel",
+  "kind": "platform",
+  "name": "The Chapel",
+  "venue_name": "The Chapel",
+  "address": "777 Valencia St, San Francisco, CA 94110",
+  "lat": 37.7605,
+  "lon": -122.4212,
+  "genre": "music"
+ },
+ {
+  "url": "https://worldtreeofhope.org/tree-lighting",
+  "kind": "organizer",
+  "name": "Rainbow World Fund",
+  "venue_name": "Grace Cathedral",
+  "address": "1100 California St, San Francisco, CA 94108",
+  "lat": 37.7919,
+  "lon": -122.4134,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.act-sf.org/whats-on/2026-27-season/john-proctor-is-the-villain",
+  "kind": "theater",
+  "name": "A.C.T. Toni Rembe Theater",
+  "venue_name": "A.C.T. Toni Rembe Theater",
+  "address": "415 Geary St, San Francisco, CA 94102",
+  "lat": 37.7869,
+  "lon": -122.4103,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.ahith.com",
+  "kind": "theater",
+  "name": "Balboa Theatre",
+  "venue_name": "Balboa Theatre",
+  "address": "3630 Balboa St, San Francisco, CA 94121",
+  "lat": 37.7758,
+  "lon": -122.498,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.artbae.info/openings-and-events/larisa-brechuns-somnia-ryan-graff-contemporary-l46ez",
+  "kind": "venue",
+  "name": "Ryan Graff Contemporary",
+  "venue_name": "Ryan Graff Contemporary",
+  "address": "804 Sutter St, San Francisco, CA 94109",
+  "lat": 37.7887,
+  "lon": -122.4138,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.augusthallsf.com/tm-event/jalen-ngonda-doctrine-of-love-tour",
+  "kind": "venue",
+  "name": "August Hall",
+  "venue_name": "August Hall",
+  "address": "420 Mason St, San Francisco, CA 94102",
+  "lat": 37.7876,
+  "lon": -122.4098,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.augusthallsf.com/tm-event/son-volt",
+  "kind": "venue",
+  "name": "August Hall",
+  "venue_name": "August Hall",
+  "address": "420 Mason St, San Francisco, CA 94102",
+  "lat": 37.7876,
+  "lon": -122.4098,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.augusthallsf.com/tm-event/tank-and-the-bangas-the-last-balloon-tour",
+  "kind": "venue",
+  "name": "August Hall",
+  "venue_name": "August Hall",
+  "address": "420 Mason St, San Francisco, CA 94102",
+  "lat": 37.7874,
+  "lon": -122.4098,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.augusthallsf.com/tm-event/the-pineapple-thief",
+  "kind": "venue",
+  "name": "August Hall",
+  "venue_name": "August Hall",
+  "address": "420 Mason St, San Francisco, CA 94102",
+  "lat": 37.7876,
+  "lon": -122.4098,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.birdbeckett.com/events-calendar",
+  "kind": "bookstore",
+  "name": "Bird & Beckett Books and Records",
+  "venue_name": "Bird & Beckett Books and Records",
+  "address": "653 Chenery St, San Francisco, CA 94131",
+  "lat": 37.7339,
+  "lon": -122.4339,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.booksmith.com/event/2026-11-14/booksmith-presents-jane-wiedlin-tmi-memoirs-go-go-meet-and-greet",
+  "kind": "bookstore",
+  "name": "The Booksmith",
+  "venue_name": "The Booksmith",
+  "address": "1727 Haight St, San Francisco, CA 94117",
+  "lat": 37.7693,
+  "lon": -122.4513,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.booksmith.com/event/2026-11-19/booksmith-presents-daniel-duane-yosemite-falls-reckoning-california-history-and",
+  "kind": "bookstore",
+  "name": "The Booksmith",
+  "venue_name": "The Booksmith",
+  "address": "1727 Haight St, San Francisco, CA 94117",
+  "lat": 37.7693,
+  "lon": -122.4513,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.booksmith.com/event/dazed",
+  "kind": "bookstore",
+  "name": "4 Star Theater",
+  "venue_name": "4 Star Theater",
+  "address": "2200 Clement St, San Francisco, CA 94121",
+  "lat": 37.7823,
+  "lon": -122.4829,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.booksmith.com/event/dvan26",
+  "kind": "bookstore",
+  "name": "The Booksmith",
+  "venue_name": "The Booksmith",
+  "address": "1727 Haight St, San Francisco, CA 94117",
+  "lat": 37.7693,
+  "lon": -122.4513,
+  "genre": "party"
+ },
+ {
+  "url": "http://www.bottomofthehill.com/20261114.html",
+  "kind": "venue",
+  "name": "Bottom of the Hill",
+  "venue_name": "Bottom of the Hill",
+  "address": "1233 17th St, San Francisco, CA 94107",
+  "lat": 37.765,
+  "lon": -122.3961,
+  "genre": "music"
+ },
+ {
+  "url": "http://www.bottomofthehill.com/20261121.html",
+  "kind": "venue",
+  "name": "Bottom of the Hill",
+  "venue_name": "Bottom of the Hill",
+  "address": "1233 17th St, San Francisco, CA 94107",
+  "lat": 37.765,
+  "lon": -122.3964,
+  "genre": "music"
+ },
+ {
+  "url": "http://www.bottomofthehill.com/20261128.html",
+  "kind": "venue",
+  "name": "Bottom of the Hill",
+  "venue_name": "Bottom of the Hill",
+  "address": "1233 17th St, San Francisco, CA 94107",
+  "lat": 37.765,
+  "lon": -122.3964,
+  "genre": "music"
+ },
+ {
+  "url": "http://www.bottomofthehill.com/20261203.html",
+  "kind": "venue",
+  "name": "Bottom of the Hill",
+  "venue_name": "Bottom of the Hill",
+  "address": "1233 17th St, San Francisco, CA 94107",
+  "lat": 37.765,
+  "lon": -122.3964,
+  "genre": "music"
+ },
+ {
+  "url": "http://www.bottomofthehill.com/20261205.html",
+  "kind": "venue",
+  "name": "Bottom of the Hill",
+  "venue_name": "Bottom of the Hill",
+  "address": "1233 17th St, San Francisco, CA 94107",
+  "lat": 37.765,
+  "lon": -122.3964,
+  "genre": "music"
+ },
+ {
+  "url": "http://www.bottomofthehill.com/20261212.html",
+  "kind": "venue",
+  "name": "Bottom of the Hill",
+  "venue_name": "Bottom of the Hill",
+  "address": "1233 17th St, San Francisco, CA 94107",
+  "lat": 37.765,
+  "lon": -122.3964,
+  "genre": "music"
+ },
+ {
+  "url": "http://www.bottomofthehill.com/20261213.html",
+  "kind": "venue",
+  "name": "Bottom of the Hill",
+  "venue_name": "Bottom of the Hill",
+  "address": "1233 17th St, San Francisco, CA 94107",
+  "lat": 37.765,
+  "lon": -122.3964,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.brickandmortarmusic.com/tm-event/bayonne-the-filters-tour",
+  "kind": "venue",
+  "name": "Brick & Mortar Music Hall",
+  "venue_name": "Brick & Mortar Music Hall",
+  "address": "1710 Mission St, San Francisco, CA 94103",
+  "lat": 37.7697,
+  "lon": -122.4203,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.cafedunord.com/shows/2026-11-19-internet-girl",
+  "kind": "organizer",
+  "name": "Cafe du Nord / Swedish American Hall",
+  "venue_name": "Cafe du Nord",
+  "address": "2174 Market St, San Francisco, CA 94114",
+  "lat": 37.7667,
+  "lon": -122.4305,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.cafedunord.com/shows/2026-12-03-elijah-fox",
+  "kind": "organizer",
+  "name": "Cafe du Nord / Swedish American Hall",
+  "venue_name": "Swedish American Hall",
+  "address": "2174 Market St, San Francisco, CA 94114",
+  "lat": 37.7667,
+  "lon": -122.4305,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.cafedunord.com/shows/2026-12-08-why",
+  "kind": "organizer",
+  "name": "Cafe du Nord / Swedish American Hall",
+  "venue_name": "Swedish American Hall",
+  "address": "2174 Market St, San Francisco, CA 94114",
+  "lat": 37.7667,
+  "lon": -122.4305,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.calacademy.org/nightlife",
+  "kind": "museum",
+  "name": "California Academy of Sciences",
+  "venue_name": "California Academy of Sciences",
+  "address": "55 Music Concourse Dr, San Francisco, CA 94118",
+  "lat": 37.7698,
+  "lon": -122.4661,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.calacademy.org/nightlife/nightlife-naughty-or-nice",
+  "kind": "museum",
+  "name": "California Academy of Sciences",
+  "venue_name": "California Academy of Sciences",
+  "address": "55 Music Concourse Dr, San Francisco, CA 94118",
+  "lat": 37.7698,
+  "lon": -122.4661,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.calacademy.org/nightlife/nightlife-pajammy-jam",
+  "kind": "museum",
+  "name": "California Academy of Sciences",
+  "venue_name": "California Academy of Sciences",
+  "address": "55 Music Concourse Dr, San Francisco, CA 94118",
+  "lat": 37.7698,
+  "lon": -122.4661,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.cityarts.net/event/marlon-james-2",
+  "kind": "theater",
+  "name": "Sydney Goldstein Theater",
+  "venue_name": "Sydney Goldstein Theater",
+  "address": "275 Hayes St, San Francisco, CA 94102",
+  "lat": 37.7769,
+  "lon": -122.421,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.cityarts.net/event/yung-pueblo-2",
+  "kind": "theater",
+  "name": "Sydney Goldstein Theater",
+  "venue_name": "Sydney Goldstein Theater",
+  "address": "275 Hayes St, San Francisco, CA 94102",
+  "lat": 37.7769,
+  "lon": -122.421,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.cityarts.net/event/zoe-kazan-florence-pugh",
+  "kind": "theater",
+  "name": "Sydney Goldstein Theater",
+  "venue_name": "Sydney Goldstein Theater",
+  "address": "275 Hayes St, San Francisco, CA 94102",
+  "lat": 37.7769,
+  "lon": -122.421,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.clubfugazisf.com/dear-san-francisco",
+  "kind": "club",
+  "name": "Club Fugazi",
+  "venue_name": "Club Fugazi",
+  "address": "678 Green St, San Francisco, CA 94133",
+  "lat": 37.7996,
+  "lon": -122.4103,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.detoursf.com",
+  "kind": "venue",
+  "name": "The Detour",
+  "venue_name": "The Detour",
+  "address": "2200 Market St, San Francisco, CA 94114",
+  "lat": 37.7657,
+  "lon": -122.4316,
+  "genre": "play"
+ },
+ {
+  "url": "https://www.downtownsf.org/events/letsglowsf",
+  "kind": "organizer",
+  "name": "Downtown SF Partnership",
+  "venue_name": "Harry Bridges Plaza (Ferry Building)",
+  "address": "1 Ferry Building, San Francisco, CA 94111",
+  "lat": 37.7952,
+  "lon": -122.3942,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.dublinerbarsf.com",
+  "kind": "organizer",
+  "name": "The Dubliner Noe Valley",
+  "venue_name": "The Dubliner",
+  "address": "3838 24th St, San Francisco, CA 94114",
+  "lat": 37.7518,
+  "lon": -122.4283,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.eventbrite.com/e/holiday-market-at-embarcadero-center-40th-annual-building-lighting-tickets-2003091366198",
+  "kind": "platform",
+  "name": "Three Embarcadero Center",
+  "venue_name": "Three Embarcadero Center",
+  "address": "3 Embarcadero Center, San Francisco, CA 94111",
+  "lat": 37.7948,
+  "lon": -122.3984,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.eventbrite.com/e/lady-camdens-naughty-nutcracker-wanted-tickets-1999952529854",
+  "kind": "platform",
+  "name": "Oasis",
+  "venue_name": "Oasis",
+  "address": "298 11th St, San Francisco, CA 94103",
+  "lat": 37.7719,
+  "lon": -122.4144,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.exploratorium.edu/visit/calendar/after-dark",
+  "kind": "museum",
+  "name": "Exploratorium",
+  "venue_name": "Exploratorium",
+  "address": "Pier 15, The Embarcadero at Green St, San Francisco, CA 94111",
+  "lat": 37.8016,
+  "lon": -122.3974,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.famsf.org/events/closer-look-mysteries-17th-century-limewood-panel",
+  "kind": "museum",
+  "name": "Legion of Honor",
+  "venue_name": "Legion of Honor",
+  "address": "100 34th Ave, San Francisco, CA 94121",
+  "lat": 37.7846,
+  "lon": -122.501,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.ghirardellisq.com/ongoing-events/2026/10/28/santa-lights-the-square",
+  "kind": "venue",
+  "name": "Ghirardelli Square",
+  "venue_name": "Ghirardelli Square",
+  "address": "900 North Point St, San Francisco, CA 94109",
+  "lat": 37.8058,
+  "lon": -122.4227,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.hainesgallery.com/content/feature/2541/10684",
+  "kind": "venue",
+  "name": "Haines Gallery",
+  "venue_name": "Haines Gallery",
+  "address": "2 Marina Blvd, Building C, San Francisco, CA 94123",
+  "lat": 37.8063,
+  "lon": -122.4316,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.harrysbarsf.com/events",
+  "kind": "organizer",
+  "name": "Harry's Bar (hosted by TriviawithErin)",
+  "venue_name": "Harry's Bar",
+  "address": "2020 Fillmore St, San Francisco, CA 94115",
+  "lat": 37.7883,
+  "lon": -122.4335,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.harveymilkphotocenter.org?p=161604",
+  "kind": "venue",
+  "name": "Harvey Milk Center for the Arts",
+  "venue_name": "Harvey Milk Center for the Arts",
+  "address": "50 Scott St, San Francisco, CA 94117",
+  "lat": 37.7695,
+  "lon": -122.4346,
+  "genre": "food"
+ },
+ {
+  "url": "https://www.hotelutah.com",
+  "kind": "venue",
+  "name": "Hotel Utah Saloon",
+  "venue_name": "Hotel Utah Saloon",
+  "address": "500 4th St, San Francisco, CA 94107",
+  "lat": 37.7794,
+  "lon": -122.3981,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.improv.org",
+  "kind": "theater",
+  "name": "BATS Bayfront Theater",
+  "venue_name": "BATS Bayfront Theater",
+  "address": "Fort Mason Center, 2 Marina Blvd, Bldg B, 3rd Floor, San Francisco, CA 94123",
+  "lat": 37.8064,
+  "lon": -122.4318,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.jambase.com/show/band-of-horses-the-regency-ballroom-20261112",
+  "kind": "aggregator",
+  "name": "The Regency Ballroom",
+  "venue_name": "The Regency Ballroom",
+  "address": "1300 Van Ness Ave, San Francisco, CA 94109",
+  "lat": 37.7878,
+  "lon": -122.4215,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.jccsf.org/event/frame-italy-film-festival-december-5",
+  "kind": "organizer",
+  "name": "Jewish Community Center of San Francisco",
+  "venue_name": "JCCSF",
+  "address": "3200 California St, San Francisco, CA 94118",
+  "lat": 37.7874,
+  "lon": -122.4478,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.jccsf.org/event/gertrude-stein-a-family-saga-meets-the-birth-of-modernism",
+  "kind": "organizer",
+  "name": "Jewish Community Center of San Francisco",
+  "venue_name": "JCCSF",
+  "address": "3200 California St, San Francisco, CA 94118",
+  "lat": 37.7874,
+  "lon": -122.4478,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.jccsf.org/event/reb-zalmans-fragments-of-a-future-scroll-hasidism-for-the-aquarian-age",
+  "kind": "organizer",
+  "name": "Jewish Community Center of San Francisco",
+  "venue_name": "JCCSF",
+  "address": "3200 California St, San Francisco, CA 94118",
+  "lat": 37.7874,
+  "lon": -122.4478,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.livenation.com/venue/KovZpZAE6eeA/the-fillmore-events",
+  "kind": "platform",
+  "name": "The Fillmore",
+  "venue_name": "The Fillmore",
+  "address": "1805 Geary Blvd, San Francisco, CA 94115",
+  "lat": 37.7841,
+  "lon": -122.433,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.meetup.com/san-francisco-volleyball-training-playing-meetup-group",
+  "kind": "platform",
+  "name": "Ocean Beach, Stairwell 17",
+  "venue_name": "Ocean Beach, Stairwell 17",
+  "address": "1000 Great Hwy, San Francisco, CA 94121",
+  "lat": 37.7695,
+  "lon": -122.5104,
+  "genre": "play"
+ },
+ {
+  "url": "https://www.meetup.com/slowrunnerssf",
+  "kind": "platform",
+  "name": "Panhandle (William McKinley Monument)",
+  "venue_name": "Panhandle (William McKinley Monument)",
+  "address": "Baker St & Oak St, San Francisco, CA 94117",
+  "lat": 37.7731,
+  "lon": -122.4415,
+  "genre": "move"
+ },
+ {
+  "url": "https://www.moadsf.org/event/film-screening-discussion-post-atlantic-the-art-of-dewey-crumpler",
+  "kind": "museum",
+  "name": "Museum of the African Diaspora",
+  "venue_name": "Museum of the African Diaspora",
+  "address": "685 Mission St, San Francisco, CA 94105",
+  "lat": 37.7865,
+  "lon": -122.4015,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.moadsf.org/event/finding-home---a-journey-through-life-legacy-and-the-power-of-storytelling-an-intimate-fireside-chat-with-denise-nicholas",
+  "kind": "museum",
+  "name": "Museum of the African Diaspora",
+  "venue_name": "Museum of the African Diaspora",
+  "address": "685 Mission St, San Francisco, CA 94105",
+  "lat": 37.7865,
+  "lon": -122.4015,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.moadsf.org/event/moad-sfjazz-present-black-nile",
+  "kind": "museum",
+  "name": "Museum of the African Diaspora",
+  "venue_name": "Museum of the African Diaspora",
+  "address": "685 Mission St, San Francisco, CA 94105",
+  "lat": 37.7865,
+  "lon": -122.4015,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.moadsf.org/event/thrive-moad-dec-2026",
+  "kind": "museum",
+  "name": "Museum of the African Diaspora",
+  "venue_name": "Museum of the African Diaspora",
+  "address": "685 Mission St, San Francisco, CA 94105",
+  "lat": 37.7865,
+  "lon": -122.4015,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.nba.com/warriors/news/warriors-fan-guide-november-2026",
+  "kind": "organizer",
+  "name": "Golden State Warriors",
+  "venue_name": "Chase Center",
+  "address": "1 Warriors Way, San Francisco, CA 94158",
+  "lat": 37.7679,
+  "lon": -122.3874,
+  "genre": "play"
+ },
+ {
+  "url": "https://www.neckofthewoodssf.com/tm-event/clement-st-comedy-14",
+  "kind": "venue",
+  "name": "Neck of the Woods",
+  "venue_name": "Neck of the Woods",
+  "address": "406 Clement St, San Francisco, CA 94118",
+  "lat": 37.7831,
+  "lon": -122.4637,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.pier39.com/holidayseason",
+  "kind": "organizer",
+  "name": "Pier 39",
+  "venue_name": "Pier 39 Entrance Plaza",
+  "address": "Pier 39, The Embarcadero, San Francisco, CA 94133",
+  "lat": 37.8087,
+  "lon": -122.4098,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.runguides.com/event/2910/san-francisco-turkey-trot",
+  "kind": "aggregator",
+  "name": "Polo Field, Golden Gate Park",
+  "venue_name": "Polo Field, Golden Gate Park",
+  "address": "John F Kennedy Dr, Golden Gate Park, San Francisco, CA 94121",
+  "lat": 37.7682,
+  "lon": -122.4928,
+  "genre": "move"
+ },
+ {
+  "url": "https://www.sf.gov/castro-farmers-market-111826",
+  "kind": "aggregator",
+  "name": "Castro Farmers' Market",
+  "venue_name": "Castro Farmers' Market",
+  "address": "270 Noe St, San Francisco, CA 94114",
+  "lat": 37.7647,
+  "lon": -122.4334,
+  "genre": "food"
+ },
+ {
+  "url": "https://www.sf.gov/departments--city-administrator--office-transgender-initiatives/oti-november-2026-community-calendar-trans-film-festival",
+  "kind": "aggregator",
+  "name": "The Roxie",
+  "venue_name": "The Roxie",
+  "address": "3117 16th St, San Francisco, CA 94103",
+  "lat": 37.7647,
+  "lon": -122.4224,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.sfballet.org/productions/nutcracker",
+  "kind": "theater",
+  "name": "War Memorial Opera House",
+  "venue_name": "War Memorial Opera House",
+  "address": "301 Van Ness Ave, San Francisco, CA 94102",
+  "lat": 37.7785,
+  "lon": -122.4209,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.sfgirlschorus.org/performances/2026/12/12/family-matinee-w-adam-shulman-trio-amp-the-san-francisco-girls-chorus",
+  "kind": "organizer",
+  "name": "SFJAZZ and San Francisco Girls Chorus",
+  "venue_name": "SFJAZZ Center (Miner Auditorium)",
+  "address": "201 Franklin St, San Francisco, CA 94102",
+  "lat": 37.7764,
+  "lon": -122.4216,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.sfhiphopdancefest.com",
+  "kind": "organizer",
+  "name": "SF International Hip Hop DanceFest (Micaya)",
+  "venue_name": "Palace of Fine Arts",
+  "address": "3301 Lyon St, San Francisco, CA 94123",
+  "lat": 37.8029,
+  "lon": -122.4484,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.sfmoma.org/event/art-in-the-age-of-ai-a-conversation-between-holly-herndon-mat-dryhurst-and-hans-ulrich-obrist",
+  "kind": "museum",
+  "name": "SFMOMA",
+  "venue_name": "SFMOMA",
+  "address": "151 Third St, San Francisco, CA 94103",
+  "lat": 37.7857,
+  "lon": -122.4011,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.sfmoma.org/event/baon-stories-and-struggles-of-filipino-migrants",
+  "kind": "museum",
+  "name": "SFMOMA",
+  "venue_name": "SFMOMA",
+  "address": "151 Third St, San Francisco, CA 94103",
+  "lat": 37.7857,
+  "lon": -122.4011,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.sfmoma.org/event/krazy-kites-with-scrap",
+  "kind": "museum",
+  "name": "SFMOMA",
+  "venue_name": "SFMOMA",
+  "address": "151 Third St, San Francisco, CA 94103",
+  "lat": 37.7857,
+  "lon": -122.4011,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.sfmoma.org/event/parol-making-workshop-with-soma-pilipinas",
+  "kind": "museum",
+  "name": "SFMOMA",
+  "venue_name": "SFMOMA",
+  "address": "151 Third St, San Francisco, CA 94103",
+  "lat": 37.7857,
+  "lon": -122.4011,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.sfmoma.org/event/sydney-cash-makes-too-much-art",
+  "kind": "museum",
+  "name": "SFMOMA",
+  "venue_name": "SFMOMA",
+  "address": "151 Third St, San Francisco, CA 94103",
+  "lat": 37.7857,
+  "lon": -122.4011,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.sfmoma.org/event/the-art-of-butoh",
+  "kind": "museum",
+  "name": "SFMOMA",
+  "venue_name": "SFMOMA",
+  "address": "151 Third St, San Francisco, CA 94103",
+  "lat": 37.7857,
+  "lon": -122.4011,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.sfrecpark.org/Calendar.aspx?EID=10407",
+  "kind": "organizer",
+  "name": "San Francisco Recreation and Parks",
+  "venue_name": "Sunset Dunes",
+  "address": "Great Highway between Lincoln Way and Sloat Blvd, San Francisco, CA 94122",
+  "lat": 37.7507,
+  "lon": -122.5085,
+  "genre": "move"
+ },
+ {
+  "url": "https://www.sfstation.com/a-noh-christmas-carol-e2416716",
+  "kind": "aggregator",
+  "name": "Theatre of Yugen / Noh Space",
+  "venue_name": "Theatre of Yugen / Noh Space",
+  "address": "2840 Mariposa St, San Francisco, CA 94110",
+  "lat": 37.763,
+  "lon": -122.4116,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.sfstation.com/abiogensis-opening-reception-new-works-by-philip-beesley-and-casey-curran-e15774247",
+  "kind": "aggregator",
+  "name": "Heron Arts",
+  "venue_name": "Heron Arts",
+  "address": "7 Heron St, San Francisco, CA 94103",
+  "lat": 37.7746,
+  "lon": -122.4083,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.sfstation.com/anthony-jeselnik-wrath-of-man-e2350394",
+  "kind": "aggregator",
+  "name": "The Masonic",
+  "venue_name": "The Masonic",
+  "address": "1111 California St, San Francisco, CA 94108",
+  "lat": 37.7912,
+  "lon": -122.413,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.sfstation.com/cheaper-than-therapy-stand-up-comedy-e2480621",
+  "kind": "aggregator",
+  "name": "Shelton Theater",
+  "venue_name": "Shelton Theater",
+  "address": "533 Sutter St, San Francisco, CA 94102",
+  "lat": 37.7894,
+  "lon": -122.4093,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.sfstation.com/comedy-confessional-e2477814",
+  "kind": "aggregator",
+  "name": "O'Reilly's Pub",
+  "venue_name": "O'Reilly's Pub",
+  "address": "1840 Haight St, San Francisco, CA 94117",
+  "lat": 37.7694,
+  "lon": -122.4512,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.sfstation.com/crucial-reggae-sundays-free-music-in-golden-gate-park-e2478002",
+  "kind": "aggregator",
+  "name": "Golden Gate Park Bandshell",
+  "venue_name": "Golden Gate Park Bandshell",
+  "address": "Music Concourse Dr, Golden Gate Park, San Francisco, CA 94118",
+  "lat": 37.7699,
+  "lon": -122.4686,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.sfstation.com/mirthquake-monday-live-comedy-in-the-richmond-e15770229",
+  "kind": "aggregator",
+  "name": "The Abbey Tavern",
+  "venue_name": "The Abbey Tavern",
+  "address": "4100 Geary Blvd, San Francisco, CA 94118",
+  "lat": 37.781,
+  "lon": -122.4628,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.sfstation.com/mortified-e2464775",
+  "kind": "aggregator",
+  "name": "DNA Lounge",
+  "venue_name": "DNA Lounge",
+  "address": "375 11th St, San Francisco, CA 94103",
+  "lat": 37.771,
+  "lon": -122.4128,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.sfstation.com/ode-to-joy-european-cinefest-san-francisco-e15774821",
+  "kind": "aggregator",
+  "name": "Delancey Street Screening Room",
+  "venue_name": "Delancey Street Screening Room",
+  "address": "600 Embarcadero, San Francisco, CA 94107",
+  "lat": 37.7841,
+  "lon": -122.3884,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.sfstation.com/san-francisco-comedy-showcase-e2188352",
+  "kind": "aggregator",
+  "name": "Punch Line San Francisco",
+  "venue_name": "Punch Line San Francisco",
+  "address": "444 Battery St, San Francisco, CA 94111",
+  "lat": 37.7951,
+  "lon": -122.4,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.sfstation.com/the-ritual-a-comedy-show-e2478059",
+  "kind": "aggregator",
+  "name": "Endgames Improv Theater & Bar",
+  "venue_name": "Endgames Improv Theater & Bar",
+  "address": "2965 Mission St, San Francisco, CA 94110",
+  "lat": 37.7484,
+  "lon": -122.4185,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.sfsymphony.org/SanFrancisco/media/SanFrancisco/2026-27-Season-Calendar.pdf",
+  "kind": "theater",
+  "name": "Davies Symphony Hall",
+  "venue_name": "Davies Symphony Hall",
+  "address": "201 Van Ness Ave, San Francisco, CA 94102",
+  "lat": 37.7776,
+  "lon": -122.4205,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.sfvs.org/festival",
+  "kind": "organizer",
+  "name": "San Francisco Vegan Society",
+  "venue_name": "Event Center, Cathedral of Saint Mary of the Assumption",
+  "address": "1111 Gough St, San Francisco, CA 94109",
+  "lat": 37.784,
+  "lon": -122.4253,
+  "genre": "food"
+ },
+ {
+  "url": "https://www.theindependentsf.com/tm-event/swervedriver-raise-at-35",
+  "kind": "venue",
+  "name": "The Independent",
+  "venue_name": "The Independent",
+  "address": "628 Divisadero St, San Francisco, CA 94117",
+  "lat": 37.7755,
+  "lon": -122.4376,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.theindependentsf.com/tm-event/the-bobby-lees",
+  "kind": "venue",
+  "name": "The Independent",
+  "venue_name": "The Independent",
+  "address": "628 Divisadero St, San Francisco, CA 94117",
+  "lat": 37.7755,
+  "lon": -122.4376,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.theindependentsf.com/tm-event/unkle",
+  "kind": "venue",
+  "name": "The Independent",
+  "venue_name": "The Independent",
+  "address": "628 Divisadero St, San Francisco, CA 94117",
+  "lat": 37.7755,
+  "lon": -122.4376,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.theindependentsf.com/tm-event/wishy",
+  "kind": "venue",
+  "name": "The Independent",
+  "venue_name": "The Independent",
+  "address": "628 Divisadero St, San Francisco, CA 94117",
+  "lat": 37.7755,
+  "lon": -122.4376,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.thepalacetheatersf.com/events/smatp",
+  "kind": "theater",
+  "name": "The Palace Theater",
+  "venue_name": "The Palace Theater",
+  "address": "644 Broadway, San Francisco, CA 94133",
+  "lat": 37.798,
+  "lon": -122.4079,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.thewarfieldtheatre.com/events/detail/1468105",
+  "kind": "theater",
+  "name": "The Warfield",
+  "venue_name": "The Warfield",
+  "address": "982 Market St, San Francisco, CA 94102",
+  "lat": 37.7827,
+  "lon": -122.4101,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.thewarfieldtheatre.com/events/detail/1486743",
+  "kind": "theater",
+  "name": "The Warfield",
+  "venue_name": "The Warfield",
+  "address": "982 Market St, San Francisco, CA 94102",
+  "lat": 37.7827,
+  "lon": -122.4101,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.thewarfieldtheatre.com/events/detail/1619471",
+  "kind": "theater",
+  "name": "The Warfield",
+  "venue_name": "The Warfield",
+  "address": "982 Market St, San Francisco, CA 94102",
+  "lat": 37.7826,
+  "lon": -122.4103,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.ticketmaster.com/alvin-kuai-san-francisco-california-11-17-2026/event/1C0064F5CE111428",
+  "kind": "platform",
+  "name": "Punch Line San Francisco",
+  "venue_name": "Punch Line San Francisco",
+  "address": "444 Battery St, San Francisco, CA 94111",
+  "lat": 37.7955,
+  "lon": -122.4001,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.ticketmaster.com/amir-k-san-francisco-california-11-13-2026/event/1C0065119B97A2F7",
+  "kind": "platform",
+  "name": "Cobb's Comedy Club",
+  "venue_name": "Cobb's Comedy Club",
+  "address": "915 Columbus Ave, San Francisco, CA 94133",
+  "lat": 37.8036,
+  "lon": -122.4146,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.ticketmaster.com/chloe-radcliffe-san-francisco-california-12-09-2026/event/1C0065373DE31A20",
+  "kind": "platform",
+  "name": "Cobb's Comedy Club",
+  "venue_name": "Cobb's Comedy Club",
+  "address": "915 Columbus Ave, San Francisco, CA 94133",
+  "lat": 37.8029,
+  "lon": -122.4142,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.ticketmaster.com/dana-gould-san-francisco-california-12-10-2026/event/1C006511F853F21D",
+  "kind": "platform",
+  "name": "Punch Line San Francisco",
+  "venue_name": "Punch Line San Francisco",
+  "address": "444 Battery St, San Francisco, CA 94111",
+  "lat": 37.7955,
+  "lon": -122.4001,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.ticketmaster.com/greg-fitzsimmons-san-francisco-california-12-03-2026/event/1C006503E154993C",
+  "kind": "platform",
+  "name": "Punch Line San Francisco",
+  "venue_name": "Punch Line San Francisco",
+  "address": "444 Battery St, San Francisco, CA 94111",
+  "lat": 37.7955,
+  "lon": -122.4001,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.ticketmaster.com/jenny-tian-ripe-san-francisco-california-11-18-2026/event/1C0064AC13A553C5",
+  "kind": "platform",
+  "name": "Cobb's Comedy Club",
+  "venue_name": "Cobb's Comedy Club",
+  "address": "915 Columbus Ave, San Francisco, CA 94133",
+  "lat": 37.8029,
+  "lon": -122.4142,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.ticketmaster.com/kyle-kinane-san-francisco-california-12-04-2026/event/1C0064CA21AE07E5",
+  "kind": "platform",
+  "name": "Cobb's Comedy Club",
+  "venue_name": "Cobb's Comedy Club",
+  "address": "915 Columbus Ave, San Francisco, CA 94133",
+  "lat": 37.8029,
+  "lon": -122.4142,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.ticketmaster.com/maz-jobrani-san-francisco-california-12-11-2026/event/1C0064FC0DC64513",
+  "kind": "platform",
+  "name": "Cobb's Comedy Club",
+  "venue_name": "Cobb's Comedy Club",
+  "address": "915 Columbus Ave, San Francisco, CA 94133",
+  "lat": 37.8029,
+  "lon": -122.4142,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.ticketmaster.com/michelle-collins-san-francisco-california-12-02-2026/event/1C0065284063930E",
+  "kind": "platform",
+  "name": "Cobb's Comedy Club",
+  "venue_name": "Cobb's Comedy Club",
+  "address": "915 Columbus Ave, San Francisco, CA 94133",
+  "lat": 37.8029,
+  "lon": -122.4142,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.ticketmaster.com/national-park-after-dark-your-neck-san-francisco-california-11-12-2026/event/1C0064FA1C7753B0",
+  "kind": "platform",
+  "name": "Cobb's Comedy Club",
+  "venue_name": "Cobb's Comedy Club",
+  "address": "915 Columbus Ave, San Francisco, CA 94133",
+  "lat": 37.8036,
+  "lon": -122.4146,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.ticketmaster.com/preacher-lawson-san-francisco-california-11-27-2026/event/1C006528490A9F7E",
+  "kind": "platform",
+  "name": "Cobb's Comedy Club",
+  "venue_name": "Cobb's Comedy Club",
+  "address": "915 Columbus Ave, San Francisco, CA 94133",
+  "lat": 37.8029,
+  "lon": -122.4142,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.ticketmaster.com/ricky-velez-san-francisco-california-11-12-2026/event/1C0064F5CCD41105",
+  "kind": "platform",
+  "name": "Punch Line San Francisco",
+  "venue_name": "Punch Line San Francisco",
+  "address": "444 Battery St, San Francisco, CA 94111",
+  "lat": 37.7951,
+  "lon": -122.4,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.ticketmaster.com/scott-capurro-has-friends-san-francisco-california-12-02-2026/event/1C006509C88A3E41",
+  "kind": "platform",
+  "name": "Punch Line San Francisco",
+  "venue_name": "Punch Line San Francisco",
+  "address": "444 Battery St, San Francisco, CA 94111",
+  "lat": 37.7955,
+  "lon": -122.4001,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.ticketmaster.com/steve-hofstetter-san-francisco-california-11-30-2026/event/1C00643AD32E24B0",
+  "kind": "platform",
+  "name": "Cobb's Comedy Club",
+  "venue_name": "Cobb's Comedy Club",
+  "address": "915 Columbus Ave, San Francisco, CA 94133",
+  "lat": 37.8029,
+  "lon": -122.4142,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.ticketweb.com/event/kate-nash-swedish-american-hall-tickets/14313314",
+  "kind": "organizer",
+  "name": "Cafe du Nord / Swedish American Hall",
+  "venue_name": "Swedish American Hall",
+  "address": "2174 Market St, San Francisco, CA 94114",
+  "lat": 37.7666,
+  "lon": -122.4308,
+  "genre": "music"
+ },
+ {
+  "url": "https://www.waltdisney.org/education/films/perfect-pairing-brews-and-views-coco-2017-and-fox-tale-fermentation-project",
+  "kind": "museum",
+  "name": "The Walt Disney Family Museum",
+  "venue_name": "The Walt Disney Family Museum",
+  "address": "104 Montgomery St, San Francisco, CA 94129",
+  "lat": 37.8014,
+  "lon": -122.4587,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.waltdisney.org/education/talks/screening-talk-huz-drawn-life-animator-ron-husband-and-disney-legend-don-hahn",
+  "kind": "museum",
+  "name": "The Walt Disney Family Museum",
+  "venue_name": "The Walt Disney Family Museum",
+  "address": "104 Montgomery St, San Francisco, CA 94129",
+  "lat": 37.8014,
+  "lon": -122.4587,
+  "genre": "party"
+ },
+ {
+  "url": "https://www.wildsidewest.com",
+  "kind": "venue",
+  "name": "Wild Side West",
+  "venue_name": "Wild Side West",
+  "address": "424 Cortland Ave, San Francisco, CA 94110",
+  "lat": 37.739,
+  "lon": -122.4172,
+  "genre": "party"
+ }
+]

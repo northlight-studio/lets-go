@@ -1,9 +1,9 @@
 from collections import defaultdict
-from datetime import timedelta
+from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.catalog import cells
@@ -21,13 +21,31 @@ CITY_TIME = {"sf": ZoneInfo("America/Los_Angeles")}
 CATALOG_DAYS = 14
 # Trucks are in the catalog for /v1/discover; the map's listing layer isn't built for hundreds of carts.
 NOT_AS_LISTINGS = {"datasf"}
+# A slot or event with no end is over this long after it starts.
+TYPICAL_LENGTH = timedelta(hours=3)
+
+
+def slot_over(slot: dict, at: datetime, zone: ZoneInfo) -> bool:
+    """A one-off slot whose end (or start plus a typical length) has passed. Weekly slots never are."""
+    if "weekday" in slot and slot.get("weekday"):
+        return False
+    try:
+        day = date.fromisoformat(str(slot["date"]))
+        start = datetime.combine(day, time.fromisoformat(str(slot["start"])), zone)
+        end = datetime.combine(day, time.fromisoformat(str(slot["end"])), zone) if slot.get("end") else None
+    except (KeyError, ValueError):
+        return True
+    if end is not None and end <= start:
+        end += timedelta(days=1)
+    return (end or start + TYPICAL_LENGTH) <= at
 
 
 async def catalog_listings(session: AsyncSession, city: str, taken: set[str]) -> list[ListingOut]:
     """Catalog events in the shape of `sf_happenings.json`: one listing per title and venue, a dated
     slot per occurrence, so phones that only know /v1/listings get the real city too."""
     zone = CITY_TIME.get(city, ZoneInfo("UTC"))
-    today = cells.night_of(now(), city)
+    at = now()
+    today = cells.night_of(at, city)
     rows = (
         await session.scalars(
             select(Event)
@@ -37,6 +55,11 @@ async def catalog_listings(session: AsyncSession, city: str, taken: set[str]) ->
                 Event.lat.is_not(None),
                 Event.day >= today,
                 Event.day <= today + timedelta(days=CATALOG_DAYS),
+                # Nothing that's over: ended, or (with no end) three hours past its start.
+                or_(
+                    Event.ends_at > at,
+                    and_(Event.ends_at.is_(None), Event.starts_at > at - TYPICAL_LENGTH),
+                ),
                 ~Event.id.in_(select(EventSource.event_id).where(EventSource.source.in_(NOT_AS_LISTINGS))),
             )
             .order_by(Event.starts_at)
@@ -79,17 +102,19 @@ async def catalog_listings(session: AsyncSession, city: str, taken: set[str]) ->
 async def listings(
     city: str = Query(default="sf", max_length=16), session: AsyncSession = Depends(get_session)
 ) -> Listings:
-    """Everything live in `city` with a date still ahead: the hand-made regulars, then the catalog's
-    dated events. Public: you can see what's on before you have an account."""
-    # From yesterday, so a show that runs past midnight is still there in the small hours.
-    since = (now().astimezone(CITY_TIME.get(city, ZoneInfo("UTC"))) - timedelta(days=1)).date().isoformat()
+    """Everything live in `city` that hasn't happened yet: the hand-made regulars, then the catalog's
+    dated events. A one-off slot that's over is left out, and a listing with nothing left goes with it.
+    Public: you can see what's on before you have an account."""
+    zone = CITY_TIME.get(city, ZoneInfo("UTC"))
+    at = now()
     rows = await session.scalars(
         select(Listing).where(Listing.city == city, Listing.status == "live").order_by(Listing.title)
     )
-    manual = [
-        ListingOut.model_validate(row)
-        for row in rows
-        if any("weekday" in s or s.get("date", "") >= since for s in row.schedule)
-    ]
+    manual = []
+    for row in rows:
+        ahead = [s for s in row.schedule if not slot_over(s, at, zone)]
+        if ahead:
+            item = ListingOut.model_validate(row)
+            manual.append(item.model_copy(update={"schedule": [Slot.model_validate(s) for s in ahead]}))
     taken = {listing_key(city, item.title, item.venue) for item in manual}
     return Listings(listings=manual + await catalog_listings(session, city, taken))

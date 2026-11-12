@@ -230,7 +230,10 @@ async def test_openai_scout_reads_the_catalog_proposes_and_stops():
     assert found.usage.cost_micros == round(2200 * 0.10 + 800 * 0.01 + 600 * 0.50 + 2 * 10_000)
     first, second = responses.requests[0], responses.requests[1]
     assert first["model"] == "gpt-6-luna" and first["reasoning"] == {"effort": "medium"}
-    assert first["prompt_cache_key"] == PROMPT_CACHE_KEY == "letsgo:scout:v1"
+    assert first["prompt_cache_key"] == PROMPT_CACHE_KEY == "letsgo:scout:v2"
+    # Proposals name the calendar page they came from, so it can join the source list.
+    propose = next(t for t in first["tools"] if t.get("name") == "propose_events")
+    assert "calendar_url" in propose["parameters"]["properties"]["events"]["items"]["required"]
     assert "temperature" not in first
     assert [t.get("name", t["type"]) for t in first["tools"]] == [
         "web_search",

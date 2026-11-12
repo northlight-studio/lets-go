@@ -1,0 +1,27 @@
+<!doctype html>
+<html><head><title>The Chapel · Calendar</title>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@graph": [
+  {"@type": "Organization", "name": "The Chapel"},
+  {"@type": "MusicEvent", "name": "Shannon &amp; the Clams", "startDate": "{{ISO+2}}T20:00:00",
+   "endDate": "{{ISO+2}}T23:30:00", "url": "/events/shannon-and-the-clams",
+   "location": {"@type": "Place", "name": "The Chapel",
+     "address": {"@type": "PostalAddress", "streetAddress": "777 Valencia St", "addressLocality": "San Francisco"},
+     "geo": {"@type": "GeoCoordinates", "latitude": "37.7604", "longitude": "-122.4213"}},
+   "offers": [{"@type": "Offer", "price": "30.00"}, {"@type": "Offer", "price": 25}]},
+  {"@type": "ComedyEvent", "name": "Late Show Comedy", "startDate": "{{ISO+3}}T21:00:00",
+   "eventStatus": "https://schema.org/EventCancelled",
+   "location": {"@type": "Place", "name": "The Chapel", "address": "777 Valencia St, San Francisco"}},
+  {"@type": "Event", "name": "Livestream Q&A", "startDate": "{{ISO+3}}T18:00:00",
+   "eventAttendanceMode": "https://schema.org/OnlineEventAttendanceMode",
+   "location": {"@type": "VirtualLocation", "url": "https://stream.example"}},
+  {"@type": "Event", "name": "Some day in the spring", "startDate": "{{ISO+4}}"},
+  {"@type": "ItemList", "itemListElement": [
+    {"@type": "ListItem", "item": {"@type": ["Event"], "name": "Vinyl Swap", "startDate": "{{ISO+5}}T12:00:00",
+      "isAccessibleForFree": true}}]},
+  {"@type": "MusicEvent", "name": "Big Name Tour", "startDate": "{{ISO+6}}T20:00:00",
+   "offers": {"@type": "Offer", "price": "55", "availability": "https://schema.org/SoldOut"}}
+]}
+</script>
+<script type="application/ld+json">{ this is not json }</script>
+</head><body><h1>Upcoming at The Chapel</h1></body></html>

@@ -1,6 +1,7 @@
 """The city catalog: one row per real event, wherever it was found, shared by everyone.
 
-Feeds fill it every night (`app.catalog.sweep`); the scout fills gaps when someone asks for something
+Feeds fill it every night (`app.catalog.sweep`), then the reader goes through the city's own
+publishers (`sources`, `app.catalog.sources`); the scout fills gaps when someone asks for something
 nobody has asked about nearby lately (`app.catalog.scout`). Nothing here names who asked: the only
 person-linked tables are `finds` (what your asks put on the map, seen only by you) and `scout_quota`
 (a counter, so one person can't run up the bill).
@@ -186,3 +187,82 @@ class SweepLog(Base):
     ok: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     # {"funcheap": {"seen": 120, "added": 30, ...}, ...}
     summary: Mapped[str] = mapped_column(Text, nullable=False, default="")
+
+
+class Source(Base):
+    """Somewhere the city publishes what's on: a venue's calendar, a club's page, a run club, a museum,
+    an organizer, or one of the nightly feeds. Read once a night by `app.catalog.sources.night`."""
+
+    __tablename__ = "sources"
+    __table_args__ = (UniqueConstraint("city", "url", name="sources_city_url"),)
+    id: Mapped[uuid.UUID] = _uuid()
+    city: Mapped[str] = mapped_column(String(16), nullable=False)
+    # The page people would open, normalized (no fragment, no utm_*, no trailing slash).
+    url: Mapped[str] = mapped_column(String(500), nullable=False)
+    host: Mapped[str] = mapped_column(String(200), nullable=False, index=True)
+    # venue | club | bookstore | brewery | run_club | museum | theater | organizer | platform |
+    # aggregator | feed
+    kind: Mapped[str] = mapped_column(String(16), nullable=False)
+    # The venue or organizer as people say it, and the venue's place when the page is one venue's.
+    name: Mapped[str] = mapped_column(String(160), nullable=False, default="")
+    venue_name: Mapped[str] = mapped_column(String(160), nullable=False, default="")
+    address: Mapped[str] = mapped_column(String(240), nullable=False, default="")
+    lat: Mapped[float | None] = mapped_column(Float)
+    lon: Mapped[float | None] = mapped_column(Float)
+    area: Mapped[str | None] = mapped_column(String(16))
+    # The app Genre its events show as when nothing in the event says otherwise.
+    genre: Mapped[str] = mapped_column(String(16), nullable=False, default="party")
+    # How it's read: ical | jsonld | rss | squarespace | tribe | html (by the model) | feed (a sweep
+    # feed) | auto (not learned yet: the first read looks for the best structured format).
+    reader: Mapped[str] = mapped_column(String(12), nullable=False, default="auto")
+    # Where the structured format lives when it isn't the page itself (an .ics link, an API).
+    feed_url: Mapped[str | None] = mapped_column(String(500))
+    # seed | scout | finder | hand
+    added_by: Mapped[str] = mapped_column(String(8), nullable=False)
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    last_fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_changed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # When it last had at least one upcoming event: "empty for N weeks" counts from here.
+    last_nonempty_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    content_hash: Mapped[str | None] = mapped_column(String(64))
+    etag: Mapped[str | None] = mapped_column(String(200))
+    last_modified: Mapped[str | None] = mapped_column(String(64))
+    last_status: Mapped[int | None] = mapped_column(Integer)
+    events_last: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # new | ok | moved | broken | empty | blocked (robots.txt says no, or it wants a login)
+    health: Mapped[str] = mapped_column(String(8), nullable=False, default="new")
+    health_note: Mapped[str] = mapped_column(String(300), nullable=False, default="")
+    moved_to: Mapped[str | None] = mapped_column(String(500))
+    fails: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = _created()
+
+
+class ReaderNight(Base):
+    """One pass of the reader: the nightly read, or an hourly re-check of what starts soon."""
+
+    __tablename__ = "reader_nights"
+    id: Mapped[uuid.UUID] = _uuid()
+    city: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    # night | recheck
+    kind: Mapped[str] = mapped_column(String(8), nullable=False, default="night")
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    sources: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    read: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    unchanged: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    changed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    failed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    blocked: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    by_model: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # Changed pages left for tomorrow because the day's budget ran out.
+    deferred: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    events_seen: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    added: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    updated: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    canceled: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    gone: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    tokens_in: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    tokens_out: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # Millionths of a dollar, at list prices; counted against the city's daily budget.
+    cost_micros: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    note: Mapped[str] = mapped_column(Text, nullable=False, default="")
