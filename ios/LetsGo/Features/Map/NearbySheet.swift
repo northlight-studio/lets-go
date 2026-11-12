@@ -2,14 +2,14 @@ import SwiftUI
 import SwiftData
 import MapKit
 
-/// The list over the map: search, filters and what's on, grouped by when. Places'
+/// The list over the map: search, and what the map shows, grouped by when. Slim or full,
+/// and a swipe down always puts it away. Places'
 /// pages push inside it, so going back lands you on the list where you were.
 struct NearbySheet: View {
     @Environment(HomeModel.self) private var model
     @Environment(LocationService.self) private var location
     @Query(sort: \Gathering.start) private var gatherings: [Gathering]
     @Query private var kitchens: [Kitchen]
-    @Query private var notes: [TasteNote]
 
     @FocusState private var searching: Bool
     @State private var hosting: GatheringDraft?
@@ -51,7 +51,6 @@ struct NearbySheet: View {
                 Task { try? await Task.sleep(for: .milliseconds(350)); searching = true }
             }
         }
-        .onDisappear { model.selectedID = nil }
         .sheet(item: $hosting) { NewGatheringView(draft: $0) }
     }
 
@@ -81,10 +80,10 @@ struct NearbySheet: View {
                 Button("Cancel") {
                     model.query = ""
                     searching = false
-                    model.detent = HomeModel.half
+                    model.detent = HomeModel.slim
                 }
                 .font(.system(size: 17))
-                .foregroundStyle(Palette.accent)
+                .foregroundStyle(Palette.ink)
                 .transition(.move(edge: .trailing).combined(with: .opacity))
             }
         }
@@ -139,36 +138,28 @@ struct NearbySheet: View {
 
     // MARK: Nearby
 
+    /// The same window as the map: the rail's day, until the thumb, narrowed by the filters.
     private func nearby(now: Date) -> some View {
-        @Bindable var model = model
         let all = Nearby.candidates(gatherings: gatherings, kitchens: kitchens, from: location.center, now: now)
-        let taste = Nearby.taste(notes: notes, gatherings: gatherings, kitchens: kitchens)
-        let shown = model.visible(all, now: now, taste: taste)
+        let shown = model.shown(all, now: now)
+        let span = model.span(now: now)
+        let day = Timetable.label(model.railDay(now: now), now: now)
         return VStack(alignment: .leading, spacing: 0) {
-            ScrollView(.horizontal) {
-                HStack(spacing: 8) {
-                    ForEach(TimeWindow.allCases) { w in
-                        FilterChip(title: w.label, on: model.window == w) { model.window = w }
-                    }
-                    Rectangle().fill(Palette.line).frame(width: 1, height: 20)
-                    ForEach([Genre.play, .food, .music, .move, .party]) { g in
-                        FilterChip(title: g.plural, on: model.genre == g) { model.genre = model.genre == g ? nil : g }
-                    }
-                }
+            Text("\(Timetable.countLine(shown.count)) \u{00B7} \(day) \(Timetable.untilLine(model.railUntil(all, now: now), span: span))")
+                .font(.subheadline)
+                .monospacedDigit()
+                .foregroundStyle(Palette.muted)
                 .padding(.horizontal, 16)
-                .padding(.vertical, 2)
-            }
-            .scrollIndicators(.hidden)
-            .padding(.top, 12)
+                .padding(.top, 12)
 
             if shown.isEmpty {
                 VStack(alignment: .leading, spacing: 12) {
                     let inCity = CityListings.covers(location.center)
-                    Text(!inCity ? "Let's Go only knows San Francisco so far." : model.window == .now ? "Nothing in the next few hours." : "Nothing here yet.")
-                        .font(.system(size: 17, weight: .semibold))
-                    Text(!inCity ? "There are no listings here yet. Start something and it shows up for people nearby."
-                         : model.window == .now ? "Try Tonight or Weekend, or start something yourself." : "Start something and it shows up here for people nearby.")
-                        .font(.system(size: 15)).foregroundStyle(Palette.muted)
+                    Text(inCity ? "Nothing starts by then." : "Let's Go only knows San Francisco so far.")
+                        .font(.headline)
+                    Text(inCity ? "Drag the rail later or look at another day, or start something yourself."
+                                : "There are no listings here yet. Start something and it shows up for people nearby.")
+                        .font(.subheadline).foregroundStyle(Palette.muted)
                     Button { hosting = GatheringDraft.from(SearchQuery.parse("")) } label: {
                         Label("Host something", systemImage: "plus")
                     }
@@ -290,7 +281,7 @@ struct PickRow: View {
                     Text(pick.start <= now ? "Now" : pick.start.formatted(date: .omitted, time: .shortened))
                         .font(.system(size: 14, weight: .semibold))
                         .monospacedDigit()
-                        .foregroundStyle(pick.start <= now ? Palette.live : Palette.ink)
+                        .foregroundStyle(pick.start <= now ? Palette.accentSoft : Palette.ink)
                     Text(pick.start <= now ? "till \(pick.end.formatted(date: .omitted, time: .shortened))" : When.relative(pick.start, now: now))
                         .font(.system(size: 11))
                         .monospacedDigit()

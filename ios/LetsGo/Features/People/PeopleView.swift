@@ -72,10 +72,10 @@ struct PeopleView: View {
                     Button { withAnimation(.snappy) { segment = s } } label: {
                         Text(s.rawValue)
                             .font(.system(size: 13.5, weight: segment == s ? .semibold : .medium))
-                            .foregroundStyle(segment == s ? Palette.accentInk : Palette.ink)
+                            .foregroundStyle(segment == s ? Palette.onProminent : Palette.ink)
                             .padding(.horizontal, 14)
                             .frame(height: 34)
-                            .background(segment == s ? Palette.accent : Color.clear, in: .capsule)
+                            .background(segment == s ? Palette.prominent : Color.clear, in: .capsule)
                     }
                     .buttonStyle(.plain)
                     .accessibilityAddTraits(segment == s ? .isSelected : [])
@@ -209,9 +209,9 @@ struct PeopleView: View {
                         }
                         Spacer(minLength: 6)
                         Text("See").font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(Palette.accentInk)
+                            .foregroundStyle(Palette.onProminent)
                             .padding(.horizontal, 14).frame(height: 34)
-                            .background(Palette.accent, in: .capsule)
+                            .background(Palette.prominent, in: .capsule)
                     }
                     .foregroundStyle(Palette.ink)
                     .frame(height: 56)
@@ -237,9 +237,9 @@ struct PeopleView: View {
                 } else {
                     Button("Join") { path.append(gathering) }
                         .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(Palette.accentInk)
+                        .foregroundStyle(Palette.onProminent)
                         .padding(.horizontal, 14).frame(height: 34)
-                        .background(Palette.accent, in: .capsule)
+                        .background(Palette.prominent, in: .capsule)
                         .buttonStyle(.plain)
                 }
             } else if let at = f.coordinate {

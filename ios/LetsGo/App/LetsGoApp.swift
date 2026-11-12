@@ -12,7 +12,7 @@ struct LetsGoApp: App {
                 .environment(location)
                 .environment(sync)
                 // Light by day, dark after sunset: whatever the phone's appearance is.
-                .tint(Palette.accent)
+                .tint(Palette.ink)
         }
         .modelContainer(for: [
             Gathering.self, Kitchen.self, MenuItem.self, Drop.self,

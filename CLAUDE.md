@@ -9,7 +9,7 @@ iOS app: a live map of things to do within walking distance, home kitchens selli
 
 ## Rules
 - Weeks start Monday if anything ever needs a calendar week.
-- The look is *Daylight map* (README → The look): follow the phone's light and dark, colours only from `Palette` in `Design/Theme.swift` (never a hard-coded dark), the system's own Liquid Glass for chrome with nothing drawn behind toolbars or the tab bar, yellow for the one prominent button a screen, the system face, no all-caps body copy. Signal keeps its black and lime.
+- The look is *Paperwhite* (README → The look): follow the phone's light and dark, colours only from `Palette` in `Design/Theme.swift` (never a hard-coded dark), the system's own Liquid Glass for chrome with nothing drawn behind toolbars or the tab bar, ink for the one prominent button a screen, the red-orange accent on the map only for what's on now and what you tapped, the system face upright (no serif, no italic), no all-caps body copy. The map is MapLibre with our own style: change its colours in `scripts/map-style.py`, run it, and commit both JSON files. Signal keeps its black and lime.
 - MVVM-ish: views stay dumb; logic that can be tested lives in plain types (`Wren`, `WrenQuery`, `Pricing`, `Walk`).
 - Every write goes through `Ledger` so stamps and Wren's taste notes stay consistent. Saves log on failure, never silently.
 - Nothing made up goes on the map: no sample people, places or listings. A screen with nothing real to show says so and offers the way to start (add a friend, host something).

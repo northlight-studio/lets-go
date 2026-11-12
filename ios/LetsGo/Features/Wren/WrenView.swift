@@ -188,9 +188,9 @@ struct WrenView: View {
             Button { ask(input) } label: {
                 Image(systemName: "arrow.up")
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(Palette.accentInk)
+                    .foregroundStyle(Palette.onProminent)
                     .frame(width: 42, height: 42)
-                    .background(Palette.accent, in: .circle)
+                    .background(Palette.prominent, in: .circle)
             }
             .disabled(input.trimmingCharacters(in: .whitespaces).isEmpty)
             .accessibilityLabel("Ask Wren")
@@ -351,10 +351,10 @@ struct YouBubble: View {
     var body: some View {
         Text(text)
             .font(.system(size: 17, weight: .semibold))
-            .foregroundStyle(Palette.accentInk)
+            .foregroundStyle(Palette.onProminent)
             .padding(.horizontal, 15)
             .padding(.vertical, 11)
-            .background(Palette.accent, in: UnevenRoundedRectangle(topLeadingRadius: 22, bottomLeadingRadius: 22, bottomTrailingRadius: 6, topTrailingRadius: 22))
+            .background(Palette.prominent, in: UnevenRoundedRectangle(topLeadingRadius: 22, bottomLeadingRadius: 22, bottomTrailingRadius: 6, topTrailingRadius: 22))
             .frame(maxWidth: .infinity, alignment: .trailing)
             .padding(.leading, 60)
     }

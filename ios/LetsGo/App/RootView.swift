@@ -37,7 +37,7 @@ struct RootView: View {
                 WrenView()
             }
         }
-        .tint(Palette.accent)
+        .tint(Palette.ink)
         .environment(model)
         .fullScreenCover(isPresented: $model.showQuote) {
             QuoteSplash(onDone: {
