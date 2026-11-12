@@ -20,6 +20,8 @@ final class HomeModel {
     /// Hours past now Signal's ruler is showing.
     var ahead: Double = 0
     var genre: Genre?
+    /// The chips under the search: all, food, events or friends.
+    var layer: MapLayer = .all
     var freeOnly = false
     /// Only things your friends are going to.
     var friendsOnly = false
@@ -77,9 +79,11 @@ final class HomeModel {
         return min(until, rail.upperBound)
     }
 
-    /// What the map and the list show: the rail's window, narrowed by kind and price.
+    /// What the map and the list show: the rail's window, narrowed by the chip (food or
+    /// events; the Friends chip narrows by who's going, in `HomeView`), kind and price.
     func shown(_ all: [Candidate], now: Date) -> [Candidate] {
         Timetable.window(all, span: span(now: now), until: railUntil(all, now: now), now: now, genre: genre, freeOnly: freeOnly)
+            .filter { layer == .friends || layer.keeps($0) }
     }
 
     func pickDay(_ d: Date, now: Date) {
@@ -133,7 +137,7 @@ enum AppTab: Hashable {
 }
 
 enum MapMode: Hashable {
-    /// The everyday map: Paperwhite, each thing its start time, with the time rail.
+    /// The everyday map: Neighborhood color, kitchens, events and friends as pins, with the time rail.
     case paper
     /// Black and lime: the top three, numbered, with when to leave.
     case signal

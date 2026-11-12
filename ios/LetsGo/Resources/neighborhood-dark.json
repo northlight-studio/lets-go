@@ -1,6 +1,6 @@
 {
  "version": 8,
- "name": "Paperwhite dark",
+ "name": "Neighborhood color, at night",
  "sources": {
   "openmaptiles": {
    "type": "vector",
@@ -11,10 +11,73 @@
  "glyphs": "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
  "layers": [
   {
-   "id": "paper",
+   "id": "land",
    "type": "background",
    "paint": {
-    "background-color": "#1C1C1A"
+    "background-color": "#121A2B"
+   }
+  },
+  {
+   "id": "blocks",
+   "type": "fill",
+   "source": "openmaptiles",
+   "source-layer": "landuse",
+   "minzoom": 11,
+   "filter": [
+    "all",
+    [
+     "match",
+     [
+      "geometry-type"
+     ],
+     [
+      "Polygon",
+      "MultiPolygon"
+     ],
+     true,
+     false
+    ],
+    [
+     "match",
+     [
+      "get",
+      "class"
+     ],
+     [
+      "residential",
+      "commercial",
+      "retail",
+      "industrial",
+      "neighbourhood",
+      "quarter",
+      "suburb",
+      "school",
+      "university",
+      "college",
+      "hospital",
+      "railway",
+      "garages",
+      "religious"
+     ],
+     true,
+     false
+    ]
+   ],
+   "paint": {
+    "fill-color": "#172134",
+    "fill-opacity": [
+     "interpolate",
+     [
+      "linear"
+     ],
+     [
+      "zoom"
+     ],
+     11,
+     0,
+     12.5,
+     1
+    ]
    }
   },
   {
@@ -43,16 +106,14 @@
       "class"
      ],
      [
-      "grass",
-      "wood"
+      "grass"
      ],
      true,
      false
     ]
    ],
    "paint": {
-    "fill-color": "#20241F",
-    "fill-opacity": 0.7
+    "fill-color": "#173427"
    }
   },
   {
@@ -73,7 +134,45 @@
     false
    ],
    "paint": {
-    "fill-color": "#20241F"
+    "fill-color": "#173427"
+   }
+  },
+  {
+   "id": "wood",
+   "type": "fill",
+   "source": "openmaptiles",
+   "source-layer": "landcover",
+   "filter": [
+    "all",
+    [
+     "match",
+     [
+      "geometry-type"
+     ],
+     [
+      "Polygon",
+      "MultiPolygon"
+     ],
+     true,
+     false
+    ],
+    [
+     "match",
+     [
+      "get",
+      "class"
+     ],
+     [
+      "wood",
+      "forest"
+     ],
+     true,
+     false
+    ]
+   ],
+   "paint": {
+    "fill-color": "#1F4733",
+    "fill-opacity": 0.85
    }
   },
   {
@@ -105,9 +204,74 @@
     ]
    ],
    "paint": {
-    "fill-color": "#1F2425",
-    "fill-outline-color": "#272E30",
+    "fill-color": "#0A1222",
     "fill-antialias": true
+   }
+  },
+  {
+   "id": "shore",
+   "type": "line",
+   "source": "openmaptiles",
+   "source-layer": "water",
+   "filter": [
+    "all",
+    [
+     "match",
+     [
+      "geometry-type"
+     ],
+     [
+      "Polygon",
+      "MultiPolygon"
+     ],
+     true,
+     false
+    ],
+    [
+     "!=",
+     [
+      "get",
+      "brunnel"
+     ],
+     "tunnel"
+    ]
+   ],
+   "layout": {
+    "line-join": "round"
+   },
+   "paint": {
+    "line-color": "#0E1A30",
+    "line-width": [
+     "interpolate",
+     [
+      "linear"
+     ],
+     [
+      "zoom"
+     ],
+     10,
+     1,
+     14,
+     2.5,
+     18,
+     5
+    ],
+    "line-offset": [
+     "interpolate",
+     [
+      "linear"
+     ],
+     [
+      "zoom"
+     ],
+     10,
+     0.5,
+     14,
+     1.25,
+     18,
+     2.5
+    ],
+    "line-blur": 0.5
    }
   },
   {
@@ -139,7 +303,7 @@
     ]
    ],
    "paint": {
-    "line-color": "#272E30",
+    "line-color": "#0A1222",
     "line-width": [
      "interpolate",
      [
@@ -150,21 +314,78 @@
       "zoom"
      ],
      10,
-     0.5,
+     0.6,
      18,
-     3
+     4
     ]
    }
   },
   {
-   "id": "blocks",
+   "id": "building_shadow",
+   "type": "fill",
+   "source": "openmaptiles",
+   "source-layer": "building",
+   "minzoom": 14,
+   "paint": {
+    "fill-color": "rgba(0,0,0,0.28)",
+    "fill-antialias": false,
+    "fill-translate": [
+     "interpolate",
+     [
+      "linear"
+     ],
+     [
+      "zoom"
+     ],
+     14,
+     [
+      "literal",
+      [
+       0.6,
+       0.6
+      ]
+     ],
+     17,
+     [
+      "literal",
+      [
+       1.6,
+       1.6
+      ]
+     ],
+     19,
+     [
+      "literal",
+      [
+       3,
+       3
+      ]
+     ]
+    ],
+    "fill-opacity": [
+     "interpolate",
+     [
+      "linear"
+     ],
+     [
+      "zoom"
+     ],
+     14,
+     0,
+     15,
+     1
+    ]
+   }
+  },
+  {
+   "id": "building",
    "type": "fill",
    "source": "openmaptiles",
    "source-layer": "building",
    "minzoom": 13,
    "paint": {
-    "fill-color": "#22221F",
-    "fill-outline-color": "#262623",
+    "fill-color": "#1F2B43",
+    "fill-outline-color": "#26334E",
     "fill-opacity": [
      "interpolate",
      [
@@ -226,7 +447,7 @@
     "line-cap": "round"
    },
    "paint": {
-    "line-color": "#2E2D29",
+    "line-color": "#2B3755",
     "line-width": [
      "interpolate",
      [
@@ -237,9 +458,9 @@
       "zoom"
      ],
      15,
-     0.6,
+     0.7,
      20,
-     2
+     2.2
     ],
     "line-dasharray": [
      2,
@@ -290,7 +511,7 @@
     ]
    ],
    "paint": {
-    "line-color": "#34332F",
+    "line-color": "#2B3755",
     "line-width": [
      "interpolate",
      [
@@ -301,9 +522,9 @@
       "zoom"
      ],
      12,
-     0.5,
+     0.6,
      20,
-     1.5
+     1.8
     ]
    }
   },
@@ -312,7 +533,7 @@
    "type": "line",
    "source": "openmaptiles",
    "source-layer": "transportation",
-   "minzoom": 13,
+   "minzoom": 12.5,
    "filter": [
     "all",
     [
@@ -354,7 +575,7 @@
     "line-join": "round"
    },
    "paint": {
-    "line-color": "#2A2926",
+    "line-color": "#202A44",
     "line-width": [
      "interpolate",
      [
@@ -365,11 +586,11 @@
       "zoom"
      ],
      13,
-     1.4,
+     1.6,
      16,
-     4.6,
+     5.6,
      20,
-     24
+     27
     ]
    }
   },
@@ -378,7 +599,7 @@
    "type": "line",
    "source": "openmaptiles",
    "source-layer": "transportation",
-   "minzoom": 13,
+   "minzoom": 12.5,
    "filter": [
     "all",
     [
@@ -420,7 +641,7 @@
     "line-join": "round"
    },
    "paint": {
-    "line-color": "#33322E",
+    "line-color": "#2B3755",
     "line-width": [
      "interpolate",
      [
@@ -431,11 +652,11 @@
       "zoom"
      ],
      13,
-     0.6,
+     0.8,
      16,
-     3.5,
+     4.2,
      20,
-     22
+     24
     ]
    }
   },
@@ -488,7 +709,7 @@
     "line-join": "round"
    },
    "paint": {
-    "line-color": "#2E2D29",
+    "line-color": "#5E4B28",
     "line-width": [
      "interpolate",
      [
@@ -499,13 +720,13 @@
       "zoom"
      ],
      10,
-     1.4,
+     1.8,
      13,
-     3,
+     3.8,
      16,
-     7.4,
+     9.4,
      20,
-     32
+     37
     ]
    }
   },
@@ -558,7 +779,7 @@
     "line-join": "round"
    },
    "paint": {
-    "line-color": "#403E39",
+    "line-color": "#4A3D24",
     "line-width": [
      "interpolate",
      [
@@ -569,13 +790,13 @@
       "zoom"
      ],
      10,
-     0.8,
+     1,
      13,
-     2,
+     2.6,
      16,
-     6,
+     7.5,
      20,
-     30
+     34
     ]
    }
   },
@@ -625,7 +846,7 @@
     "line-join": "round"
    },
    "paint": {
-    "line-color": "#2E2D29",
+    "line-color": "#5E4B28",
     "line-width": [
      "interpolate",
      [
@@ -636,13 +857,13 @@
       "zoom"
      ],
      8,
-     1.4,
+     1.8,
      13,
-     3.6,
+     4.6,
      16,
-     8.4,
+     10.4,
      20,
-     34
+     39
     ]
    }
   },
@@ -692,7 +913,7 @@
     "line-join": "round"
    },
    "paint": {
-    "line-color": "#403E39",
+    "line-color": "#4A3D24",
     "line-width": [
      "interpolate",
      [
@@ -703,13 +924,13 @@
       "zoom"
      ],
      8,
-     0.8,
+     1,
      13,
-     2.6,
+     3.2,
      16,
-     7,
+     8.5,
      20,
-     32
+     36
     ]
    }
   },
@@ -718,6 +939,75 @@
    "type": "symbol",
    "source": "openmaptiles",
    "source-layer": "water_name",
+   "filter": [
+    "all",
+    [
+     "match",
+     [
+      "geometry-type"
+     ],
+     [
+      "Point",
+      "MultiPoint"
+     ],
+     true,
+     false
+    ],
+    [
+     "match",
+     [
+      "get",
+      "class"
+     ],
+     [
+      "ocean",
+      "sea",
+      "bay",
+      "strait",
+      "lake",
+      "lagoon",
+      "reservoir"
+     ],
+     true,
+     false
+    ]
+   ],
+   "layout": {
+    "text-field": [
+     "coalesce",
+     [
+      "get",
+      "name_en"
+     ],
+     [
+      "get",
+      "name:latin"
+     ],
+     [
+      "get",
+      "name"
+     ]
+    ],
+    "text-font": [
+     "Noto Sans Regular"
+    ],
+    "text-size": 12,
+    "text-max-width": 8,
+    "text-letter-spacing": 0.04
+   },
+   "paint": {
+    "text-color": "#5D7398",
+    "text-halo-color": "#0A1222",
+    "text-halo-width": 1,
+    "text-halo-blur": 0.5
+   }
+  },
+  {
+   "id": "park_name",
+   "type": "symbol",
+   "source": "openmaptiles",
+   "source-layer": "park",
+   "minzoom": 14,
    "filter": [
     "match",
     [
@@ -749,13 +1039,13 @@
     "text-font": [
      "Noto Sans Regular"
     ],
-    "text-size": 11,
-    "text-max-width": 8,
-    "text-letter-spacing": 0.04
+    "text-size": 11.5,
+    "text-max-width": 7,
+    "text-letter-spacing": 0.02
    },
    "paint": {
-    "text-color": "#9A958A",
-    "text-halo-color": "#1C1C1A",
+    "text-color": "#8D97B3",
+    "text-halo-color": "#121A2B",
     "text-halo-width": 1.4,
     "text-halo-blur": 0.4
    }
@@ -827,12 +1117,13 @@
      18,
      11.5
     ],
+    "text-letter-spacing": 0.03,
     "text-rotation-alignment": "map",
     "symbol-spacing": 320
    },
    "paint": {
-    "text-color": "#9A958A",
-    "text-halo-color": "#1C1C1A",
+    "text-color": "#8D97B3",
+    "text-halo-color": "#121A2B",
     "text-halo-width": 1.4,
     "text-halo-blur": 0.4
    }
@@ -907,12 +1198,13 @@
      18,
      12
     ],
+    "text-letter-spacing": 0.03,
     "text-rotation-alignment": "map",
     "symbol-spacing": 360
    },
    "paint": {
-    "text-color": "#9A958A",
-    "text-halo-color": "#1C1C1A",
+    "text-color": "#8D97B3",
+    "text-halo-color": "#121A2B",
     "text-halo-width": 1.4,
     "text-halo-blur": 0.4
    }
@@ -954,10 +1246,11 @@
      ]
     ],
     "text-font": [
-     "Noto Sans Regular"
+     "Noto Sans Bold"
     ],
-    "text-max-width": 7,
-    "text-letter-spacing": 0.02,
+    "text-transform": "uppercase",
+    "text-max-width": 9,
+    "text-letter-spacing": 0.18,
     "text-size": [
      "interpolate",
      [
@@ -967,14 +1260,14 @@
       "zoom"
      ],
      12,
-     12,
+     10,
      16,
-     14
+     11.5
     ]
    },
    "paint": {
-    "text-color": "#C9C4B8",
-    "text-halo-color": "#1C1C1A",
+    "text-color": "#A8B1C9",
+    "text-halo-color": "#121A2B",
     "text-halo-width": 1.4,
     "text-halo-blur": 0.4
    }
@@ -1016,9 +1309,10 @@
      ]
     ],
     "text-font": [
-     "Noto Sans Regular"
+     "Noto Sans Bold"
     ],
     "text-max-width": 8,
+    "text-letter-spacing": 0.04,
     "text-size": [
      "interpolate",
      [
@@ -1034,8 +1328,8 @@
     ]
    },
    "paint": {
-    "text-color": "#C9C4B8",
-    "text-halo-color": "#1C1C1A",
+    "text-color": "#A8B1C9",
+    "text-halo-color": "#121A2B",
     "text-halo-width": 1.4,
     "text-halo-blur": 0.4
    }
