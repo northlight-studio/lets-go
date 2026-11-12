@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		E1E34430186874731F6D7634 /* MapLibre in Frameworks */ = {isa = PBXBuildFile; productRef = 333CDBC04E63B37088E816C3 /* MapLibre */; };
+		A1B2C3D4E5F60718293A4B5C /* StripePaymentSheet in Frameworks */ = {isa = PBXBuildFile; productRef = B2C3D4E5F60718293A4B5C6D /* StripePaymentSheet */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,6 +54,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E1E34430186874731F6D7634 /* MapLibre in Frameworks */,
+				A1B2C3D4E5F60718293A4B5C /* StripePaymentSheet in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -106,6 +108,7 @@
 			name = LetsGo;
 			packageProductDependencies = (
 				333CDBC04E63B37088E816C3 /* MapLibre */,
+				B2C3D4E5F60718293A4B5C6D /* StripePaymentSheet */,
 			);
 			productName = LetsGo;
 			productReference = 73D86873393FB2E091C0BDD1 /* LetsGo.app */;
@@ -163,6 +166,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				01C8A5C1F3ADCB4433190818 /* XCRemoteSwiftPackageReference "maplibre-gl-native-distribution" */,
+				C3D4E5F60718293A4B5C6D7E /* XCRemoteSwiftPackageReference "stripe-ios-spm" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 30C914E93BE2DA1F745A0ED8 /* Products */;
@@ -228,6 +232,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Let's Go";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Let's Go uses the camera to photograph what you're selling.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Let's Go shows what's happening within walking distance of you, and checks you in when you show up.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -339,6 +344,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Let's Go";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Let's Go uses the camera to photograph what you're selling.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Let's Go shows what's happening within walking distance of you, and checks you in when you show up.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -474,6 +480,14 @@
 				minimumVersion = 6.31.0;
 			};
 		};
+		C3D4E5F60718293A4B5C6D7E /* XCRemoteSwiftPackageReference "stripe-ios-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/stripe/stripe-ios-spm";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 24.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -481,6 +495,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 01C8A5C1F3ADCB4433190818 /* XCRemoteSwiftPackageReference "maplibre-gl-native-distribution" */;
 			productName = MapLibre;
+		};
+		B2C3D4E5F60718293A4B5C6D /* StripePaymentSheet */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C3D4E5F60718293A4B5C6D7E /* XCRemoteSwiftPackageReference "stripe-ios-spm" */;
+			productName = StripePaymentSheet;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

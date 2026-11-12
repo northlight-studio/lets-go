@@ -23,6 +23,7 @@ struct HomeView: View {
     @State private var camera: PaperMap.Camera?
     @State private var routes = RouteBook()
     @State private var hostingBlank = false
+    @State private var selling = false
     @State private var joining = false
     @State private var problem: String?
     @State private var credits = false
@@ -55,6 +56,7 @@ struct HomeView: View {
                 .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $hostingBlank) { NewGatheringView(draft: nil) }
+        .sheet(isPresented: $selling) { SellView().environment(location) }
         .confirmationDialog("Map data", isPresented: $credits, titleVisibility: .visible) {
             ForEach(MapCredit.all) { c in
                 Button(c.name) { openURL(c.link) }
@@ -152,7 +154,7 @@ struct HomeView: View {
         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
     }
 
-    /// The small glass circle by the search: kinds, free, friends, Quick pick and hosting.
+    /// The small glass circle by the search: kinds, free, friends, Quick pick, hosting and selling.
     private var filterMenu: some View {
         @Bindable var model = model
         return Menu {
@@ -167,6 +169,7 @@ struct HomeView: View {
             }
             Button { model.toggleSignal() } label: { Label("Quick pick", systemImage: "bolt") }
             Button { hostingBlank = true } label: { Label("Host something", systemImage: "plus") }
+            Button { selling = true } label: { Label("Sell something", systemImage: "camera") }
         } label: {
             Image(systemName: model.isFiltered ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease")
                 .font(.system(size: 16, weight: .medium))

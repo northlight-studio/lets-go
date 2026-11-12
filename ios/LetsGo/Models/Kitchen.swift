@@ -33,6 +33,15 @@ final class Kitchen {
     var tableSeats: Int = 0
     var tableTaken: Int = 0
     var tableFriends: [TableSeat] = []
+    /// The street address: yours, or a kitchen you've reserved from (the server shows it to no one else).
+    var address: String = ""
+    var followers: Int = 0
+    var isFollowing: Bool = false
+    /// `PayMode`: in the app once the cook has set up payouts, else at pickup.
+    var payRaw: String = PayMode.atPickup.rawValue
+    /// The best review with words in it, for a batch's listing.
+    var quote: String = ""
+    var quoteAuthor: String = ""
 
     @Relationship(deleteRule: .cascade, inverse: \MenuItem.kitchen) var menu: [MenuItem] = []
     @Relationship(deleteRule: .cascade, inverse: \Drop.kitchen) var drops: [Drop] = []
@@ -82,6 +91,7 @@ final class Kitchen {
     }
 
     var isReady: Bool { permitConfirmed && handlerCardConfirmed && !menu.isEmpty }
+    var pay: PayMode { PayMode(rawValue: payRaw) ?? .atPickup }
 }
 
 @Model
@@ -115,6 +125,17 @@ final class Drop {
     var perSlot: Int
     var kitchen: Kitchen?
     var remoteID: UUID?
+    /// A batch (one thing, posted with "Sell something"): what it is, its price and its photo.
+    var title: String = ""
+    var unit: String = ""
+    var priceCents: Int = 0
+    var tags: [String] = []
+    /// "porch" or "door".
+    var pickupSpot: String = ""
+    /// The server's path for the photo ("/v1/photos/…"); `APIConfig.resolve` makes it a URL.
+    var photoPath: String?
+    /// Pickup slots already full, from the server.
+    var fullSlots: [Date] = []
 
     init(start: Date, end: Date, total: Int, sold: Int = 0, perSlot: Int = 4) {
         self.id = UUID()
@@ -125,6 +146,7 @@ final class Drop {
         self.perSlot = perSlot
     }
 
+    var isBatch: Bool { !title.isEmpty && priceCents > 0 }
     var left: Int { max(0, total - sold) }
     var isSoldOut: Bool { left == 0 }
     func isLive(at now: Date) -> Bool { start <= now && now < end }
@@ -166,6 +188,19 @@ final class Order {
     var statusRaw: String
     var kitchen: Kitchen?
     var remoteID: UUID?
+    /// `PaymentState`: at pickup, or in the app (unpaid until PaymentSheet finishes, then paid).
+    var paymentRaw: String = PaymentState.atPickup.rawValue
+    /// Three digits to say at the door.
+    var pickupCode: String = ""
+    /// The exact spot, once it's yours to see (reserved, and paid if paying in the app).
+    var address: String = ""
+    var exactLatitude: Double?
+    var exactLongitude: Double?
+    /// A batch order: what it is and its photo.
+    var title: String = ""
+    var unit: String = ""
+    var photoPath: String?
+    var pickupSpot: String = ""
 
     init(pickupAt: Date, lines: [OrderLine], eatOnPorch: Bool) {
         self.id = UUID()
@@ -181,9 +216,20 @@ final class Order {
         set { statusRaw = newValue.rawValue }
     }
 
+    var payment: PaymentState {
+        get { PaymentState(rawValue: paymentRaw) ?? .atPickup }
+        set { paymentRaw = newValue.rawValue }
+    }
+
+    var exactCoordinate: CLLocationCoordinate2D? {
+        guard let exactLatitude, let exactLongitude else { return nil }
+        return .init(latitude: exactLatitude, longitude: exactLongitude)
+    }
+
     var itemCount: Int { lines.reduce(0) { $0 + $1.quantity } }
     var subtotalCents: Int { lines.reduce(0) { $0 + $1.priceCents * $1.quantity } }
-    var serviceCents: Int { Pricing.serviceFee(for: subtotalCents) }
+    /// What the app keeps, only from a payment in the app. Paying the cook in person, there's none.
+    var serviceCents: Int { payment == .atPickup ? 0 : Pricing.serviceFee(for: subtotalCents) }
     var totalCents: Int { subtotalCents + serviceCents }
 }
 

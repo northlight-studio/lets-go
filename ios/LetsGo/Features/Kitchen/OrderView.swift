@@ -1,8 +1,8 @@
 import SwiftUI
 import SwiftData
 
-/// Pick a pickup slot (or a porch seat), then reserve.
-/// Payment isn't wired up yet, so you pay the cook at pickup.
+/// Pick a pickup slot (or a porch seat), then reserve. Paid in the app when the kitchen has set up
+/// payouts (the pickup screen that follows has Pay), else to the cook at pickup.
 struct OrderView: View {
     var kitchen: Kitchen
     var drop: Drop
@@ -27,7 +27,7 @@ struct OrderView: View {
         NavigationStack {
             Group {
                 if let placed {
-                    ReservedView(order: placed) { dismiss() }
+                    PickupView(order: placed, onDone: { dismiss() })
                 } else {
                     form
                 }
@@ -104,10 +104,11 @@ struct OrderView: View {
                 Label("The exact pickup spot shows after you reserve.", systemImage: "lock.fill")
                     .font(.system(size: 13)).foregroundStyle(Palette.muted)
                 VStack(spacing: 6) {
+                    let service = kitchen.pay == .inApp ? Pricing.serviceFee(for: subtotal) : 0
                     row("Food", Pricing.format(subtotal))
-                    row("Service", Pricing.format(Pricing.serviceFee(for: subtotal)))
-                    row("Total", Pricing.format(subtotal + Pricing.serviceFee(for: subtotal)), bold: true)
-                    Text("Pay \(kitchen.cookName) at pickup. In-app payment comes later.")
+                    if kitchen.pay == .inApp { row("Service", Pricing.format(service)) }
+                    row("Total", Pricing.format(subtotal + service), bold: true)
+                    Text(BatchCopy.payLine(pay: kitchen.pay, cook: kitchen.cookName, totalCents: subtotal + service))
                         .font(.system(size: 12)).foregroundStyle(Palette.muted)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -148,7 +149,7 @@ struct OrderView: View {
 
     private func isFull(_ s: Date) -> Bool {
         let booked = kitchen.orders.filter { $0.pickupAt == s }.count
-        return booked >= drop.perSlot
+        return booked >= drop.perSlot || drop.fullSlots.contains(s)
     }
 
     private func reserve() {
@@ -168,40 +169,5 @@ struct OrderView: View {
             }
             reserving = false
         }
-    }
-}
-
-struct ReservedView: View {
-    var order: Order
-    var done: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 54))
-                .foregroundStyle(Genre.play.color)
-                .padding(.top, 20)
-            Text("Reserved").display(30)
-            Text("Pick up at \(order.pickupAt.formatted(date: .omitted, time: .shortened)) from \(order.kitchen?.cookName ?? "the cook").")
-                .font(.system(size: 17))
-            if let note = order.kitchen?.pickupNote, !note.isEmpty {
-                VStack(alignment: .leading, spacing: 6) {
-                    Label("Where to go", systemImage: "lock.open.fill").eyebrow(Palette.accent)
-                    Text(note).font(.system(size: 16, weight: .semibold))
-                }
-                .padding(14)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .card()
-            }
-            if order.eatOnPorch {
-                Label("A porch seat's yours if one's open when you get there.", systemImage: "chair.lounge")
-                    .font(.system(size: 14)).foregroundStyle(Palette.muted)
-            }
-            Text("It's in Kitchens → Your orders. Mark it picked up there and leave a review.")
-                .font(.system(size: 14)).foregroundStyle(Palette.muted)
-            Spacer()
-            Button("Done", action: done).buttonStyle(PrimaryButtonStyle())
-        }
-        .padding(20)
     }
 }

@@ -211,7 +211,8 @@ enum Sync {
                 clientId: order.id, dropId: dropID, pickupAt: order.pickupAt, lines: lines, eatOnPorch: order.eatOnPorch
             )))
             order.remoteID = dto.id
-            k.pickupNote = dto.pickupNote
+            apply(dto, to: order)
+            if !dto.pickupNote.isEmpty { k.pickupNote = dto.pickupNote }
         }
         Ledger.reserve(order, at: k, drop: drop, context: context)
     }
@@ -267,7 +268,7 @@ enum Sync {
         return k
     }
 
-    private static func update(_ k: Kitchen, from dto: KitchenDTO, context: ModelContext) {
+    static func update(_ k: Kitchen, from dto: KitchenDTO, context: ModelContext) {
         k.name = dto.name
         k.cookName = dto.isMine ? "You" : dto.cookName
         k.cuisine = dto.cuisine
@@ -278,7 +279,11 @@ enum Sync {
         k.isMine = dto.isMine
         k.permitConfirmed = dto.permitted
         k.handlerCardConfirmed = dto.permitted
-        k.regulars = 0
+        if let r = dto.regulars { k.regulars = r }
+        if let f = dto.followers { k.followers = f }
+        if let f = dto.isFollowing { k.isFollowing = f }
+        if let pay = dto.pay { k.payRaw = pay }
+        if let a = dto.address { k.address = a }
         // The server's rating already includes any review you posted from here,
         // so take your local ones back out of the base.
         let localStars = k.reviews.reduce(0) { $0 + $1.stars }
@@ -314,20 +319,31 @@ enum Sync {
             }
             for item in k.menu where item.remoteID.map({ !keep.contains($0) }) ?? false { context.delete(item) }
         }
-        if let d = dto.nextDrop {
-            let drop = k.drops.first { $0.remoteID == d.id } ?? {
-                let new = Drop(start: d.startsAt, end: d.endsAt, total: d.total)
-                new.remoteID = d.id
-                context.insert(new)
-                new.kitchen = k
-                return new
-            }()
-            drop.start = d.startsAt
-            drop.end = d.endsAt
-            drop.total = d.total
-            drop.sold = d.sold
-            drop.perSlot = d.perSlot
-        }
+        if let d = dto.nextDrop { upsert(d, in: k, context: context) }
+    }
+
+    /// The local copy of a server drop, made if it's new, with everything the server said about it.
+    @discardableResult
+    static func upsert(_ d: DropDTO, in k: Kitchen, context: ModelContext) -> Drop {
+        let drop = k.drops.first { $0.remoteID == d.id } ?? {
+            let new = Drop(start: d.startsAt, end: d.endsAt, total: d.total)
+            new.remoteID = d.id
+            context.insert(new)
+            new.kitchen = k
+            return new
+        }()
+        drop.start = d.startsAt
+        drop.end = d.endsAt
+        drop.total = d.total
+        drop.sold = d.sold
+        drop.perSlot = d.perSlot
+        if let t = d.title { drop.title = t }
+        if let u = d.unit { drop.unit = u }
+        if let p = d.priceCents { drop.priceCents = p }
+        if let t = d.tags { drop.tags = t }
+        if let s = d.pickupSpot { drop.pickupSpot = s }
+        if d.photoUrl != nil || d.title != nil { drop.photoPath = d.photoUrl }
+        return drop
     }
 
     static func fetch<T: PersistentModel>(_ context: ModelContext, _ d: FetchDescriptor<T>) -> [T] {

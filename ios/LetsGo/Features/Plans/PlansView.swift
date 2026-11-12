@@ -20,6 +20,9 @@ struct PlansView: View {
     @State private var day: Date?
     @State private var showWholeDay = false
     @State private var hosting = false
+    @State private var selling = false
+    /// New batches from kitchens you follow (push isn't set up yet, so they show here).
+    @State private var notes: [NoteDTO] = []
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -33,6 +36,7 @@ struct PlansView: View {
                         header(all, soon: soon, now: now)
                         planned(now: now)
                         yours(now: now)
+                        followed(now: now)
                         pick(all, taste: taste, now: now)
                         soonStrip(soon, now: now)
                         walkable(all, excluding: Set(soon.map(\.id)), now: now)
@@ -57,6 +61,54 @@ struct PlansView: View {
             .navigationDestination(for: SavedPlan.self) { PlanView(plan: $0) }
         }
         .sheet(isPresented: $hosting) { NewGatheringView(draft: nil) }
+        .sheet(isPresented: $selling) { SellView() }
+        .task { if let n = try? await Sync.notes() { notes = n } }
+    }
+
+    // MARK: Kitchens you follow
+
+    /// "Dana's kitchen posted Mango sticky rice ice cream": unread notes, newest first.
+    @ViewBuilder
+    private func followed(now: Date) -> some View {
+        let unread = notes.filter { !$0.read }.prefix(4)
+        if !unread.isEmpty {
+            sectionHeader("New from kitchens you follow", action: "Clear") { clearNotes() }
+            VStack(spacing: 0) {
+                ForEach(Array(unread.enumerated()), id: \.element.id) { i, n in
+                    Button { open(n) } label: {
+                        HStack(spacing: 12) {
+                            BatchPhoto(path: n.photoUrl, title: n.title, height: 44, radius: 12).frame(width: 44)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(n.title.isEmpty ? "A new batch" : n.title)
+                                    .font(.system(size: 16, weight: .semibold)).foregroundStyle(Palette.ink).lineLimit(1)
+                                Text(n.kitchenName).font(.system(size: 13)).foregroundStyle(Palette.muted).lineLimit(1)
+                            }
+                            Spacer(minLength: 6)
+                            if let at = n.startsAt {
+                                Text(When.short(at, now: now)).font(.system(size: 14, weight: .semibold)).monospacedDigit()
+                                    .foregroundStyle(Palette.ink)
+                            }
+                        }
+                        .padding(.vertical, 10)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, 14)
+                    if i < unread.count - 1 { Divider().overlay(Palette.line).padding(.leading, 70) }
+                }
+            }
+            .card(radius: 20)
+            .padding(.horizontal, 16)
+        }
+    }
+
+    private func open(_ n: NoteDTO) {
+        if let k = kitchens.first(where: { $0.remoteID == n.kitchenId }) { path.append(k) }
+    }
+
+    private func clearNotes() {
+        withAnimation { notes = notes.map { var n = $0; n.read = true; return n } }
+        Task { try? await Sync.markNotesRead() }
     }
 
     // MARK: Plans Wren made
@@ -106,7 +158,7 @@ struct PlansView: View {
     @ViewBuilder
     private func yours(now: Date) -> some View {
         let joined = gatherings.filter { $0.isJoined && $0.isShown(at: now) }.prefix(6)
-        let pickups = orders.filter { $0.status == .reserved && $0.pickupAt.addingTimeInterval(3600) > now }.prefix(4)
+        let pickups = orders.filter { $0.status == .reserved && $0.payment.isLive && $0.pickupAt.addingTimeInterval(3600) > now }.prefix(4)
         if !joined.isEmpty || !pickups.isEmpty {
             sectionHeader("You're in", detail: "Show up, check in, collect the stamp.")
             VStack(spacing: 0) {
@@ -120,8 +172,10 @@ struct PlansView: View {
                         HStack(spacing: 12) {
                             CategoryDot(category: .food, size: 40)
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(o.kitchen?.name ?? "Pickup").font(.system(size: 16, weight: .semibold)).foregroundStyle(Palette.ink).lineLimit(1)
-                                Text("\(o.itemCount) item\(o.itemCount == 1 ? "" : "s")\(o.eatOnPorch ? " · porch seat" : "")")
+                                Text(o.title.isEmpty ? (o.kitchen?.name ?? "Pickup") : o.title).font(.system(size: 16, weight: .semibold)).foregroundStyle(Palette.ink).lineLimit(1)
+                                Text(o.title.isEmpty
+                                     ? "\(o.itemCount) item\(o.itemCount == 1 ? "" : "s")\(o.eatOnPorch ? " · porch seat" : "")"
+                                     : "\(o.kitchen?.name ?? "") · \(BatchCopy.count(o.itemCount, o.unit))\(o.payment == .unpaid ? " · not paid yet" : "")")
                                     .font(.system(size: 13)).foregroundStyle(Palette.muted).lineLimit(1)
                             }
                             Spacer(minLength: 6)
@@ -148,8 +202,11 @@ struct PlansView: View {
                     .font(.system(size: 14))
                     .foregroundStyle(Palette.muted)
                     .fixedSize(horizontal: false, vertical: true)
-                Button { hosting = true } label: { Label("Host something", systemImage: "plus") }
-                    .buttonStyle(SecondaryButtonStyle())
+                HStack(spacing: 10) {
+                    Button { hosting = true } label: { Label("Host something", systemImage: "plus") }
+                    Button { selling = true } label: { Label("Sell something", systemImage: "camera") }
+                }
+                .buttonStyle(SecondaryButtonStyle())
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -349,9 +406,37 @@ struct PlansView: View {
             }
             .scrollIndicators(.hidden)
         } else {
-            sectionHeader("Home kitchens near you", detail: "No kitchens nearby yet. When a neighbor opens theirs, its drops show up here.",
+            sectionHeader("Home kitchens near you", detail: "No kitchens nearby yet. When a neighbor posts a batch, it shows up here.",
                           action: "Open yours") { path.append(MyKitchenRoute()) }
         }
+        sellCard
+    }
+
+    /// Make something good? Put a batch on the map.
+    private var sellCard: some View {
+        Button { selling = true } label: {
+            HStack(spacing: 14) {
+                Image(systemName: "camera")
+                    .font(.system(size: 20, weight: .medium))
+                    .foregroundStyle(Palette.ink)
+                    .frame(width: 44, height: 44)
+                    .background(Palette.raise, in: .circle)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Sell something").font(.system(size: 16, weight: .bold)).foregroundStyle(Palette.ink)
+                    Text("Make something good? Snap it, set a price and a pickup time, and neighbors a short walk away can reserve it.")
+                        .font(.system(size: 13))
+                        .foregroundStyle(Palette.muted)
+                        .multilineTextAlignment(.leading)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.muted)
+            }
+            .padding(16)
+            .card(radius: 22)
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 16)
+        .padding(.top, 12)
     }
 
     // MARK: The city list

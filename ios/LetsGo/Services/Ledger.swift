@@ -115,6 +115,28 @@ enum Ledger {
         return earned
     }
 
+    /// A batch you posted ("Sell something"). The first one is a stamp.
+    static func postBatch(_ drop: Drop, at kitchen: Kitchen, context: ModelContext) {
+        if drop.kitchen == nil {
+            context.insert(drop)
+            drop.kitchen = kitchen
+        }
+        award(key: "first-batch", title: "Sold to the block", symbol: "basket.fill", category: .food, context: context)
+        save(context, "post batch")
+    }
+
+    /// An order's payment, code or address changed on the server (paid, picked up).
+    static func settle(_ order: Order, context: ModelContext) {
+        save(context, "settle order")
+    }
+
+    static func follow(_ kitchen: Kitchen, _ on: Bool, followers: Int, context: ModelContext) {
+        kitchen.isFollowing = on
+        kitchen.followers = followers
+        if on { learn("eats:\(kitchen.cuisine.lowercased())", "Likes \(kitchen.cuisine.lowercased())", .food, context: context) }
+        save(context, on ? "follow" : "unfollow")
+    }
+
     static func openKitchen(_ kitchen: Kitchen, context: ModelContext) {
         context.insert(kitchen)
         award(key: "opened-kitchen", title: "Opened a kitchen", symbol: "house.fill", category: .food, context: context)

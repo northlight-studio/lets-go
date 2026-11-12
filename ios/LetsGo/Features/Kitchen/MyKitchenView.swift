@@ -28,6 +28,7 @@ private struct OpenKitchenForm: View {
     @State private var permit = false
     @State private var handlerCard = false
     @State private var opening = false
+    @State private var selling = false
     @State private var problem: String?
 
     var body: some View {
@@ -35,6 +36,10 @@ private struct OpenKitchenForm: View {
             Section {
                 Text("Sell what you're good at making to people a few blocks away. You set the batch, the time and the price; people reserve and pick up at your door.")
                     .font(.system(size: 14)).foregroundStyle(Palette.muted)
+                Button { selling = true } label: { Label("Sell something", systemImage: "camera") }
+                    .fontWeight(.semibold)
+            } footer: {
+                Text("Just one batch? Post it and your kitchen opens with your name. Or set up a whole kitchen below.")
             }
             Section("Your kitchen") {
                 TextField("Name, like \"Back Gate Ice Cream\"", text: $name)
@@ -65,6 +70,7 @@ private struct OpenKitchenForm: View {
         }
         .scrollContentBackground(.hidden)
         .navigationTitle("Open your kitchen")
+        .sheet(isPresented: $selling) { SellView() }
         .errorAlert($problem)
     }
 
@@ -94,7 +100,13 @@ private struct KitchenDashboard: View {
     @Environment(\.modelContext) private var context
     @State private var addingItem = false
     @State private var postingDrop = false
+    @State private var selling = false
     @State private var problem: String?
+    /// Every confirmed order on the kitchen, from the server, with names and codes.
+    @State private var orders: [OrderDTO] = []
+    @State private var handing: Set<UUID> = []
+    @State private var payouts: PayoutsDTO?
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         let now = Date.now
@@ -107,7 +119,15 @@ private struct KitchenDashboard: View {
                         HStack(spacing: 5) { Stars(value: r); Text(String(format: "%.1f · %d reviews", r, kitchen.reviewCount)) }
                             .font(.system(size: 13))
                     }
+                    if kitchen.followers > 0 {
+                        Text("\(kitchen.followers) follower\(kitchen.followers == 1 ? "" : "s")")
+                            .font(.system(size: 13)).foregroundStyle(Palette.muted)
+                    }
                 }
+                Button { selling = true } label: { Label("Sell something", systemImage: "camera") }
+                    .buttonStyle(PrimaryButtonStyle())
+                ForEach(batches(now: now)) { batchCard($0, now: now) }
+                payoutsCard
                 stats
                 dropSection(now: now)
                 if let tip = tip(now: now) { TipNote(text: tip) }
@@ -118,18 +138,150 @@ private struct KitchenDashboard: View {
         }
         .sheet(isPresented: $addingItem) { AddMenuItemView(kitchen: kitchen) }
         .sheet(isPresented: $postingDrop) { PostDropView(kitchen: kitchen) }
+        .sheet(isPresented: $selling, onDismiss: { Task { await load() } }) { SellView() }
         .errorAlert($problem)
-        .task { try? await Sync.refresh(kitchen, context: context) }
+        .refreshable { await load() }
+        .task {
+            try? await Sync.refresh(kitchen, context: context)
+            await load()
+        }
     }
 
+    private func load() async {
+        guard kitchen.remoteID != nil else { return }
+        if let o = try? await Sync.kitchenOrders() { orders = o }
+        if let p = try? await Sync.payouts() { payouts = p }
+        for d in batches(now: .now) { try? await Sync.refresh(batch: d, context: context) }
+    }
+
+    // MARK: Batches
+
+    /// Your batches still to come or on now, soonest first.
+    private func batches(now: Date) -> [Drop] {
+        kitchen.drops.filter { $0.isBatch && $0.end > now }.sorted { $0.start < $1.start }
+    }
+
+    private func batchCard(_ drop: Drop, now: Date) -> some View {
+        let mine = orders.filter { $0.dropId == drop.remoteID }
+        let waiting = mine.filter { $0.status == "reserved" }
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                BatchPhoto(path: drop.photoPath, title: drop.title, height: 64, radius: 14).frame(width: 64)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(drop.isLive(at: now) ? "Live now" : BatchCopy.window(drop.start, drop.end, now: now))
+                        .eyebrow(drop.isLive(at: now) ? Palette.accentSoft : Palette.muted)
+                    Text(drop.title).font(.system(size: 17, weight: .semibold)).lineLimit(2)
+                    Text("\(drop.sold) of \(BatchCopy.count(drop.total, drop.unit)) sold · \(BatchCopy.price(drop.priceCents, unit: drop.unit))")
+                        .font(.system(size: 13)).foregroundStyle(Palette.muted).monospacedDigit()
+                }
+            }
+            LeftBar(left: drop.left, total: drop.total)
+            if mine.isEmpty {
+                Text("No orders yet. They show here with each buyer's pickup code.")
+                    .font(.system(size: 13)).foregroundStyle(Palette.muted)
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(Array(mine.enumerated()), id: \.element.id) { i, o in
+                        orderRow(o)
+                        if i < mine.count - 1 { Divider().overlay(Palette.line) }
+                    }
+                }
+                if waiting.isEmpty {
+                    Text("Everyone's picked up.").font(.system(size: 13)).foregroundStyle(Palette.muted)
+                }
+            }
+        }
+        .padding(14)
+        .card()
+    }
+
+    private func orderRow(_ o: OrderDTO) -> some View {
+        let qty = o.lines.reduce(0) { $0 + $1.quantity }
+        let done = o.status != "reserved"
+        return HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(o.buyerName ?? "Someone") · \(BatchCopy.count(qty, o.unit ?? ""))")
+                    .font(.system(size: 15, weight: .semibold))
+                Text("\(o.pickupAt.formatted(date: .omitted, time: .shortened)) · \(o.payment == PaymentState.paid.rawValue ? "paid" : "pays \(Pricing.format(o.totalCents)) at pickup")")
+                    .font(.system(size: 12)).foregroundStyle(Palette.muted)
+            }
+            Spacer(minLength: 6)
+            Text(BatchCopy.spoken(o.pickupCode ?? ""))
+                .font(.system(size: 20, weight: .bold))
+                .monospacedDigit()
+                .foregroundStyle(done ? Palette.muted : Palette.ink)
+                .accessibilityLabel("Code \(BatchCopy.spoken(o.pickupCode ?? ""))")
+            if done {
+                Image(systemName: "checkmark.circle.fill").foregroundStyle(Palette.live)
+                    .accessibilityLabel("Picked up")
+            } else {
+                Button("Picked up") { handOver(o) }
+                    .buttonStyle(.glass)
+                    .font(.system(size: 13, weight: .semibold))
+                    .disabled(handing.contains(o.id))
+                    .accessibilityLabel("Mark \(o.buyerName ?? "this order") picked up")
+            }
+        }
+        .padding(.vertical, 9)
+    }
+
+    private func handOver(_ o: OrderDTO) {
+        handing.insert(o.id)
+        Task {
+            await attempt($problem) { () throws(APIError) in
+                let done = try await Sync.handOver(o.id, code: nil)
+                if let i = orders.firstIndex(where: { $0.id == done.id }) { orders[i] = done }
+            }
+            handing.remove(o.id)
+        }
+    }
+
+    // MARK: Payouts
+
+    @ViewBuilder
+    private var payoutsCard: some View {
+        if let p = payouts {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Payments").eyebrow()
+                if !p.enabled {
+                    Text("Buyers pay you at pickup. Paying in the app isn't switched on yet.")
+                        .font(.system(size: 14)).foregroundStyle(Palette.soft)
+                } else if p.ready {
+                    Label("Buyers pay in the app. Stripe sends it to your bank.", systemImage: "checkmark.circle.fill")
+                        .font(.system(size: 14)).foregroundStyle(Palette.live)
+                } else {
+                    Text("Buyers pay you at pickup until you set up payouts. Stripe asks for your name, date of birth and a bank account.")
+                        .font(.system(size: 14)).foregroundStyle(Palette.soft)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Button("Set up payouts") { setUpPayouts() }
+                        .buttonStyle(SecondaryButtonStyle())
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .card()
+        }
+    }
+
+    private func setUpPayouts() {
+        Task {
+            await attempt($problem) { () throws(APIError) in
+                let p = try await Sync.setUpPayouts()
+                payouts = p
+                if let link = p.onboardingUrl.flatMap { URL(string: $0) } { openURL(link) }
+            }
+        }
+    }
+
+    /// Handed over so far, from the server's orders (what the cook gets: the food, not the service fee).
     private var stats: some View {
-        let done = kitchen.orders.filter { $0.status != .reserved }
-        let items = done.reduce(0) { $0 + $1.itemCount }
+        let done = orders.filter { $0.status != "reserved" }
+        let items = done.reduce(0) { $0 + $1.lines.reduce(0) { $0 + $1.quantity } }
         let paid = done.reduce(0) { $0 + $1.subtotalCents }
         return HStack(spacing: 8) {
             stat("\(items)", "sold")
             stat(Pricing.format(paid), "earned")
-            stat("\(Set(done.map(\.id)).count)", "orders")
+            stat("\(done.count)", "orders")
         }
     }
 
@@ -147,7 +299,8 @@ private struct KitchenDashboard: View {
     private func dropSection(now: Date) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Drops").eyebrow()
-            if let drop = kitchen.nextDrop(after: now) {
+            // Drops off the menu; batches have their own cards above.
+            if let drop = kitchen.drops.filter({ !$0.isBatch && $0.end > now }).min(by: { $0.start < $1.start }) {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Text(drop.isLive(at: now) ? "On now" : When.short(drop.start, now: now)).font(.system(size: 15, weight: .bold))
@@ -170,9 +323,9 @@ private struct KitchenDashboard: View {
             Button {
                 postingDrop = true
             } label: {
-                Label("Post a drop", systemImage: "plus")
+                Label("Post a drop from the menu", systemImage: "plus")
             }
-            .buttonStyle(PrimaryButtonStyle())
+            .buttonStyle(SecondaryButtonStyle())
             .disabled(kitchen.menu.isEmpty)
             if kitchen.menu.isEmpty {
                 Text("Add something to the menu first.").font(.system(size: 12)).foregroundStyle(Palette.muted)
