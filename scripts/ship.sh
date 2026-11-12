@@ -27,11 +27,13 @@ rm -rf "$OUT"; mkdir -p "$OUT"
 echo "Archiving build $BUILD"
 # Sign the archive with the distribution cert straight from its own keychain. Automatic
 # signing would reach for the login keychain, which a background runner can't open.
+# The profile goes in through LETSGO_PROFILE_SPECIFIER, which only the app target reads (project.yml):
+# Swift packages' resource bundles (Stripe's) fail the archive if they're handed a profile.
 KEYCHAIN="$HOME/Library/Keychains/letsgo-signing.keychain-db"
 xcodebuild archive -project ios/LetsGo.xcodeproj -scheme LetsGo -configuration Release \
   -destination 'generic/platform=iOS' -archivePath "$OUT/LetsGo.xcarchive" \
   CURRENT_PROJECT_VERSION="$BUILD" DEVELOPMENT_TEAM=X3HMA23KKN \
-  CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="$CERT_SHA1" PROVISIONING_PROFILE_SPECIFIER="LetsGo AppStore" \
+  CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="$CERT_SHA1" LETSGO_PROFILE_SPECIFIER="LetsGo AppStore" \
   OTHER_CODE_SIGN_FLAGS="--keychain $KEYCHAIN" -quiet
 
 cat > "$OUT/ExportOptions.plist" <<PLIST
