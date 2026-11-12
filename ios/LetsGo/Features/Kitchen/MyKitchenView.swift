@@ -137,7 +137,7 @@ private struct KitchenDashboard: View {
                 orders = try await Sync.kitchenOrders(kitchen)
                 ordersProblem = nil
             } catch {
-                ordersProblem = "Couldn't load your orders. \(error.errorDescription ?? "")"
+                ordersProblem = "Couldn't load your orders. \(error.localizedDescription)"
             }
         }
     }
