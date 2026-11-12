@@ -181,6 +181,8 @@ class Drop(Base):
     # Where on the house: "porch" or "door" (empty for menu drops).
     pickup_spot: Mapped[str] = mapped_column(String(8), nullable=False, default="", server_default="")
     photo_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("photos.id", ondelete="SET NULL"))
+    # When it was posted: what's new on Your block.
+    created_at: Mapped[datetime] = _created()
 
     kitchen: Mapped[Kitchen] = relationship(back_populates="drops")
     item: Mapped["MenuItem | None"] = relationship(lazy="joined")

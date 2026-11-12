@@ -55,6 +55,12 @@ struct PeopleView: View {
             .navigationDestination(for: Gathering.self) { GatheringDetailView(gathering: $0) }
             .navigationDestination(for: Kitchen.self) { KitchenView(kitchen: $0) }
             .navigationDestination(for: Order.self) { OrderStatusView(order: $0) }
+            .navigationDestination(for: BlockRoute.self) { _ in BlockView() }
+        }
+        .onChange(of: BlockFeed.shared.openRequested, initial: true) { _, open in
+            guard open else { return }
+            BlockFeed.shared.openRequested = false
+            path = NavigationPath([BlockRoute()])
         }
         .sheet(isPresented: $model.addingFriend) { AddFriendView() }
         .sheet(isPresented: $makingCrew) { NewCrewView(people: people) }
@@ -74,6 +80,20 @@ struct PeopleView: View {
                 Text("People").display(34)
             }
             Spacer()
+            Button { path.append(BlockRoute()) } label: {
+                Image(systemName: "bell")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Palette.ink)
+                    .frame(width: 42, height: 42)
+                    .glassEffect(.regular.interactive(), in: .circle)
+                    .overlay(alignment: .topTrailing) {
+                        if BlockFeed.shared.hasNew {
+                            Circle().fill(Palette.ink).frame(width: 9, height: 9).offset(x: -5, y: 5)
+                        }
+                    }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(BlockFeed.shared.hasNew ? "Your block, something new" : "Your block")
             Button { model.addingFriend = true } label: {
                 Image(systemName: "person.badge.plus")
                     .font(.system(size: 16, weight: .semibold))

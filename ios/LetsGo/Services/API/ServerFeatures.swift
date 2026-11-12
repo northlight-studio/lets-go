@@ -26,6 +26,8 @@ final class ServerFeatures {
         case discover
         /// Selling a batch: posting with a photo, its listing, paying in the app, follows and pickup codes.
         case selling
+        /// Your block: the short list of what's on within a few blocks.
+        case block
 
         /// Routes (as the server's OpenAPI lists them) the feature can't work without.
         var routes: [String] {
@@ -36,11 +38,13 @@ final class ServerFeatures {
             case .listings: ["/v1/listings"]
             case .discover: ["/v1/discover"]
             case .selling: ["/v1/batches", "/v1/drops/{drop_id}"]
+            case .block: ["/v1/me/block"]
             }
         }
 
         /// The feature a request path belongs to, when it's one the first server didn't have.
         static func owning(_ path: String) -> Feature? {
+            if path.hasPrefix("/v1/me/block") { return .block }
             if path.hasSuffix("/poster") || path.hasPrefix("/v1/posters") { return .posters }
             if path.hasSuffix("/invites") { return .people }
             if ["/v1/me/up-for", "/v1/up-for", "/v1/meetups"].contains(where: { path.hasPrefix($0) }) { return .upFor }
@@ -63,6 +67,7 @@ final class ServerFeatures {
             case .listings: "The city's newest listings need the new server. These are the ones that came with the app."
             case .discover: "Searching the city needs the new server. It's coming soon."
             case .selling: "Selling a batch needs the new server. It's coming soon."
+            case .block: "Your block needs the new server. It's coming soon."
             }
         }
 
