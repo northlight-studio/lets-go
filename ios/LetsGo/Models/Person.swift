@@ -13,10 +13,14 @@ final class Person {
     /// what older versions stored; they stay in the model so the store opens without a migration.
     var isSample: Bool
     var sampleRole: String = ""
-    /// Porch light: up for something until then.
+    /// Up for something (once called the porch light) until then. `porchNote` is what, as it reads ("A walk").
     var porchUntil: Date?
     var porchNote: String = ""
-    /// Where their porch light is, if they shared it.
+    /// What they're up for: walk, coffee, drink, pickup, cooking, or "" for their own words.
+    var upActivity: String = ""
+    /// How far a walk they are, rounded, from the server. Never where they are.
+    var upWalkMinutes: Int?
+    /// Where they are, only when that's a gathering they checked in to (public anyway).
     var latitude: Double?
     var longitude: Double?
     /// What they joined tonight, from the server: "there" (checked in) or "heading".
@@ -51,6 +55,10 @@ final class Crew {
     var isMine: Bool
     /// Only `SamplePurge` reads this (see `Person.isSample`).
     var isSample: Bool
+    /// The next thing two or more of the crew are in for, from the server.
+    var nextTitle: String = ""
+    var nextStart: Date?
+    var nextGatheringID: UUID?
 
     init(id: UUID = UUID(), name: String, memberIDs: [UUID], isMine: Bool = true) {
         self.id = id
@@ -80,6 +88,8 @@ struct Friend: Identifiable, Hashable, Sendable {
     var name: String
     var porchUntil: Date?
     var porchNote: String = ""
+    var upActivity: String = ""
+    var upWalkMinutes: Int?
     var latitude: Double?
     var longitude: Double?
     var out: Out?
@@ -126,7 +136,8 @@ extension Person {
         }
         return Friend(
             id: id, name: name,
-            porchUntil: porchUntil, porchNote: porchNote, latitude: latitude, longitude: longitude,
+            porchUntil: porchUntil, porchNote: porchNote, upActivity: upActivity, upWalkMinutes: upWalkMinutes,
+            latitude: latitude, longitude: longitude,
             out: out, wavedAt: wavedAt, youWavedAt: youWavedAt, freeAfterHour: freeAfterHour
         )
     }
@@ -144,6 +155,13 @@ final class Intro {
     /// Only `SamplePurge` reads this (see `Person.isSample`).
     var isSample: Bool
     var dismissed: Bool = false
+    /// What they're up for, when they are: people you've met see each other's.
+    var upUntil: Date?
+    var upActivity: String = ""
+    var upLabel: String = ""
+    var upWalkMinutes: Int?
+    var wavedAt: Date?
+    var youWavedAt: Date?
 
     init(id: UUID, name: String, together: [SharedNight], saidHi: Bool = false) {
         self.id = id
@@ -153,7 +171,63 @@ final class Intro {
         self.isSample = false
     }
 
-    var friend: Friend { Friend(id: id, name: name) }
+    var friend: Friend {
+        Friend(id: id, name: name, porchUntil: upUntil, porchNote: upLabel, upActivity: upActivity,
+               upWalkMinutes: upWalkMinutes, wavedAt: wavedAt, youWavedAt: youWavedAt)
+    }
+}
+
+/// You and one other person meeting, after one of you said I'm in. From the server; seen only by the
+/// two of you, until Done. Their position never comes down: only how many minutes off they are.
+@Model
+final class UpMatch {
+    var id: UUID
+    var otherID: UUID
+    var otherName: String
+    /// It was your "up for" they said I'm in to.
+    var isMine: Bool
+    var activity: String
+    var label: String
+    var headline: String
+    var spotName: String = ""
+    var spotLatitude: Double?
+    var spotLongitude: Double?
+    /// Roughly halfway, rounded to a few hundred metres: where this phone looks for a spot.
+    var areaLatitude: Double?
+    var areaLongitude: Double?
+    var meetAt: Date
+    var endsAt: Date
+    var myWalkMinutes: Int?
+    var theirWalkMinutes: Int?
+    var iAmOnMyWay: Bool = false
+    var theyAreOnTheirWay: Bool = false
+    var theySay: String = ""
+    var iSaid: String = ""
+
+    init(id: UUID, otherID: UUID, otherName: String, isMine: Bool, activity: String, label: String,
+         headline: String, meetAt: Date, endsAt: Date) {
+        self.id = id
+        self.otherID = otherID
+        self.otherName = otherName
+        self.isMine = isMine
+        self.activity = activity
+        self.label = label
+        self.headline = headline
+        self.meetAt = meetAt
+        self.endsAt = endsAt
+    }
+
+    var other: Friend { Friend(id: otherID, name: otherName) }
+
+    var spot: CLLocationCoordinate2D? {
+        guard let spotLatitude, let spotLongitude else { return nil }
+        return .init(latitude: spotLatitude, longitude: spotLongitude)
+    }
+
+    var area: CLLocationCoordinate2D? {
+        guard let areaLatitude, let areaLongitude else { return nil }
+        return .init(latitude: areaLatitude, longitude: areaLongitude)
+    }
 }
 
 struct SharedNight: Codable, Hashable, Sendable {

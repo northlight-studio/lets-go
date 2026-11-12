@@ -276,11 +276,15 @@ class FriendCode(Base):
 
 
 class PorchLight(Base):
-    """ "Up for something" for a couple of hours, seen only by friends. Where is optional."""
+    """Up for something (it used to be called the porch light) for a couple of hours: a walk, coffee,
+    or your own words. Seen by friends and people you've met. Where you are stays on the server:
+    others get a walk time, never the coordinates."""
 
     __tablename__ = "porch_lights"
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
     on_until: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    # walk, coffee, drink, pickup, cooking (app/upfor.py), or "" when it's only your own words.
+    activity: Mapped[str] = mapped_column(String(20), nullable=False, default="", server_default="")
     note: Mapped[str] = mapped_column(String(80), nullable=False, default="")
     lat: Mapped[float | None] = mapped_column(Float)
     lon: Mapped[float | None] = mapped_column(Float)
@@ -288,7 +292,7 @@ class PorchLight(Base):
 
 
 class Wave(Base):
-    """A wave at a friend whose porch light is on. They see it for two hours."""
+    """A wave at a friend or someone you've met, to say hi. They see it for two hours."""
 
     __tablename__ = "waves"
     id: Mapped[uuid.UUID] = _uuid()
@@ -297,6 +301,43 @@ class Wave(Base):
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     created_at: Mapped[datetime] = _created()
+
+
+class Meetup(Base):
+    """Someone tapped I'm in on what you're up for: the two of you, a spot about halfway, and when.
+    Each side's position is kept only to work out walk times, never sent to anyone, and wiped at Done."""
+
+    __tablename__ = "meetups"
+    __table_args__ = (CheckConstraint("host_id <> guest_id", name="meetup_not_self"),)
+    id: Mapped[uuid.UUID] = _uuid()
+    # Whose "up for" it was, and who said I'm in.
+    host_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    guest_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    activity: Mapped[str] = mapped_column(String(20), nullable=False, default="")
+    words: Mapped[str] = mapped_column(String(80), nullable=False, default="")
+    host_lat: Mapped[float | None] = mapped_column(Float)
+    host_lon: Mapped[float | None] = mapped_column(Float)
+    guest_lat: Mapped[float | None] = mapped_column(Float)
+    guest_lon: Mapped[float | None] = mapped_column(Float)
+    host_on_way_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    guest_on_way_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # A short preset reply ("Running 5 late"), the last each of you sent.
+    host_says: Mapped[str] = mapped_column(String(40), nullable=False, default="")
+    guest_says: Mapped[str] = mapped_column(String(40), nullable=False, default="")
+    spot_name: Mapped[str | None] = mapped_column(String(120))
+    spot_lat: Mapped[float | None] = mapped_column(Float)
+    spot_lon: Mapped[float | None] = mapped_column(Float)
+    meet_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    ends_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    done_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = _created()
+
+    host: Mapped[User] = relationship(foreign_keys=[host_id], lazy="joined", innerjoin=True)
+    guest: Mapped[User] = relationship(foreign_keys=[guest_id], lazy="joined", innerjoin=True)
 
 
 class Crew(Base):
