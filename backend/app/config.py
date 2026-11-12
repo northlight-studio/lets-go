@@ -51,6 +51,20 @@ class Settings(BaseSettings):
     web_per_ip_per_gathering: int = 3
     web_per_ip_per_hour: int = 6
 
+    # Payments (Stripe). With no secret and publishable key, every order is "pay at pickup".
+    # Card and Apple Pay through PaymentSheet on the phone, PaymentIntents here, and Connect Express
+    # accounts for sellers' payouts (destination charges: the app keeps the service fee).
+    stripe_secret_key: str = ""
+    stripe_publishable_key: str = ""
+    stripe_webhook_secret: str = ""
+    # The Apple Pay merchant id (merchant.com.…). Empty: PaymentSheet offers cards only.
+    apple_pay_merchant_id: str = ""
+    stripe_country: str = "US"
+
+    @property
+    def payments_enabled(self) -> bool:
+        return bool(self.stripe_secret_key and self.stripe_publishable_key)
+
     @field_validator("database_url")
     @classmethod
     def _async_driver(cls, url: str) -> str:

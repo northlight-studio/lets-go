@@ -1,11 +1,14 @@
 """Model → response shapes that depend on who's asking."""
 
+import hashlib
+import math
 import uuid
 from datetime import UTC, datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.models import Drop, Gathering, Kitchen, Order, Review
 from app.schemas import DropOut, GatheringOut, KitchenOut, OrderLineOut, OrderOut, PersonOut
 
@@ -56,8 +59,13 @@ def friends_going(g: Gathering, friend_ids: set[uuid.UUID] | frozenset[uuid.UUID
     ]
 
 
-def drop_out(d: Drop) -> DropOut:
-    return DropOut(
+def photo_url(photo_id: uuid.UUID | None) -> str | None:
+    """Relative to the API's own address, so it works from any server the phone points at."""
+    return f"/v1/photos/{photo_id}" if photo_id else None
+
+
+def drop_fields(d: Drop) -> dict:
+    return dict(
         id=d.id,
         starts_at=d.starts_at,
         ends_at=d.ends_at,
@@ -65,7 +73,34 @@ def drop_out(d: Drop) -> DropOut:
         sold=d.sold,
         per_slot=d.per_slot,
         left=max(0, d.total - d.sold),
+        title=d.title,
+        unit=d.unit,
+        price_cents=d.item.price_cents if d.menu_item_id and d.item else None,
+        tags=list(d.tags or []),
+        pickup_spot=d.pickup_spot,
+        photo_url=photo_url(d.photo_id),
     )
+
+
+def drop_out(d: Drop) -> DropOut:
+    return DropOut(**drop_fields(d))
+
+
+def public_point(k: Kitchen) -> tuple[float, float]:
+    """Where a kitchen shows to people who haven't ordered: 60 to 150 m off the house, in a direction
+    fixed by its id, so it doesn't wander between looks and can't be averaged back to the door."""
+    h = hashlib.sha256(k.id.bytes).digest()
+    angle = int.from_bytes(h[:4]) / 2**32 * 2 * math.pi
+    meters = 60 + int.from_bytes(h[4:8]) / 2**32 * 90
+    north, east = meters * math.cos(angle), meters * math.sin(angle)
+    return (
+        k.lat + north / 111_320,
+        k.lon + east / (111_320 * max(0.01, math.cos(math.radians(k.lat)))),
+    )
+
+
+def pay_mode(k: Kitchen) -> str:
+    return "in_app" if settings.payments_enabled and k.payouts_ready and k.stripe_account_id else "at_pickup"
 
 
 def next_drop(k: Kitchen, at: datetime) -> Drop | None:
@@ -85,17 +120,23 @@ async def ratings(session: AsyncSession, kitchen_ids: list[uuid.UUID]) -> dict[u
 
 
 def kitchen_out(
-    k: Kitchen, viewer_id: uuid.UUID, rating: tuple[float, int] | None, distance: float | None = None
+    k: Kitchen,
+    viewer_id: uuid.UUID,
+    rating: tuple[float, int] | None,
+    distance: float | None = None,
+    exact: bool = False,
 ) -> KitchenOut:
+    """`exact`: the viewer may see where the house really is (its owner, or a confirmed buyer)."""
     d = next_drop(k, now())
+    lat, lon = (k.lat, k.lon) if exact or k.owner_id == viewer_id else public_point(k)
     return KitchenOut(
         id=k.id,
         name=k.name,
         cook_name=k.owner.display_name,
         cuisine=k.cuisine,
         story=k.story,
-        lat=k.lat,
-        lon=k.lon,
+        lat=lat,
+        lon=lon,
         porch_tables=k.porch_tables,
         permitted=k.permit_confirmed and k.handler_card_confirmed,
         rating=rating[0] if rating else None,
@@ -103,10 +144,15 @@ def kitchen_out(
         next_drop=drop_out(d) if d else None,
         is_mine=k.owner_id == viewer_id,
         distance_m=distance,
+        photo_url=photo_url(d.photo_id) if d else None,
+        pay=pay_mode(k),
     )
 
 
-def order_out(o: Order) -> OrderOut:
+def order_out(o: Order, for_seller: bool = False) -> OrderOut:
+    """The address, the exact spot and the pickup note only once it's confirmed."""
+    shown = o.confirmed or for_seller
+    d = o.drop
     return OrderOut(
         id=o.id,
         client_id=o.client_id,
@@ -120,5 +166,16 @@ def order_out(o: Order) -> OrderOut:
         subtotal_cents=o.subtotal_cents,
         service_cents=o.service_cents,
         total_cents=o.subtotal_cents + o.service_cents,
-        pickup_note=o.kitchen.pickup_note,
+        pickup_note=o.kitchen.pickup_note if shown else "",
+        payment=o.payment,
+        pickup_code=o.pickup_code if shown else "",
+        picked_up_at=o.picked_up_at,
+        title=d.title,
+        unit=d.unit,
+        photo_url=photo_url(d.photo_id),
+        pickup_spot=d.pickup_spot,
+        address=o.kitchen.address if shown else None,
+        lat=o.kitchen.lat if shown else None,
+        lon=o.kitchen.lon if shown else None,
+        buyer_name=o.buyer.display_name if for_seller else None,
     )
