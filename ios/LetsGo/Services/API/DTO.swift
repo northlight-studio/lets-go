@@ -522,3 +522,35 @@ nonisolated struct IntroDTO: Codable, Sendable {
 nonisolated struct IntroResultDTO: Codable, Sendable {
     var connected: Bool
 }
+
+/// One row on Your block (backend `BlockItemOut`). The server only ever names a friend, someone
+/// you've met, or a kitchen by its own name; anyone else is in `count`.
+nonisolated struct BlockItemDTO: Codable, Sendable, Equatable, Identifiable {
+    /// Stable across pulls: how the phone remembers what you've seen.
+    var key: String
+    /// batch · back (a kitchen you follow) · supper · going · neighbor · up_for
+    var kind: String
+    /// The drop, gathering or person it's about.
+    var id: UUID
+    var kitchenId: UUID? = nil
+    var title: String = ""
+    var name: String? = nil
+    var friends: [String] = []
+    var count: Int = 0
+    var left: Int? = nil
+    var unit: String = ""
+    var seatsLeft: Int? = nil
+    var priceCents: Int? = nil
+    var placeName: String = ""
+    var startsAt: Date? = nil
+    var endsAt: Date? = nil
+    var postedAt: Date? = nil
+    var walkMin: Int? = nil
+    var photoUrl: String? = nil
+    var together: Int = 0
+}
+
+nonisolated struct BlockDTO: Codable, Sendable {
+    var items: [BlockItemDTO]
+    var radiusM: Double
+}

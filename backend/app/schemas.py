@@ -704,3 +704,41 @@ class DiscoverOut(BaseModel):
 
 class FindsOut(BaseModel):
     events: list[EventOut]
+
+
+# Your block
+
+
+class BlockItemOut(BaseModel):
+    """One row on Your block. The phone writes the words (in its own time zone); this is what it
+    writes them from. `name` is only ever a friend's, someone you've met, or a kitchen's public name;
+    people you don't know are in `count`."""
+
+    key: str
+    # batch (a neighbor's batch) · back (a kitchen you follow) · supper · going · neighbor · up_for
+    kind: Literal["batch", "back", "supper", "going", "neighbor", "up_for"]
+    # The drop, gathering or person it's about.
+    id: uuid.UUID
+    kitchen_id: uuid.UUID | None = None
+    title: str = ""
+    name: str | None = None
+    # Friends going, by name; everyone else in, as a number.
+    friends: list[str] = []
+    count: int = 0
+    left: int | None = None
+    unit: str = ""
+    seats_left: int | None = None
+    price_cents: int | None = None
+    place_name: str = ""
+    starts_at: datetime | None = None
+    ends_at: datetime | None = None
+    posted_at: datetime | None = None
+    walk_min: int | None = None
+    photo_url: str | None = None
+    # For a neighbor to say hi to: how many things you've both been to.
+    together: int = 0
+
+
+class BlockOut(BaseModel):
+    items: list[BlockItemOut]
+    radius_m: float

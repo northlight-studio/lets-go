@@ -46,6 +46,10 @@ struct RootView: View {
             }, onInvite: inviteAction)
         }
         .fullScreenCover(item: $model.recap) { MorningAfterView(night: $0) }
+        // A tapped evening digest: People, where Your block opens.
+        .onChange(of: BlockFeed.shared.openRequested, initial: true) { _, open in
+            if open { model.tab = .people }
+        }
         .onAppear {
             if !seenQuote { model.showQuote = true }
             litSince = .now
@@ -149,5 +153,6 @@ struct RootView: View {
             if server.has(.people) { try await Sync.refreshPeople(around: center, context: context) }
         }
         prune()
+        if server.has(.block) { await BlockFeed.shared.refresh(around: center) }
     }
 }
