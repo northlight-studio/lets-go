@@ -116,6 +116,7 @@ class KitchenCreate(BaseModel):
     porch_tables: int = Field(default=0, ge=0, le=20)
     permit_confirmed: bool = False
     handler_card_confirmed: bool = False
+    address: str = Field(default="", max_length=200)
 
 
 class KitchenUpdate(BaseModel):
@@ -126,6 +127,7 @@ class KitchenUpdate(BaseModel):
     porch_tables: int | None = Field(default=None, ge=0, le=20)
     permit_confirmed: bool | None = None
     handler_card_confirmed: bool | None = None
+    address: str | None = Field(default=None, max_length=200)
 
 
 class MenuItemCreate(BaseModel):
@@ -162,6 +164,47 @@ class DropOut(Out):
     sold: int
     per_slot: int
     left: int
+    # A batch's own fields; empty (and price_cents null) for a drop off the menu.
+    title: str = ""
+    unit: str = ""
+    price_cents: int | None = None
+    tags: list[str] = []
+    pickup_spot: str = ""
+    # Relative to the API's address: "/v1/photos/<id>". The map draws it as the food pin.
+    photo_url: str | None = None
+
+
+PickupSpot = Literal["porch", "door"]
+Pay = Literal["in_app", "at_pickup"]
+
+
+class BatchCreate(BaseModel):
+    """Post a batch in one go. Opens a kitchen in your name if you don't have one yet."""
+
+    title: str = Field(min_length=1, max_length=80)
+    price_cents: int = Field(gt=0, le=100_000)
+    total: int = Field(gt=0, le=500)
+    unit: str = Field(default="", max_length=20)
+    starts_at: datetime
+    ends_at: datetime
+    pickup_spot: PickupSpot = "porch"
+    tags: list[str] = Field(default_factory=list, max_length=8)
+    per_slot: int = Field(default=4, gt=0, le=100)
+    # Asked once, kept on the kitchen.
+    permit_confirmed: bool = False
+    # The kitchen's address and pickup note; needed the first time, kept after.
+    address: str | None = Field(default=None, max_length=200)
+    pickup_note: str | None = Field(default=None, max_length=300)
+    # Where the kitchen goes on the map, the first time.
+    lat: float | None = Field(default=None, ge=-90, le=90)
+    lon: float | None = Field(default=None, ge=-180, le=180)
+
+    @model_validator(mode="after")
+    def _ends_after_start(self):
+        if self.ends_at <= self.starts_at:
+            raise ValueError("The pickup window has to end after it starts")
+        self.tags = [t.strip()[:30] for t in self.tags if t.strip()]
+        return self
 
 
 class ReviewOut(Out):
@@ -187,6 +230,14 @@ class KitchenOut(Out):
     next_drop: DropOut | None
     is_mine: bool
     distance_m: float | None = None
+    # The next drop's photo, for the map's food pin.
+    photo_url: str | None = None
+    # In the app (Stripe) or to the cook at pickup.
+    pay: Pay = "at_pickup"
+    # On a kitchen's page and a batch's, not in /v1/nearby.
+    regulars: int | None = None
+    followers: int | None = None
+    is_following: bool | None = None
 
 
 class TableFriend(BaseModel):
@@ -210,6 +261,50 @@ class KitchenDetail(KitchenOut):
     # Present only for the owner and for people with an order here.
     pickup_note: str | None
     table: TableOut | None = None
+    address: str | None = None
+
+
+class BatchOut(DropOut):
+    """A batch's listing page: the photo, what it is, the kitchen, how many are left."""
+
+    kitchen: KitchenOut
+    review: ReviewOut | None
+    # 15-minute pickup slots already full.
+    full_slots: list[datetime]
+    # The owner's and confirmed buyers' only.
+    address: str | None
+    pickup_note: str | None
+
+
+class PhotoOut(BaseModel):
+    photo_url: str
+
+
+class FollowOut(BaseModel):
+    following: bool
+    followers: int
+
+
+class NoteOut(BaseModel):
+    id: uuid.UUID
+    kind: Literal["batch"]
+    kitchen_id: uuid.UUID
+    kitchen_name: str
+    drop_id: uuid.UUID | None
+    title: str
+    photo_url: str | None
+    starts_at: datetime | None
+    created_at: datetime
+    read: bool
+
+
+class PayoutsOut(BaseModel):
+    # Stripe is set up on the server at all.
+    enabled: bool
+    # This kitchen's account can take charges: buyers pay in the app.
+    ready: bool
+    # Where to finish setting up (Stripe's own page), when not ready.
+    onboarding_url: str | None = None
 
 
 class Nearby(BaseModel):
@@ -229,8 +324,16 @@ class OrderCreate(BaseModel):
     client_id: uuid.UUID
     drop_id: uuid.UUID
     pickup_at: datetime
-    lines: list[OrderLineIn] = Field(min_length=1, max_length=20)
+    # Menu drops take lines; a batch takes a quantity.
+    lines: list[OrderLineIn] = Field(default_factory=list, max_length=20)
+    quantity: int | None = Field(default=None, gt=0, le=50)
     eat_on_porch: bool = False
+
+    @model_validator(mode="after")
+    def _something(self):
+        if not self.lines and self.quantity is None:
+            raise ValueError("Pick something to reserve")
+        return self
 
 
 class OrderLineOut(Out):
@@ -247,12 +350,45 @@ class OrderOut(Out):
     drop_id: uuid.UUID
     pickup_at: datetime
     eat_on_porch: bool
-    status: Literal["reserved", "picked_up", "reviewed"]
+    status: Literal["reserved", "picked_up", "reviewed", "canceled"]
     lines: list[OrderLineOut]
     subtotal_cents: int
     service_cents: int
     total_cents: int
+    # Empty until the order's confirmed (paid, or paying at pickup).
     pickup_note: str
+    # refunded: the money came after its hold ran out and the batch had sold out meanwhile.
+    payment: Literal["at_pickup", "unpaid", "paid", "refunded"] = "at_pickup"
+    pickup_code: str = ""
+    picked_up_at: datetime | None = None
+    title: str = ""
+    unit: str = ""
+    photo_url: str | None = None
+    pickup_spot: str = ""
+    # The exact spot, once confirmed.
+    address: str | None = None
+    lat: float | None = None
+    lon: float | None = None
+    # On the seller's list only.
+    buyer_name: str | None = None
+
+
+class PaymentOut(BaseModel):
+    """What PaymentSheet needs. `client_secret` is null once it's paid."""
+
+    order_id: uuid.UUID
+    payment: Literal["unpaid", "paid"]
+    amount_cents: int
+    client_secret: str | None
+    publishable_key: str
+    merchant_id: str | None
+    merchant_name: str = "Let's Go"
+    country: str = "US"
+
+
+class PickupIn(BaseModel):
+    # The three digits the buyer said, if the cook typed them in.
+    code: str | None = Field(default=None, max_length=3)
 
 
 class ReviewCreate(BaseModel):

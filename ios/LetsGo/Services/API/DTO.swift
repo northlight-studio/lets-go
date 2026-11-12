@@ -70,8 +70,104 @@ nonisolated struct DropDTO: Codable, Sendable {
     var sold: Int
     var perSlot: Int
     var left: Int
-    /// The drop's photo, once the server has one.
+    // A batch's own fields. Older servers don't send them.
+    var title: String?
+    var unit: String?
+    var priceCents: Int?
+    var tags: [String]?
+    var pickupSpot: String?
+    /// Relative to the server ("/v1/photos/…"); see `APIConfig.resolve`.
     var photoUrl: String?
+}
+
+/// POST /v1/batches: post a batch (opens a kitchen in your name the first time).
+nonisolated struct NewBatchDTO: Encodable, Sendable {
+    var title: String
+    var priceCents: Int
+    var total: Int
+    var unit: String
+    var startsAt: Date
+    var endsAt: Date
+    var pickupSpot: String
+    var tags: [String]
+    var permitConfirmed: Bool
+    var address: String?
+    var pickupNote: String?
+    var lat: Double?
+    var lon: Double?
+}
+
+/// A batch's listing page (GET /v1/drops/{id}): the drop's fields, its kitchen, a review, the full slots,
+/// and the address for the owner and people who've reserved.
+nonisolated struct BatchDTO: Codable, Sendable {
+    var id: UUID
+    var startsAt: Date
+    var endsAt: Date
+    var total: Int
+    var sold: Int
+    var perSlot: Int
+    var left: Int
+    var title: String
+    var unit: String
+    var priceCents: Int?
+    var tags: [String]
+    var pickupSpot: String
+    var photoUrl: String?
+    var kitchen: KitchenDTO
+    var review: ReviewDTO?
+    var fullSlots: [Date]
+    var address: String?
+    var pickupNote: String?
+
+    var drop: DropDTO {
+        DropDTO(id: id, startsAt: startsAt, endsAt: endsAt, total: total, sold: sold, perSlot: perSlot, left: left,
+                title: title, unit: unit, priceCents: priceCents, tags: tags, pickupSpot: pickupSpot, photoUrl: photoUrl)
+    }
+}
+
+nonisolated struct PhotoDTO: Codable, Sendable {
+    var photoUrl: String
+}
+
+nonisolated struct FollowDTO: Codable, Sendable {
+    var following: Bool
+    var followers: Int
+}
+
+/// Something for you: a kitchen you follow posted a batch.
+nonisolated struct NoteDTO: Codable, Sendable, Identifiable {
+    var id: UUID
+    var kind: String
+    var kitchenId: UUID
+    var kitchenName: String
+    var dropId: UUID?
+    var title: String
+    var photoUrl: String?
+    var startsAt: Date?
+    var createdAt: Date
+    var read: Bool
+}
+
+/// What PaymentSheet needs for one order. `clientSecret` is nil once it's paid.
+nonisolated struct PaymentDTO: Codable, Sendable {
+    var orderId: UUID
+    var payment: String
+    var amountCents: Int
+    var clientSecret: String?
+    var publishableKey: String
+    var merchantId: String?
+    var merchantName: String
+    var country: String
+}
+
+nonisolated struct PayoutsDTO: Codable, Sendable {
+    var enabled: Bool
+    var ready: Bool
+    var onboardingUrl: String?
+}
+
+nonisolated struct PickupCodeDTO: Encodable, Sendable {
+    var code: String?
 }
 
 nonisolated struct MenuItemDTO: Codable, Sendable {
@@ -104,10 +200,18 @@ nonisolated struct KitchenDTO: Codable, Sendable, Identifiable {
     var nextDrop: DropDTO?
     var isMine: Bool
     var distanceM: Double?
-    // Only on the detail endpoint.
+    /// The next drop's photo, for the map's food pin.
+    var photoUrl: String?
+    /// "in_app" or "at_pickup". Older servers don't send it.
+    var pay: String?
+    // Only on the detail endpoint (and a batch's page).
+    var regulars: Int?
+    var followers: Int?
+    var isFollowing: Bool?
     var menu: [MenuItemDTO]?
     var reviews: [ReviewDTO]?
     var pickupNote: String?
+    var address: String?
     var table: TableDTO?
 }
 
@@ -178,6 +282,19 @@ nonisolated struct OrderDTO: Codable, Sendable {
     var serviceCents: Int
     var totalCents: Int
     var pickupNote: String
+    // Older servers don't send these.
+    var payment: String?
+    var pickupCode: String?
+    var pickedUpAt: Date?
+    var title: String?
+    var unit: String?
+    var photoUrl: String?
+    var pickupSpot: String?
+    var address: String?
+    var lat: Double?
+    var lon: Double?
+    /// On the cook's list only.
+    var buyerName: String?
 }
 
 nonisolated struct NewOrderDTO: Encodable, Sendable {
@@ -190,6 +307,8 @@ nonisolated struct NewOrderDTO: Encodable, Sendable {
     var dropId: UUID
     var pickupAt: Date
     var lines: [Line]
+    /// A batch takes a quantity instead of lines.
+    var quantity: Int? = nil
     var eatOnPorch: Bool
 }
 

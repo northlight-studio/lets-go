@@ -24,6 +24,8 @@ final class ServerFeatures {
         case listings
         /// The city catalog and the scout.
         case discover
+        /// Selling a batch: posting with a photo, its listing, paying in the app, follows and pickup codes.
+        case selling
 
         /// Routes (as the server's OpenAPI lists them) the feature can't work without.
         var routes: [String] {
@@ -33,6 +35,7 @@ final class ServerFeatures {
             case .posters: ["/v1/gatherings/{gathering_id}/poster"]
             case .listings: ["/v1/listings"]
             case .discover: ["/v1/discover"]
+            case .selling: ["/v1/batches", "/v1/drops/{drop_id}"]
             }
         }
 
@@ -45,6 +48,9 @@ final class ServerFeatures {
             if people.contains(where: { path.hasPrefix($0) }) { return .people }
             if path.hasPrefix("/v1/listings") { return .listings }
             if ["/v1/discover", "/v1/scout", "/v1/me/finds"].contains(where: { path.hasPrefix($0) }) { return .discover }
+            let selling = ["/v1/batches", "/v1/drops", "/v1/photos", "/v1/me/notes", "/v1/kitchens/me/payouts"]
+            if selling.contains(where: { path.hasPrefix($0) }) || path.hasSuffix("/follow") || path.hasSuffix("/pay") { return .selling }
+            if path.hasPrefix("/v1/kitchens/me/orders/"), path.hasSuffix("/picked-up") { return .selling }
             return nil
         }
 
@@ -56,6 +62,7 @@ final class ServerFeatures {
             case .posters: "Posters need the new server. They're coming soon."
             case .listings: "The city's newest listings need the new server. These are the ones that came with the app."
             case .discover: "Searching the city needs the new server. It's coming soon."
+            case .selling: "Selling a batch needs the new server. It's coming soon."
             }
         }
 

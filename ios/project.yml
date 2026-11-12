@@ -8,6 +8,10 @@ packages:
   MapLibre:
     url: https://github.com/maplibre/maplibre-gl-native-distribution
     from: 6.31.0
+  # PaymentSheet (cards and Apple Pay) for paying for a batch in the app.
+  Stripe:
+    url: https://github.com/stripe/stripe-ios-spm
+    from: 24.0.0
 configFiles:
   Debug: Config.xcconfig
   Release: Config.xcconfig
@@ -28,6 +32,8 @@ targets:
         type: syncedFolder
     dependencies:
       - package: MapLibre
+      - package: Stripe
+        product: StripePaymentSheet
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_IDENTIFIER)
@@ -38,6 +44,7 @@ targets:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         INFOPLIST_KEY_CFBundleDisplayName: "Let's Go"
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.social-networking
+        INFOPLIST_KEY_NSCameraUsageDescription: "Let's Go uses the camera to photograph what you're selling."
         INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Let's Go shows what's happening within walking distance of you, and checks you in when you show up."
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES

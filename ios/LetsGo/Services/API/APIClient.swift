@@ -17,6 +17,13 @@ nonisolated enum APIConfig {
     }
 
     static var isConfigured: Bool { baseURL != nil }
+
+    /// A path the server sent ("/v1/photos/…") as a full URL on whichever server the phone uses.
+    static func resolve(_ path: String?) -> URL? {
+        guard let path, !path.isEmpty else { return nil }
+        if path.hasPrefix("http://") || path.hasPrefix("https://") { return URL(string: path) }
+        return baseURL?.appending(path: path)
+    }
 }
 
 nonisolated enum APIError: LocalizedError, Equatable {
@@ -54,6 +61,7 @@ nonisolated struct Endpoint<Response: Decodable & Sendable>: Sendable {
     var path: String
     var query: [URLQueryItem] = []
     var body: Data?
+    var contentType = "application/json"
     /// Only safe-to-repeat requests retry. A POST that timed out may still have
     /// happened on the server; repeating it could, say, place a second order.
     var retries: Int { method == "GET" || method == "DELETE" || method == "PUT" ? 2 : 0 }
@@ -77,6 +85,15 @@ nonisolated struct Endpoint<Response: Decodable & Sendable>: Sendable {
     /// Sets something to exactly this, so repeating it is safe.
     static func put(_ path: String, _ body: some Encodable) -> Endpoint {
         Endpoint(method: "PUT", path: path, body: try? JSONCoding.encoder.encode(body))
+    }
+
+    static func put(_ path: String) -> Endpoint {
+        Endpoint(method: "PUT", path: path)
+    }
+
+    /// A photo, as the request body.
+    static func upload(_ path: String, jpeg: Data) -> Endpoint {
+        Endpoint(method: "POST", path: path, body: jpeg, contentType: "image/jpeg")
     }
 
     static func delete(_ path: String) -> Endpoint {
@@ -183,7 +200,7 @@ final class APIClient {
         var request = URLRequest(url: url)
         request.httpMethod = e.method
         request.httpBody = e.body
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(e.contentType, forHTTPHeaderField: "Content-Type")
         // Lets the app talk to an ngrok tunnel without its browser warning page.
         request.setValue("1", forHTTPHeaderField: "ngrok-skip-browser-warning")
         if let token { request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }

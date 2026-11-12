@@ -107,7 +107,9 @@ async def test_pickup_note_is_hidden_until_you_order(client):
     assert r.status_code == 201, r.text
     o = r.json()
     assert o["pickup_note"] == "Side gate, ring the bell"
-    assert o["subtotal_cents"] == 2800 and o["service_cents"] == 140 and o["total_cents"] == 2940
+    # Paid to the cook at pickup (payments aren't configured), so no service fee on top.
+    assert o["subtotal_cents"] == 2800 and o["service_cents"] == 0 and o["total_cents"] == 2800
+    assert o["payment"] == "at_pickup" and len(o["pickup_code"]) == 3
     assert (await client.get(f"/v1/kitchens/{k['id']}", headers=you)).json()[
         "pickup_note"
     ] == "Side gate, ring the bell"

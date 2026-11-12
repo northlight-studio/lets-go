@@ -1,7 +1,8 @@
 import SwiftUI
 import SwiftData
 
-/// A house that's a restaurant today: the photo, the drop, the menu, the reviews.
+/// A house that's a restaurant today: the photo, the drop, the menu, the reviews. A kitchen whose
+/// next drop is a batch ("Sell something") opens on the batch's listing instead.
 struct KitchenView: View {
     @Bindable var kitchen: Kitchen
     @Environment(LocationService.self) private var location
@@ -13,6 +14,14 @@ struct KitchenView: View {
     @State private var sitAt: Date?
 
     var body: some View {
+        if let batch = kitchen.nextDrop(after: .now), batch.isBatch {
+            BatchView(drop: batch)
+        } else {
+            menuPage
+        }
+    }
+
+    private var menuPage: some View {
         TimelineView(.periodic(from: .now, by: 30)) { timeline in
             let now = timeline.date
             let drop = kitchen.nextDrop(after: now)

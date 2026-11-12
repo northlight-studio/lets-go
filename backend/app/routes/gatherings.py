@@ -13,7 +13,7 @@ from app.geo import bbox, distance_m
 from app.models import Gathering, GatheringInvite, GatheringMember, Kitchen, User
 from app.schemas import CheckIn, GatheringCreate, GatheringOut, Invited, InviteFriends, Nearby
 from app.social import friend_ids
-from app.views import gathering_out, kitchen_out, now, ratings
+from app.views import gathering_out, kitchen_out, now, public_point, ratings
 
 router = APIRouter(prefix="/v1", tags=["gatherings"])
 
@@ -67,7 +67,9 @@ async def nearby(
     rated = await ratings(session, [k.id for k in ks])
     kitchens = []
     for k in ks:
-        d = distance_m(lat, lon, k.lat, k.lon)
+        # Measured to where the kitchen shows, not to the house.
+        k_lat, k_lon = (k.lat, k.lon) if k.owner_id == user.id else public_point(k)
+        d = distance_m(lat, lon, k_lat, k_lon)
         if d <= radius_m:
             kitchens.append(kitchen_out(k, user.id, rated.get(k.id), d))
     return Nearby(gatherings=gatherings, kitchens=kitchens)

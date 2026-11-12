@@ -9,6 +9,15 @@ struct OrderStatusView: View {
     @State private var problem: String?
 
     var body: some View {
+        // A batch's order, or any order with a pickup code: the pickup screen.
+        if !order.title.isEmpty || !order.pickupCode.isEmpty || order.payment != .atPickup {
+            PickupView(order: order)
+        } else {
+            menuOrder
+        }
+    }
+
+    private var menuOrder: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Text(order.kitchen?.name ?? "Order").display(26)

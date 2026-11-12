@@ -11,6 +11,7 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Integer,
+    LargeBinary,
     String,
     Text,
     UniqueConstraint,
@@ -110,6 +111,14 @@ class Kitchen(Base):
     porch_tables: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     permit_confirmed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     handler_card_confirmed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    # The street address. Like the pickup note, only for the owner and people with a confirmed order;
+    # everyone else sees the kitchen a short way off its real spot (`views.public_point`).
+    address: Mapped[str] = mapped_column(String(200), nullable=False, default="", server_default="")
+    # Stripe Connect Express account for payouts; payments in the app only once it can take charges.
+    stripe_account_id: Mapped[str | None] = mapped_column(String(64))
+    payouts_ready: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
     created_at: Mapped[datetime] = _created()
 
     owner: Mapped[User] = relationship(lazy="joined", innerjoin=True)
@@ -159,8 +168,66 @@ class Drop(Base):
     total: Mapped[int] = mapped_column(Integer, nullable=False)
     sold: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     per_slot: Mapped[int] = mapped_column(Integer, nullable=False, default=4)
+    # A batch ("Mango sticky rice ice cream, $6 a pint, 8 pints") is a drop of one thing: its own
+    # menu item, kept off the standing menu. Drops posted against the menu leave these empty.
+    menu_item_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("menu_items.id"))
+    title: Mapped[str] = mapped_column(String(80), nullable=False, default="", server_default="")
+    # What one is: "pint", "box of 6". Empty for a plain count.
+    unit: Mapped[str] = mapped_column(String(20), nullable=False, default="", server_default="")
+    # Allergens and diets the seller picked: "Contains dairy", "Gluten-free".
+    tags: Mapped[list[str]] = mapped_column(
+        ARRAY(String(30)), nullable=False, default=list, server_default="{}"
+    )
+    # Where on the house: "porch" or "door" (empty for menu drops).
+    pickup_spot: Mapped[str] = mapped_column(String(8), nullable=False, default="", server_default="")
+    photo_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("photos.id", ondelete="SET NULL"))
 
     kitchen: Mapped[Kitchen] = relationship(back_populates="drops")
+    item: Mapped["MenuItem | None"] = relationship(lazy="joined")
+
+
+class Photo(Base):
+    """A JPEG, resized on the phone to about 1200 px. In Postgres for now; it should move to object
+    storage (S3 or R2 behind a CDN) once there are more than a few hundred."""
+
+    __tablename__ = "photos"
+    id: Mapped[uuid.UUID] = _uuid()
+    owner_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    content_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    data: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    created_at: Mapped[datetime] = _created()
+
+
+class Follow(Base):
+    """Following a kitchen: you hear when it posts a new batch."""
+
+    __tablename__ = "follows"
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    kitchen_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("kitchens.id", ondelete="CASCADE"), primary_key=True, index=True
+    )
+    created_at: Mapped[datetime] = _created()
+
+
+class Note(Base):
+    """Something for you in the app: a kitchen you follow posted a batch. Push isn't set up yet, so
+    these are what the phone shows instead."""
+
+    __tablename__ = "notes"
+    id: Mapped[uuid.UUID] = _uuid()
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    kind: Mapped[str] = mapped_column(String(16), nullable=False)
+    kitchen_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("kitchens.id", ondelete="CASCADE"), nullable=False
+    )
+    drop_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("drops.id", ondelete="CASCADE"))
+    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = _created()
+
+    kitchen: Mapped[Kitchen] = relationship(lazy="joined", innerjoin=True)
+    drop: Mapped[Drop | None] = relationship(lazy="joined")
 
 
 class Order(Base):
@@ -176,13 +243,29 @@ class Order(Base):
     drop_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("drops.id", ondelete="CASCADE"), nullable=False)
     pickup_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     eat_on_porch: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    # reserved → picked_up → reviewed
+    # reserved → picked_up → reviewed; canceled when an unpaid hold runs out (stock goes back).
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="reserved")
     subtotal_cents: Mapped[int] = mapped_column(Integer, nullable=False)
     service_cents: Mapped[int] = mapped_column(Integer, nullable=False)
+    # at_pickup: paid to the cook in person. unpaid → paid: in the app, one PaymentIntent per order.
+    payment: Mapped[str] = mapped_column(
+        String(12), nullable=False, default="at_pickup", server_default="at_pickup"
+    )
+    payment_intent_id: Mapped[str | None] = mapped_column(String(64), unique=True)
+    paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Three digits the buyer says at the door.
+    pickup_code: Mapped[str] = mapped_column(String(3), nullable=False, default="", server_default="")
+    picked_up_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = _created()
 
+    @property
+    def confirmed(self) -> bool:
+        """Paid, or to be paid at pickup: the address and the pickup note are theirs to see."""
+        return self.status != "canceled" and self.payment in ("at_pickup", "paid")
+
     kitchen: Mapped[Kitchen] = relationship(lazy="joined", innerjoin=True)
+    drop: Mapped[Drop] = relationship(lazy="joined", innerjoin=True)
+    buyer: Mapped[User] = relationship(lazy="joined", innerjoin=True)
     lines: Mapped[list["OrderLine"]] = relationship(cascade="all, delete-orphan", lazy="selectin")
 
 
