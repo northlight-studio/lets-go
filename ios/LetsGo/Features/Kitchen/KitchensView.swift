@@ -20,6 +20,10 @@ struct KitchensView: View {
                             }
                         }
                         section("Drops near you") {
+                            Text("A drop is a set batch a neighbor cooks, ready at a set time. Reserve a pickup slot and collect it at their door.")
+                                .font(.system(size: 13))
+                                .foregroundStyle(Palette.muted)
+                                .fixedSize(horizontal: false, vertical: true)
                             let near = sorted(now: now)
                             if near.isEmpty {
                                 Text("No kitchens nearby yet. When a neighbor opens theirs, its drops show up here, or open yours below.")
@@ -39,7 +43,8 @@ struct KitchensView: View {
             }
     }
 
-    private var openOrders: [Order] { orders.filter { $0.status != .reviewed } }
+    /// Reserved ones until an hour after pickup, then picked-up ones waiting for a review.
+    private var openOrders: [Order] { OrderLimits.open(orders, now: .now) }
 
     private var mine: Kitchen? { kitchens.first(where: \.isMine) }
 

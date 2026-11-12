@@ -70,6 +70,8 @@ nonisolated struct DropDTO: Codable, Sendable {
     var sold: Int
     var perSlot: Int
     var left: Int
+    /// The drop's photo, once the server has one.
+    var photoUrl: String?
 }
 
 nonisolated struct MenuItemDTO: Codable, Sendable {

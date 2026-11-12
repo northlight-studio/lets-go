@@ -10,6 +10,8 @@ struct UpForCard: View {
     var words: String
     var now: Date
     var busy: Bool
+    /// Why it can't be turned on right now (no server, or one without friends yet).
+    var unavailable: String? = nil
     var onStart: (_ activity: String, _ words: String, _ hours: Double) -> Void
     var onStop: () -> Void
 
@@ -112,7 +114,7 @@ struct UpForCard: View {
                     .foregroundStyle(Palette.ink)
                 }
             }
-            Text(UpFor.whoSees(hours: hours))
+            Text(unavailable ?? UpFor.whoSees(hours: hours))
                 .font(.system(size: 13))
                 .foregroundStyle(Palette.muted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -123,7 +125,7 @@ struct UpForCard: View {
                 changing = false
             }
             .buttonStyle(PrimaryButtonStyle())
-            .disabled(busy || !ready)
+            .disabled(busy || !ready || unavailable != nil)
         }
     }
 
@@ -155,6 +157,8 @@ struct UpForRow: View {
     var row: UpFor.Row
     var waved: Bool
     var busy: Bool
+    /// The server can make a match (an older one can't).
+    var canMeet = true
     var onIn: () -> Void
     var onWave: () -> Void
     var onJoin: () -> Void
@@ -194,8 +198,10 @@ struct UpForRow: View {
                 .buttonStyle(.plain)
                 .disabled(waved || busy)
                 .accessibilityLabel(waved ? "Waved" : "Wave at \(row.name)")
-                pill("I'm in", action: onIn)
-                    .disabled(busy)
+                if canMeet {
+                    pill("I'm in", action: onIn)
+                        .disabled(busy)
+                }
             }
         }
         .padding(.vertical, 8)

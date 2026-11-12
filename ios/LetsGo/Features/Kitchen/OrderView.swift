@@ -182,7 +182,7 @@ struct ReservedView: View {
                 .foregroundStyle(Genre.play.color)
                 .padding(.top, 20)
             Text("Reserved").display(30)
-            Text("Pick up at \(order.pickupAt.formatted(date: .omitted, time: .shortened)) from \(order.kitchen?.cookName ?? "the cook").")
+            Text("Pick up \(When.short(order.pickupAt, now: .now)) from \(order.kitchen?.cookName ?? "the cook").")
                 .font(.system(size: 17))
             if let note = order.kitchen?.pickupNote, !note.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
@@ -197,7 +197,7 @@ struct ReservedView: View {
                 Label("A porch seat's yours if one's open when you get there.", systemImage: "chair.lounge")
                     .font(.system(size: 14)).foregroundStyle(Palette.muted)
             }
-            Text("It's in Kitchens → Your orders. Mark it picked up there and leave a review.")
+            Text("It's at the top of Plans until pickup. Mark it picked up there; the review waits in Home kitchens → Your orders.")
                 .font(.system(size: 14)).foregroundStyle(Palette.muted)
             Spacer()
             Button("Done", action: done).buttonStyle(PrimaryButtonStyle())

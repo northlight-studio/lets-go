@@ -30,6 +30,7 @@ struct NewGatheringView: View {
                 Section {
                     TextField("What is it?", text: $title)
                         .font(.system(size: 18, weight: .semibold))
+                        .onChange(of: title) { _, v in title = KitchenLimits.clip(v, 120) }
                     Picker("Kind", selection: $category) {
                         ForEach(Genre.allCases.filter { $0 != .food }) { c in
                             Label(c.label, systemImage: c.symbol).tag(c)
@@ -43,6 +44,7 @@ struct NewGatheringView: View {
                 }
                 Section {
                     TextField("Place name, like \"The big field\"", text: $placeName)
+                        .onChange(of: placeName) { _, v in placeName = KitchenLimits.clip(v, 120) }
                     placePicker
                 } header: {
                     Text("Where")
@@ -52,8 +54,10 @@ struct NewGatheringView: View {
                 Section("Details") {
                     Stepper(capacity == 0 ? "Open to anyone" : "Up to \(capacity) people", value: $capacity, in: 0...200)
                     TextField("What to bring", text: $bring)
+                        .onChange(of: bring) { _, v in bring = KitchenLimits.clip(v, 200) }
                     TextField("Anything else people should know", text: $details, axis: .vertical)
                         .lineLimit(2...5)
+                        .onChange(of: details) { _, v in details = KitchenLimits.clip(v, 2000) }
                 }
             }
             .scrollContentBackground(.hidden)

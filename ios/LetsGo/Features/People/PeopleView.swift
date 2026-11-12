@@ -26,6 +26,14 @@ struct PeopleView: View {
     @State private var openMatch: UpMatch?
     @State private var invite: SharedText?
 
+    /// Friends need routes an older server doesn't have.
+    private var friendsOnServer: Bool { APIConfig.isConfigured && ServerFeatures.shared.has(.people) }
+    /// Why friends can't work right now, in one plain line.
+    private var friendsUnavailable: String? {
+        if !APIConfig.isConfigured { return "Friends need a server. Add one at the bottom of Passport, under Server." }
+        return ServerFeatures.shared.has(.people) ? nil : ServerFeatures.Feature.people.comingSoon
+    }
+
     var body: some View {
         @Bindable var model = model
         NavigationStack(path: $path) {
@@ -90,7 +98,7 @@ struct PeopleView: View {
         } else {
             UpForCard(
                 until: upUntil > 0 ? Date(timeIntervalSince1970: upUntil) : nil,
-                activity: upActivity, words: upWords, now: now, busy: busy,
+                activity: upActivity, words: upWords, now: now, busy: busy, unavailable: friendsUnavailable,
                 onStart: { activity, words, hours in start(activity, words, hours) },
                 onStop: { stop() }
             )
@@ -111,16 +119,16 @@ struct PeopleView: View {
         let rows = UpFor.rows(friends: friends, met: met, metTimes: metTimes, now: now)
         sectionTitle("Up for something near you")
         if rows.isEmpty {
-            Text(friends.isEmpty && met.isEmpty
+            Text(friendsUnavailable ?? (friends.isEmpty && met.isEmpty
                  ? "When friends and people you've met are up for something, they show here."
-                 : "Nobody's up for anything right now. Say what you're up for and they'll see it.")
+                 : "Nobody's up for anything right now. Say what you're up for and they'll see it."))
                 .font(.system(size: 14))
                 .foregroundStyle(Palette.muted)
                 .fixedSize(horizontal: false, vertical: true)
         }
         ForEach(rows) { row in
             UpForRow(
-                row: row, waved: waved(row, now: now), busy: busy,
+                row: row, waved: waved(row, now: now), busy: busy, canMeet: ServerFeatures.shared.has(.upFor),
                 onIn: { imIn(row) }, onWave: { wave(row) },
                 onJoin: { if let g = gathering(row.gatheringID) { path.append(g) } }
             )
@@ -220,7 +228,7 @@ struct PeopleView: View {
         Button { makingCrew = true } label: { Label("New crew", systemImage: "plus") }
             .buttonStyle(SecondaryButtonStyle())
             .padding(.top, 8)
-            .disabled(people.isEmpty)
+            .disabled(people.isEmpty || !friendsOnServer)
     }
 
     /// "6 friends · next: Thursday run, Thu 7:00 AM"
@@ -284,7 +292,7 @@ struct PeopleView: View {
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(SecondaryButtonStyle())
-            .disabled(busy || !APIConfig.isConfigured)
+            .disabled(busy || !friendsOnServer)
             Button("Got a code from someone? Add them") { model.addingFriend = true }
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(Palette.soft)

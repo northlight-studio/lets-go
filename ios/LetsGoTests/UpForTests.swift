@@ -138,3 +138,17 @@ struct UpForTests {
         #expect(MeetSpot.pick([], near: here) == nil)
     }
 }
+
+@Suite("Up for something on the map")
+struct UpForPinTests {
+    @Test func aChipGetsItsOwnBubble() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        var maya = Friend(id: UUID(), name: "Maya")
+        maya.porchUntil = now.addingTimeInterval(3600)
+        maya.porchNote = "A walk"
+        maya.upActivity = "walk"
+        #expect(Pins.bubble(maya, now: now) == "walk?")
+        // Up for something never places anyone: only a gathering they checked in to does.
+        #expect(Pins.friends([maya], now: now).isEmpty)
+    }
+}

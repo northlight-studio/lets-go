@@ -244,7 +244,7 @@ extension Sync {
             )))
             MyPorchLight.set(until: dto.until, note: dto.words, activity: dto.activity)
             return dto.until
-        } catch .rejected(status: 404, _) {
+        } catch .notOnServer {
             // A server from before the rename: the porch light carries the same thing, in words.
             let note = trimmed.isEmpty ? UpFor.label(activity: activity, words: "") : trimmed
             let dto: PorchLightDTO = try await api.send(.put("/v1/me/porch-light", PorchLightInDTO(
@@ -348,7 +348,13 @@ extension Sync {
 
     static func leave(_ crew: Crew, context: ModelContext) async throws(APIError) {
         if APIConfig.isConfigured {
-            let _: Empty = try await api.send(.delete("/v1/crews/\(crew.id.uuidString)"))
+            do {
+                let _: Empty = try await api.send(.delete("/v1/crews/\(crew.id.uuidString)"))
+            } catch .rejected(404, _) {
+                // Made on this phone before there was a server, or already gone there: only the copy is left.
+            } catch .notOnServer {
+                // A server without crews never had it.
+            }
         }
         context.delete(crew)
         Ledger.save(context, "leave crew")

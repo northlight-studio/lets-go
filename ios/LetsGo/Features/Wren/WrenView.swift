@@ -288,7 +288,6 @@ struct WrenView: View {
     private func send(_ e: Exchange) {
         guard let plan = e.plan, let request = e.request else { return }
         let saved = SavedPlan(plan, request: request.text)
-        saved.askedAt = .now
         context.insert(saved)
         Ledger.save(context, "save plan")
         let group = people.filter { plan.friendIDs.contains($0.id) }
@@ -299,7 +298,12 @@ struct WrenView: View {
                 if let event {
                     if !event.isJoined { try await Sync.join(event, context: context) }
                     // Friends get an invite only when the event is on the server.
-                    if event.remoteID != nil, !group.isEmpty { try await Sync.invite(group, to: event, context: context) }
+                    if event.remoteID != nil, !group.isEmpty, ServerFeatures.shared.has(.people) {
+                        try await Sync.invite(group, to: event, context: context)
+                        // Only once they've really been asked.
+                        saved.askedAt = .now
+                        Ledger.save(context, "asked")
+                    }
                 }
             }
             busy = false

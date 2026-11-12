@@ -13,7 +13,7 @@ struct OrderStatusView: View {
             VStack(alignment: .leading, spacing: 16) {
                 Text(order.kitchen?.name ?? "Order").display(26)
                 Text(order.status == .reserved
-                     ? "Pickup at \(order.pickupAt.formatted(date: .omitted, time: .shortened))"
+                     ? "Pickup \(When.short(order.pickupAt, now: .now))"
                      : "Picked up")
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundStyle(order.status == .reserved ? Palette.ink : Genre.play.color)

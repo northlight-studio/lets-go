@@ -31,6 +31,10 @@ struct Candidate: Identifiable, Hashable, Sendable {
     var lon: Double = 0
     /// Friends the server says are going (`Person.id`s).
     var friendIDs: [UUID] = []
+    /// A kitchen's drop photo, when the cook has posted one.
+    var photoURL: URL?
+    /// A kitchen's dish, for its pin until there's a photo: "🍕".
+    var glyph: String = ""
     var isFree: Bool { kind == .gathering && (priceText.isEmpty || priceText.lowercased().hasPrefix("free")) }
 }
 
@@ -57,7 +61,9 @@ extension Candidate {
             place: k.cuisine,
             searchText: ([k.name, k.cookName, k.cuisine, k.story, "food home cooking kitchen"] + k.menu.map { "\($0.name) \($0.note)" })
                 .joined(separator: " ").lowercased(),
-            lat: k.latitude, lon: k.longitude
+            lat: k.latitude, lon: k.longitude,
+            photoURL: drop.photoURL.flatMap { URL(string: $0) },
+            glyph: KitchenLook.glyph(for: k.cuisine)
         )
     }
 }

@@ -48,9 +48,9 @@ class GatheringCreate(BaseModel):
     @model_validator(mode="after")
     def _ends_after_start(self):
         if self.ends_at <= self.starts_at:
-            raise ValueError("ends_at must be after starts_at")
+            raise ValueError("It has to end after it starts.")
         if self.genre == "food":
-            raise ValueError("food is sold through kitchens, not gatherings")
+            raise ValueError("Food is sold through home kitchens, not gatherings.")
         return self
 
 
@@ -150,7 +150,7 @@ class DropCreate(BaseModel):
     @model_validator(mode="after")
     def _ends_after_start(self):
         if self.ends_at <= self.starts_at:
-            raise ValueError("ends_at must be after starts_at")
+            raise ValueError("It has to end after it starts.")
         return self
 
 
