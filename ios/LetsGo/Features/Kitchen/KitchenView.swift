@@ -70,7 +70,7 @@ struct KitchenView: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
-        .task { try? await Sync.refresh(kitchen, context: context) }
+        .task { await Sync.refreshQuietly(kitchen, context: context) }
     }
 
     private var titleBlock: some View {
@@ -92,7 +92,7 @@ struct KitchenView: View {
         if let drop {
             items.append(.init(label: "Left", value: "\(drop.left)", detail: "of \(drop.total)"))
         } else {
-            items.append(.init(label: "Regulars", value: "\(kitchen.regulars)", detail: "people"))
+            items.append(.init(label: "Next drop", value: "None", detail: "yet"))
         }
         return items
     }
@@ -131,7 +131,7 @@ struct KitchenView: View {
                         Spacer()
                         Text(Pricing.format(item.priceCents)).font(.system(size: 15)).monospacedDigit().foregroundStyle(Palette.muted)
                         if let drop, !drop.isSoldOut, !kitchen.isMine {
-                            Stepperish(count: bag[item.id] ?? 0, max: drop.left - bagCount + (bag[item.id] ?? 0)) { bag[item.id] = $0 }
+                            Stepperish(count: bag[item.id] ?? 0, max: min(OrderLimits.perLine, drop.left - bagCount + (bag[item.id] ?? 0))) { bag[item.id] = $0 }
                         }
                     }
                     .padding(.horizontal, 14)

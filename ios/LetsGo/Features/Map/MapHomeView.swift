@@ -119,9 +119,7 @@ struct HomeView: View {
 
     /// Friends going, when that filter is on.
     private func narrowed(_ shown: [Candidate], now: Date) -> [Candidate] {
-        guard model.friendsOnly else { return shown }
-        let friends = people.map(\.snapshot)
-        return shown.filter { !Crowd.going(to: $0, among: friends).isEmpty }
+        model.narrowed(shown, friends: people.map(\.snapshot))
     }
 
     // MARK: Top
@@ -165,7 +163,12 @@ struct HomeView: View {
                 Toggle(isOn: $model.freeOnly) { Label("Free", systemImage: "tag") }
                 Toggle(isOn: $model.friendsOnly) { Label("Friends going", systemImage: "person.2") }
             }
-            Button { model.toggleSignal() } label: { Label("Quick pick", systemImage: "bolt") }
+            Button { model.toggleSignal() } label: {
+                // A menu shows the second line under the title.
+                Text("Quick pick")
+                Text("The best three to walk to right now")
+                Image(systemName: "bolt")
+            }
             Button { hostingBlank = true } label: { Label("Host something", systemImage: "plus") }
         } label: {
             Image(systemName: model.isFiltered ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease")
@@ -229,8 +232,7 @@ struct HomeView: View {
     private func emptyNote(now: Date) -> some View {
         let inCity = CityListings.covers(location.center)
         return HStack(spacing: 10) {
-            Text(inCity ? "Nothing starts by then. Drag the rail later, or start something."
-                        : "Let's Go only knows San Francisco so far. Host something here and people nearby will see it.")
+            Text(model.emptyReason(inCity: inCity, hasFriends: !people.isEmpty))
                 .font(.footnote)
                 .foregroundStyle(Palette.soft)
                 .fixedSize(horizontal: false, vertical: true)

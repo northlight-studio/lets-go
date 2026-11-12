@@ -43,16 +43,7 @@ struct RootView: View {
             QuoteSplash(onDone: {
                 seenQuote = true
                 model.showQuote = false
-            }, onInvite: {
-                seenQuote = true
-                model.showQuote = false
-                model.tab = .people
-                Task {
-                    // Let the cover go before the sheet comes up.
-                    try? await Task.sleep(for: .milliseconds(500))
-                    model.addingFriend = true
-                }
-            })
+            }, onInvite: inviteAction)
         }
         .fullScreenCover(item: $model.recap) { MorningAfterView(night: $0) }
         .onAppear {
@@ -90,6 +81,21 @@ struct RootView: View {
                 checkRecap()
                 prune(relist: true)
                 Task { await pull() }
+            }
+        }
+    }
+
+    /// "A friend sent me an invite" on the quote: only when there's a server that keeps friends.
+    private var inviteAction: (() -> Void)? {
+        guard APIConfig.isConfigured, ServerFeatures.shared.has(.people) else { return nil }
+        return {
+            seenQuote = true
+            model.showQuote = false
+            model.tab = .people
+            Task {
+                // Let the cover go before the sheet comes up.
+                try? await Task.sleep(for: .milliseconds(500))
+                model.addingFriend = true
             }
         }
     }
@@ -135,10 +141,12 @@ struct RootView: View {
 
     private func pull() async {
         let center = location.center
-        if CityListings.covers(center), await CityListings.update() { prune(relist: true) }
+        let server = ServerFeatures.shared
+        await server.check()
+        if CityListings.covers(center), server.has(.listings), await CityListings.update() { prune(relist: true) }
         await sync.run { () throws(APIError) in
             try await Sync.refresh(around: center, context: context)
-            try await Sync.refreshPeople(around: center, context: context)
+            if server.has(.people) { try await Sync.refreshPeople(around: center, context: context) }
         }
         prune()
     }

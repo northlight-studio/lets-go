@@ -284,7 +284,7 @@ struct GatheringDetailView: View {
             Label("You showed up. Stamp collected.", systemImage: "checkmark.seal.fill")
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(gathering.category.color)
-        } else {
+        } else if !gathering.hasEnded(at: now) {
             Label("Check in when you're there to collect the \(gathering.placeName) stamp.", systemImage: "seal")
                 .font(.system(size: 13))
                 .foregroundStyle(Palette.muted)
@@ -299,15 +299,18 @@ struct GatheringDetailView: View {
         let meetFriend = meet.flatMap { m in going.first { $0.id == m.friendID } }
         return VStack(spacing: 10) {
             HStack(spacing: 10) {
-                if gathering.checkedInAt != nil {
+                if let checkedIn = gathering.checkedInAt {
                     prominent("You're here", tint: gathering.category.color) {}
                         .disabled(true)
-                    Button { here = HereMoment(title: gathering.placeName, genre: gathering.category, checkedInAt: gathering.checkedInAt ?? now,
-                                               friends: going, stamped: true) } label: {
-                        Image(systemName: "moon.stars")
+                    // "You're here" is for tonight; an older check-in is history.
+                    if NightMath.evening(of: checkedIn) == NightMath.evening(of: now) {
+                        Button { here = HereMoment(title: gathering.placeName, genre: gathering.category, checkedInAt: checkedIn,
+                                                   friends: going, stamped: true) } label: {
+                            Image(systemName: "moon.stars")
+                        }
+                        .buttonStyle(.glass)
+                        .accessibilityLabel("You're here")
                     }
-                    .buttonStyle(.glass)
-                    .accessibilityLabel("You're here")
                 } else if canCheckIn {
                     prominent("Check in") {
                         let at = location.center
@@ -352,7 +355,9 @@ struct GatheringDetailView: View {
                     .disabled(gathering.isFull)
                 }
             }
-            if !people.isEmpty, gathering.checkedInAt == nil, !gathering.hasEnded(at: now) {
+            // Asking friends along goes through the server, so only for a real gathering it has.
+            if !people.isEmpty, gathering.checkedInAt == nil, !gathering.hasEnded(at: now),
+               gathering.remoteID != nil, !gathering.isListing, ServerFeatures.shared.has(.people) {
                 Button { inviting = true } label: { Label("Bring someone", systemImage: "person.badge.plus").frame(maxWidth: .infinity) }
                     .buttonStyle(.glass)
             }

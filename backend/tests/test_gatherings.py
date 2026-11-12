@@ -132,3 +132,23 @@ def test_railway_database_url_gets_the_async_driver():
         Settings(database_url="postgresql://u:p@h:5432/d").database_url == "postgresql+asyncpg://u:p@h:5432/d"
     )
     assert Settings(database_url="postgres://u:p@h/d").database_url == "postgresql+asyncpg://u:p@h/d"
+
+
+async def test_validation_messages_read_plainly(client):
+    alice = await make_user(client, "Alice")
+    lat, lon = HERE
+    body = {
+        "title": "Backwards",
+        "genre": "play",
+        "place_name": "The park",
+        "lat": lat,
+        "lon": lon,
+        "starts_at": at(120),
+        "ends_at": at(60),
+    }
+    r = await client.post("/v1/gatherings", json=body, headers=alice)
+    assert r.status_code == 422
+    assert "It has to end after it starts." in r.text
+    r = await client.post("/v1/gatherings", json=body | {"genre": "food", "ends_at": at(180)}, headers=alice)
+    assert r.status_code == 422
+    assert "Food is sold through home kitchens" in r.text
