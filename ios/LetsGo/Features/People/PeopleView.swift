@@ -88,7 +88,7 @@ struct PeopleView: View {
                     .glassEffect(.regular.interactive(), in: .circle)
                     .overlay(alignment: .topTrailing) {
                         if BlockFeed.shared.hasNew {
-                            Circle().fill(Palette.accent).frame(width: 10, height: 10).offset(x: -4, y: 4)
+                            Circle().fill(Palette.ink).frame(width: 9, height: 9).offset(x: -5, y: 5)
                         }
                     }
             }
