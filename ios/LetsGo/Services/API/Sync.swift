@@ -385,6 +385,7 @@ enum Sync {
             drop.total = d.total
             drop.sold = d.sold
             drop.perSlot = d.perSlot
+            drop.photoURL = d.photoUrl
         }
     }
 

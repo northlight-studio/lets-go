@@ -4,11 +4,13 @@ import CoreLocation
 import MapLibre
 
 /// The map, edge to edge: MapLibre drawing OpenStreetMap tiles from OpenFreeMap in our own
-/// style (`paperwhite-light.json` / `paperwhite-dark.json`, made by `scripts/map-style.py`),
-/// following the phone's light and dark. Each thing in the window is a small tag with its
-/// start time; tags that would overlap merge into a count (`Timetable.merge`), and more
-/// appear as you zoom in. The walk ring and the route are hairlines, drawn only once you've
-/// tapped something. You are the system blue dot. No rotation or tilt: north stays up.
+/// style (`neighborhood-light.json` / `neighborhood-dark.json`, made by `scripts/map-style.py`),
+/// following the phone's light and dark. Each thing in the window is a pin (`PinView`): a
+/// kitchen's round photo with its price, an event's pill with its time and name; friends who
+/// are out or up for something show as their initials. Pins that would overlap merge into a
+/// count (`Timetable.merge`), and come apart as you zoom in. The walk ring and the route are
+/// drawn only once you've tapped something. You are the system blue dot. No rotation or
+/// tilt: north stays up.
 struct PaperMap: UIViewRepresentable {
     /// Where the map should look, asked for once per `id`.
     struct Camera: Equatable {
@@ -32,6 +34,8 @@ struct PaperMap: UIViewRepresentable {
     }
 
     var items: [Candidate]
+    /// Friends to draw (`Pins.friends`), separate from what merges.
+    var friends: [Pins.FriendPin] = []
     var now: Date
     var selectedID: UUID?
     /// Where the map opens.
@@ -44,6 +48,8 @@ struct PaperMap: UIViewRepresentable {
     var camera: Camera?
     var dark: Bool
     var onSelect: (Candidate) -> Void
+    /// A tap on a friend.
+    var onFriend: (Pins.FriendPin) -> Void = { _ in }
     /// A tap on the map itself, away from any tag.
     var onTapMap: () -> Void
     /// True while the map is being moved by a finger.
@@ -53,7 +59,7 @@ struct PaperMap: UIViewRepresentable {
     static let walkRadius: CLLocationDistance = 800
 
     static func styleURL(dark: Bool) -> URL? {
-        Bundle.main.url(forResource: dark ? "paperwhite-dark" : "paperwhite-light", withExtension: "json")
+        Bundle.main.url(forResource: dark ? "neighborhood-dark" : "neighborhood-light", withExtension: "json")
     }
 
     func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
@@ -91,6 +97,7 @@ struct PaperMap: UIViewRepresentable {
             map.styleURL = Self.styleURL(dark: dark)
         }
         c.refreshTags()
+        c.refreshFriends()
         c.refreshLines()
         if let camera, camera.id != c.lastCamera {
             c.lastCamera = camera.id
@@ -113,6 +120,8 @@ struct PaperMap: UIViewRepresentable {
         private var lastItems: [UUID] = []
         private var lastSelected: UUID?
         private var lastMinute = -1
+        private var friendTags: [String: MLNPointAnnotation] = [:]
+        private var friendsByKey: [String: Pins.FriendPin] = [:]
         private var ring: MLNPolyline?
         private var routeLine: MLNPolyline?
         private var lineKey = ""
@@ -120,6 +129,35 @@ struct PaperMap: UIViewRepresentable {
         private var moving = false
 
         init(parent: PaperMap) { self.parent = parent }
+
+        // MARK: Friends
+
+        /// Friends' pins: added, moved or removed only when they look different.
+        func refreshFriends() {
+            guard let map else { return }
+            var wanted: [String: Pins.FriendPin] = [:]
+            for f in parent.friends {
+                wanted["f:\(f.id.uuidString)|\(f.latitude)|\(f.longitude)|\(f.bubble ?? "")|\(f.initials)|\(styleDark ? "d" : "l")"] = f
+            }
+            let gone = friendTags.keys.filter { wanted[$0] == nil }
+            let goneAnnotations = gone.compactMap { friendTags[$0] }
+            for k in gone {
+                friendTags[k] = nil
+                friendsByKey[k] = nil
+                views[k] = nil
+            }
+            if !goneAnnotations.isEmpty { map.removeAnnotations(goneAnnotations) }
+            var added: [MLNPointAnnotation] = []
+            for (k, f) in wanted where friendTags[k] == nil {
+                let a = MLNPointAnnotation()
+                a.coordinate = f.coordinate
+                a.title = k
+                friendTags[k] = a
+                friendsByKey[k] = f
+                added.append(a)
+            }
+            if !added.isEmpty { map.addAnnotations(added) }
+        }
 
         // MARK: Tags
 
@@ -165,20 +203,31 @@ struct PaperMap: UIViewRepresentable {
         private func key(for g: Timetable.Group) -> String {
             let first = g.members[0]
             let text = g.isSingle ? Timetable.tag(first, now: parent.now) : "\(g.members.count)"
-            let filled = g.isSingle && (first.id == parent.selectedID || Timetable.isOn(first, now: parent.now))
-            return "\(g.id)|\(text)|\(filled ? "f" : "o")|\(styleDark ? "d" : "l")"
+            let tapped = g.isSingle && first.id == parent.selectedID
+            let on = g.isSingle && Timetable.isOn(first, now: parent.now)
+            // A kitchen's photo arriving, or a renamed event, redraws its pin.
+            let look = g.isSingle ? "\(first.title)|\(first.photoURL?.absoluteString ?? "")|\(first.priceFromCents ?? 0)" : ""
+            return "\(g.id)|\(text)|\(tapped ? "t" : "-")\(on ? "n" : "-")|\(look)|\(styleDark ? "d" : "l")"
         }
 
         func view(for annotation: MLNAnnotation, in map: MLNMapView) -> MLNAnnotationView? {
-            guard let point = annotation as? MLNPointAnnotation, let k = point.title, let group = groupsByKey[k] else { return nil }
-            let view = TagView.make(group: group, now: parent.now, selectedID: parent.selectedID, traits: map.traitCollection)
+            guard let point = annotation as? MLNPointAnnotation, let k = point.title else { return nil }
+            if let friend = friendsByKey[k] {
+                let view = PinView.friend(friend, traits: map.traitCollection)
+                views[k] = view
+                return view
+            }
+            guard let group = groupsByKey[k] else { return nil }
+            let view = PinView.make(group: group, now: parent.now, selectedID: parent.selectedID, traits: map.traitCollection)
             views[k] = view
             return view
         }
 
         func select(_ annotation: MLNAnnotation, in map: MLNMapView) {
             map.deselectAnnotation(annotation, animated: false)
-            guard let point = annotation as? MLNPointAnnotation, let k = point.title, let group = groupsByKey[k] else { return }
+            guard let point = annotation as? MLNPointAnnotation, let k = point.title else { return }
+            if let friend = friendsByKey[k] { return parent.onFriend(friend) }
+            guard let group = groupsByKey[k] else { return }
             if group.isSingle {
                 parent.onSelect(group.members[0])
             } else if Self.together(group.members) || map.zoomLevel >= map.maximumZoomLevel - 0.5 {
@@ -197,7 +246,7 @@ struct PaperMap: UIViewRepresentable {
 
         // MARK: Lines
 
-        /// The walk ring around you and the route to what's tapped, both hairlines, only
+        /// The walk ring around you (a hairline) and the route to what's tapped, only
         /// while something is tapped.
         func refreshLines() {
             guard let map else { return }
@@ -238,8 +287,8 @@ struct PaperMap: UIViewRepresentable {
             return color.resolvedColor(with: traits)
         }
 
-        func width(for line: MLNPolyline) -> CGFloat { line.title == "route" ? 1.5 : 1 }
-        func alpha(for shape: MLNShape) -> CGFloat { shape.title == "route" ? 0.9 : 0.28 }
+        func width(for line: MLNPolyline) -> CGFloat { line.title == "route" ? 3 : 1 }
+        func alpha(for shape: MLNShape) -> CGFloat { shape.title == "route" ? 0.9 : 0.3 }
 
         // MARK: Camera
 
@@ -367,51 +416,7 @@ extension PaperMap.Coordinator: @preconcurrency MLNMapViewDelegate {
 
     func mapView(_ mapView: MLNMapView, didFinishLoading style: MLNStyle) {
         refreshTags(force: true)
+        refreshFriends()
     }
 }
 
-/// A tag on the map: the start time ("7:30") in tabular figures with a hairline ink border
-/// on paper; "Now" and the tapped one filled in the accent; a merged group as a small round
-/// count. No badges, glow or halos.
-enum TagView {
-    static func make(group: Timetable.Group, now: Date, selectedID: UUID?, traits: UITraitCollection) -> MLNAnnotationView {
-        let first = group.members[0]
-        let single = group.isSingle
-        let tapped = single && first.id == selectedID
-        let filled = single && (tapped || Timetable.isOn(first, now: now))
-        let text = single ? Timetable.tag(first, now: now) : "\(group.members.count)"
-
-        let label = UILabel()
-        label.text = text
-        label.textAlignment = .center
-        label.font = single
-            ? UIFont.monospacedDigitSystemFont(ofSize: tapped ? 13 : 12, weight: .semibold)
-            : UIFont.monospacedDigitSystemFont(ofSize: 11.5, weight: .bold)
-        label.textColor = (filled ? MapInk.onFill : MapInk.ink).resolvedColor(with: traits)
-        label.adjustsFontForContentSizeCategory = false
-        let size = label.intrinsicContentSize
-        let height: CGFloat = single ? (tapped ? 22 : 20) : 22
-        let width = single ? ceil(size.width) + 12 : max(height, ceil(size.width) + 10)
-
-        let view = MLNAnnotationView(annotation: nil, reuseIdentifier: nil)
-        view.frame = CGRect(x: 0, y: 0, width: width, height: height)
-        view.scalesWithViewingDistance = false
-        view.layer.cornerRadius = single ? 4 : height / 2
-        view.layer.borderWidth = filled ? 0 : 0.9
-        view.layer.borderColor = MapInk.ink.resolvedColor(with: traits).cgColor
-        view.backgroundColor = (filled ? MapInk.accent : MapInk.paper).resolvedColor(with: traits)
-        label.frame = view.bounds
-        view.addSubview(label)
-
-        view.isAccessibilityElement = true
-        view.accessibilityTraits = .button
-        if single {
-            let when = Timetable.isOn(first, now: now) ? "on now" : "at \(HomeLine.clock(first.start))"
-            view.accessibilityLabel = "\(first.title), \(when)"
-        } else {
-            view.accessibilityLabel = "\(group.members.count) things here"
-            view.accessibilityHint = "Zooms in"
-        }
-        return view
-    }
-}

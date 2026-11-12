@@ -115,6 +115,8 @@ final class Drop {
     var perSlot: Int
     var kitchen: Kitchen?
     var remoteID: UUID?
+    /// The cook's photo of this drop, from the server (`photo_url`), when there is one.
+    var photoURL: String?
 
     init(start: Date, end: Date, total: Int, sold: Int = 0, perSlot: Int = 4) {
         self.id = UUID()

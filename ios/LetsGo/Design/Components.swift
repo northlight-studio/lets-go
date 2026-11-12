@@ -114,6 +114,19 @@ enum KitchenLook {
         ]
         return table.first { c.contains($0.0) }?.1 ?? 0.07
     }
+
+    /// The dish on a kitchen's map pin until its drop has a photo: 🍕 for pizza, 🫔 for tamales.
+    static func glyph(for cuisine: String) -> String {
+        let c = cuisine.lowercased()
+        let table: [(String, String)] = [
+            ("pizza", "🍕"), ("ice cream", "🍦"), ("gelato", "🍨"), ("tamal", "🫔"), ("curry", "🍛"), ("sourdough", "🍞"),
+            ("bread", "🍞"), ("jollof", "🍲"), ("bao", "🥟"), ("dumpling", "🥟"), ("bbq", "🍖"), ("barbecue", "🍖"),
+            ("manakish", "🫓"), ("cookie", "🍪"), ("cake", "🍰"), ("pie", "🥧"), ("pho", "🍜"), ("ramen", "🍜"),
+            ("noodle", "🍜"), ("arepa", "🫓"), ("taco", "🌮"), ("burrito", "🌯"), ("sushi", "🍣"), ("salad", "🥗"),
+            ("soup", "🍲"), ("burger", "🍔"), ("sandwich", "🥪"), ("pasta", "🍝"), ("coffee", "☕️"), ("tea", "🍵"),
+        ]
+        return table.first { c.contains($0.0) }?.1 ?? "🍽️"
+    }
 }
 
 /// App Store-style strip of three facts.

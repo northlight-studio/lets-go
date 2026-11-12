@@ -240,10 +240,6 @@ enum Timetable {
         var coordinate: CLLocationCoordinate2D { .init(latitude: latitude, longitude: longitude) }
     }
 
-    /// A tag's footprint on screen, in points, with a little air around it.
-    static let tagWidth = 50.0
-    static let tagHeight = 26.0
-
     /// Where a place sits on the whole world drawn at `zoom`, in points (MapLibre's
     /// 512-point tiles, Web Mercator). Two places' distance on screen is the difference.
     static func worldPoint(latitude: Double, longitude: Double, zoom: Double) -> (x: Double, y: Double) {
@@ -254,7 +250,7 @@ enum Timetable {
         return (x, y)
     }
 
-    /// Merges tags that would overlap at `zoom`. What's on now and what starts first keep
+    /// Merges pins that would overlap at `zoom` (each pin's room is `Pins.footprint`). What's on now and what starts first keep
     /// their own tags first; the one you tapped never merges. Zooming in pulls groups apart.
     static func merge(_ items: [Candidate], zoom: Double, now: Date, selected: UUID? = nil) -> [Group] {
         let ordered = items.sorted { a, b in
@@ -265,17 +261,19 @@ enum Timetable {
             return a.id.uuidString < b.id.uuidString
         }
         var anchors: [(x: Double, y: Double)] = []
+        var rooms: [(width: Double, height: Double)] = []
         var members: [[Candidate]] = []
         for c in ordered {
             let p = worldPoint(latitude: c.lat, longitude: c.lon, zoom: zoom)
+            let room = Pins.footprint(c, now: now)
             let joins = c.id == selected ? nil : anchors.indices.first { i in
-                members[i].first?.id != selected
-                    && abs(anchors[i].x - p.x) < tagWidth && abs(anchors[i].y - p.y) < tagHeight
+                members[i].first?.id != selected && Pins.overlap(anchors[i], rooms[i], p, room)
             }
             if let i = joins {
                 members[i].append(c)
             } else {
                 anchors.append(p)
+                rooms.append(room)
                 members.append([c])
             }
         }

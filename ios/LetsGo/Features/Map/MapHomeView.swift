@@ -2,9 +2,10 @@ import SwiftUI
 import SwiftData
 import MapKit
 
-/// The opening screen: *Paperwhite, with a timetable*. The map is the whole screen, drawn
-/// in our own style (`PaperMap`), and every thing on it is its start time. On top, only a
-/// slim search field and a small filter circle. At the bottom, the time rail picks the day
+/// The opening screen: *Neighborhood color*. The map is the whole screen, drawn in our own
+/// style (`PaperMap`): kitchens as photos with their price, events as pills with their time
+/// and name, friends as their faces. On top, a slim search field, a small filter circle and
+/// the chips (All, Food, Events, Friends). At the bottom, the time rail picks the day
 /// and how late to look, between a list button and a recenter button. Tap a time for its
 /// card; flick the card down to put it away. The tab bar steps aside while you move the
 /// map and comes back when you stop. "Quick pick" in the filter menu turns it into Signal.
@@ -76,7 +77,7 @@ struct HomeView: View {
         .userLocation(fallback: .region(MKCoordinateRegion(center: LocationService.fallback, latitudinalMeters: 3000, longitudinalMeters: 3000)))
     }
 
-    // MARK: Paperwhite
+    // MARK: The map
 
     private var paper: some View {
         TimelineView(.periodic(from: .now, by: 30)) { timeline in
@@ -85,10 +86,12 @@ struct HomeView: View {
             let shown = narrowed(model.shown(all, now: now), now: now)
             let selected = model.selectedID.flatMap { id in all.first { $0.id == id } }
             let onMap = selected.map { s in shown.contains(where: { $0.id == s.id }) ? shown : shown + [s] } ?? shown
+            let friends = model.layer.showsFriends ? Pins.friends(people.map(\.snapshot), now: now) : []
             ZStack {
-                map(items: onMap, selected: selected, now: now)
-                VStack(spacing: 0) {
+                map(items: onMap, friends: friends, selected: selected, now: now)
+                VStack(alignment: .leading, spacing: 0) {
                     topBar
+                    chips.padding(.top, 8)
                     Spacer(minLength: 0)
                     bottom(all: all, shown: shown, selected: selected, now: now)
                 }
@@ -100,14 +103,15 @@ struct HomeView: View {
         .background(Palette.bg)
     }
 
-    private func map(items: [Candidate], selected: Candidate?, now: Date) -> some View {
+    private func map(items: [Candidate], friends: [Pins.FriendPin], selected: Candidate?, now: Date) -> some View {
         PaperMap(
-            items: items, now: now, selectedID: selected?.id,
+            items: items, friends: friends, now: now, selectedID: selected?.id,
             start: location.center, startZoom: CityListings.covers(location.center) ? 13.6 : 14.5,
             here: location.center,
             route: selected.flatMap { routes.legs[$0.id]?.coordinates } ?? [],
             camera: camera, dark: colorScheme == .dark,
             onSelect: { select($0) },
+            onFriend: { _ in model.tab = .people },
             onTapMap: { tapMap() },
             onMoving: { moving in
                 if moving { touched = true }
@@ -117,7 +121,7 @@ struct HomeView: View {
         .ignoresSafeArea()
     }
 
-    /// Friends going, when that filter is on.
+    /// Friends going, when that filter or the Friends chip is on.
     private func narrowed(_ shown: [Candidate], now: Date) -> [Candidate] {
         model.narrowed(shown, friends: people.map(\.snapshot))
     }
@@ -148,6 +152,35 @@ struct HomeView: View {
         .padding(.horizontal, 16)
         .padding(.top, 4)
         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+    }
+
+    /// The chips under the search: All, Food, Events, Friends. Small, on glass; the one
+    /// that's on is ink.
+    private var chips: some View {
+        HStack(spacing: 6) {
+            ForEach(MapLayer.allCases) { layer in
+                let on = model.layer == layer
+                Button {
+                    withAnimation(reduceMotion ? nil : .snappy(duration: 0.25)) {
+                        model.layer = layer
+                        model.selectedID = nil
+                    }
+                } label: {
+                    Text(layer.label)
+                        .font(.system(size: 12.5, weight: .semibold))
+                        .foregroundStyle(on ? Palette.onProminent : Palette.ink)
+                        .padding(.horizontal, 12)
+                        .frame(minHeight: 30)
+                        .background(on ? Palette.prominent : .clear, in: .capsule)
+                        .contentShape(.capsule)
+                }
+                .buttonStyle(.plain)
+                .glassEffect(on ? .identity : .regular.interactive(), in: .capsule)
+                .accessibilityAddTraits(on ? .isSelected : [])
+            }
+        }
+        .padding(.horizontal, 16)
+        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
     }
 
     /// The small glass circle by the search: kinds, free, friends, Quick pick and hosting.
@@ -228,16 +261,25 @@ struct HomeView: View {
         )
     }
 
-    /// Nothing in the window: say so, and offer the way to start.
+    /// Nothing in the window: say so, and offer the way to start. On the Friends chip with
+    /// no friends yet, the way to start is adding one.
     private func emptyNote(now: Date) -> some View {
         let inCity = CityListings.covers(location.center)
+        let noFriends = (model.layer == .friends || model.friendsOnly) && people.isEmpty
         return HStack(spacing: 10) {
             Text(model.emptyReason(inCity: inCity, hasFriends: !people.isEmpty))
                 .font(.footnote)
                 .foregroundStyle(Palette.soft)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
-            Button("Host") { hostingBlank = true }
+            Button(noFriends ? "Add a friend" : "Host") {
+                if noFriends {
+                    model.tab = .people
+                    model.addingFriend = true
+                } else {
+                    hostingBlank = true
+                }
+            }
                 .buttonStyle(.glassProminent)
                 .tint(Palette.prominent)
                 .foregroundStyle(Palette.onProminent)
