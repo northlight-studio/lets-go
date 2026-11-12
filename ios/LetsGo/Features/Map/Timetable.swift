@@ -208,12 +208,17 @@ enum Timetable {
 
     /// "7:30", "8:00" (or "8" with `dropZeroMinutes`): the map has no room for AM and PM.
     static func clock(_ d: Date, calendar: Calendar = .current, locale: Locale = .autoupdatingCurrent, dropZeroMinutes: Bool = false) -> String {
-        var style = Date.FormatStyle.dateTime.hour(.defaultDigits(amPM: .omitted))
-        if !(dropZeroMinutes && calendar.component(.minute, from: d) == 0) { style = style.minute() }
-        style.calendar = calendar
-        style.timeZone = calendar.timeZone
-        style.locale = locale
-        return d.formatted(style)
+        let parts = calendar.dateComponents([.hour, .minute], from: d)
+        let hour24 = parts.hour ?? 0, minute = parts.minute ?? 0
+        let hour = usesTwentyFourHours(locale) ? hour24 : (hour24 % 12 == 0 ? 12 : hour24 % 12)
+        if dropZeroMinutes && minute == 0 { return "\(hour)" }
+        return "\(hour):" + (minute < 10 ? "0\(minute)" : "\(minute)")
+    }
+
+    /// Whether the locale writes times on a 24-hour clock ("20:00" rather than "8:00 PM").
+    static func usesTwentyFourHours(_ locale: Locale) -> Bool {
+        let format = DateFormatter.dateFormat(fromTemplate: "j", options: 0, locale: locale) ?? "h"
+        return format.contains("H") || format.contains("k")
     }
 
     static func hourLabel(_ d: Date, calendar: Calendar = .current, locale: Locale = .autoupdatingCurrent) -> String {
