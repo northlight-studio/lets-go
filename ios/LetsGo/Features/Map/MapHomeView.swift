@@ -25,6 +25,7 @@ struct HomeView: View {
     @State private var routes = RouteBook()
     @State private var hostingBlank = false
     @State private var selling = false
+    @State private var hostingSupper = false
     @State private var joining = false
     @State private var problem: String?
     @State private var credits = false
@@ -58,6 +59,7 @@ struct HomeView: View {
         }
         .sheet(isPresented: $hostingBlank) { NewGatheringView(draft: nil) }
         .sheet(isPresented: $selling) { SellView().environment(location) }
+        .sheet(isPresented: $hostingSupper) { HostSupperView().environment(location) }
         .confirmationDialog("Map data", isPresented: $credits, titleVisibility: .visible) {
             ForEach(MapCredit.all) { c in
                 Button(c.name) { openURL(c.link) }
@@ -85,6 +87,7 @@ struct HomeView: View {
         TimelineView(.periodic(from: .now, by: 30)) { timeline in
             let now = timeline.date
             let all = Nearby.candidates(gatherings: gatherings, kitchens: kitchens, from: location.center, now: now)
+                + SupperBook.shared.candidates(from: location.center, now: now)
             let shown = narrowed(model.shown(all, now: now), now: now)
             let selected = model.selectedID.flatMap { id in all.first { $0.id == id } }
             let onMap = selected.map { s in shown.contains(where: { $0.id == s.id }) ? shown : shown + [s] } ?? shown
@@ -206,6 +209,7 @@ struct HomeView: View {
             }
             Button { hostingBlank = true } label: { Label("Host something", systemImage: "plus") }
             Button { selling = true } label: { Label("Sell something", systemImage: "camera") }
+            Button { hostingSupper = true } label: { Label("Host a supper", systemImage: "fork.knife") }
         } label: {
             Image(systemName: model.isFiltered ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease")
                 .font(.system(size: 16, weight: .medium))
@@ -348,6 +352,8 @@ struct HomeView: View {
             if let g = gatherings.first(where: { $0.id == c.id }) { model.open(g, id: g.id, at: g.coordinate) }
         case .drop:
             if let k = kitchens.first(where: { $0.id == c.id }) { model.open(k, id: k.id, at: k.coordinate) }
+        case .supper:
+            model.open(SupperLink(id: c.id), id: c.id, at: CLLocationCoordinate2D(latitude: c.lat, longitude: c.lon))
         }
     }
 

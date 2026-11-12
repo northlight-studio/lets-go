@@ -150,6 +150,27 @@ enum Ledger {
         save(context, "open kitchen")
     }
 
+    // MARK: Supper club
+
+    /// You set up a supper. The first one is a stamp.
+    static func hostSupper(context: ModelContext) {
+        award(key: "first-supper-hosted", title: "Hosted a supper", symbol: "fork.knife.circle.fill", category: .food, context: context)
+        learn("into:suppers", "Into suppers at neighbors'", .food, context: context)
+        save(context, "host supper")
+    }
+
+    /// You asked for a seat at someone's supper.
+    static func askForSeat(context: ModelContext) {
+        learn("into:suppers", "Into suppers at neighbors'", .food, context: context)
+        save(context, "ask for a seat")
+    }
+
+    /// You sat at someone's table. The first one is a stamp.
+    static func satAtSupper(host: String, context: ModelContext) {
+        award(key: "first-supper", title: "Supper at \(host)'s", symbol: "fork.knife.circle", category: .food, context: context)
+        save(context, "sat at a supper")
+    }
+
     // MARK: Nights out
 
     /// Tonight's night, made when you first show up somewhere.

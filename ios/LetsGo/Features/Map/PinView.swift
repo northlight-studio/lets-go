@@ -15,12 +15,13 @@ enum PinView {
         guard group.isSingle else { return count(group, traits: traits) }
         let c = group.members[0]
         let tapped = c.id == selectedID
-        let view = c.kind == .drop ? food(c, tapped: tapped, traits: traits) : event(c, now: now, tapped: tapped, traits: traits)
+        let view = c.kind == .gathering ? event(c, now: now, tapped: tapped, traits: traits) : food(c, tapped: tapped, traits: traits)
         view.isAccessibilityElement = true
         view.accessibilityTraits = .button
         let when = Timetable.isOn(c, now: now) ? "on now" : "at \(HomeLine.clock(c.start))"
         var label = "\(c.title), \(when)"
         if c.kind == .drop, let price = Pins.priceTag(cents: c.priceFromCents) { label += ", from \(price)" }
+        if c.kind == .supper { label = "Supper: \(c.title), \(c.place), \(when), \(Pins.tag(c) ?? "")" }
         view.accessibilityLabel = label
         if tapped { view.accessibilityTraits.insert(.selected) }
         return view
@@ -74,7 +75,7 @@ enum PinView {
         let photo: CGFloat = 38
         let ring: CGFloat = tapped ? 3 : 2.5
         let circle = photo + ring * 2
-        let price = Pins.priceTag(cents: c.priceFromCents)
+        let price = Pins.tag(c)
         let tagHeight: CGFloat = 17, tagOverlap: CGFloat = 6
         let height = circle + (price == nil ? 0 : tagHeight - tagOverlap)
 

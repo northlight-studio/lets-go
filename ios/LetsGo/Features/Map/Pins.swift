@@ -47,6 +47,15 @@ enum Pins {
         return Pricing.format(cents)
     }
 
+    /// The tag under a photo pin: a batch's price ("$6"), or a supper's seats left ("2 seats").
+    static func tag(_ c: Candidate) -> String? {
+        switch c.kind {
+        case .drop: priceTag(cents: c.priceFromCents)
+        case .supper: SupperCopy.seatsTag(left: c.spotsLeft ?? 0)
+        case .gathering: nil
+        }
+    }
+
     // MARK: Friends
 
     /// "Maya Chen" → "MC", "Theo" → "T", "" → "?".
@@ -109,7 +118,7 @@ enum Pins {
     /// grows with its name; a kitchen is its photo and price tag.
     static func footprint(_ c: Candidate, now: Date) -> (width: Double, height: Double) {
         switch c.kind {
-        case .drop:
+        case .drop, .supper:
             return (48, 56)
         case .gathering:
             let time = Double(Timetable.tag(c, now: now).count) * 7.4
@@ -147,7 +156,7 @@ enum MapLayer: String, CaseIterable, Identifiable, Sendable {
     func keeps(_ c: Candidate, goingIDs: Set<UUID> = []) -> Bool {
         switch self {
         case .all: true
-        case .food: c.kind == .drop
+        case .food: c.kind == .drop || c.kind == .supper
         case .events: c.kind == .gathering
         case .friends: goingIDs.contains(c.id)
         }

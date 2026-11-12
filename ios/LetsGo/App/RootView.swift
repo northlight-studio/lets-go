@@ -147,6 +147,7 @@ struct RootView: View {
         await sync.run { () throws(APIError) in
             try await Sync.refresh(around: center, context: context)
             if server.has(.people) { try await Sync.refreshPeople(around: center, context: context) }
+            if server.has(.suppers) { try await SupperBook.shared.refresh(around: center) }
         }
         prune()
     }

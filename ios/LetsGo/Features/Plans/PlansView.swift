@@ -35,6 +35,7 @@ struct PlansView: View {
                     VStack(alignment: .leading, spacing: 0) {
                         header(all, soon: soon, now: now)
                         planned(now: now)
+                        suppers(now: now)
                         yours(now: now)
                         followed(now: now)
                         pick(all, taste: taste, now: now)
@@ -59,6 +60,7 @@ struct PlansView: View {
             .navigationDestination(for: CityListRoute.self) { _ in ListsView() }
             .navigationDestination(for: KitchensRoute.self) { _ in KitchensPage() }
             .navigationDestination(for: SavedPlan.self) { PlanView(plan: $0) }
+            .navigationDestination(for: SupperLink.self) { SupperView(id: $0.id) }
         }
         .sheet(isPresented: $hosting) { NewGatheringView(draft: nil) }
         .sheet(isPresented: $selling) { SellView() }
@@ -109,6 +111,46 @@ struct PlansView: View {
     private func clearNotes() {
         withAnimation { kitchenNotes = kitchenNotes.map { var n = $0; n.read = true; return n } }
         Task { try? await Sync.markNotesRead() }
+    }
+
+    // MARK: Suppers
+
+    /// Suppers you host (with how many are asking) and ones you've asked for or have a seat at,
+    /// until they're over.
+    @ViewBuilder
+    private func suppers(now: Date) -> some View {
+        let book = SupperBook.shared
+        let mine = (book.hosting + book.going).filter { !$0.canceled && $0.endsAt > now }.sorted { $0.startsAt < $1.startsAt }
+        if !mine.isEmpty {
+            sectionHeader("Suppers")
+            VStack(spacing: 0) {
+                ForEach(Array(mine.enumerated()), id: \.element.id) { i, s in
+                    Button { path.append(SupperLink(id: s.id)) } label: {
+                        HStack(spacing: 12) {
+                            BatchPhoto(path: s.photoUrl, title: s.title, height: 44, radius: 12).frame(width: 44)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(s.title).font(.system(size: 16, weight: .semibold)).foregroundStyle(Palette.ink).lineLimit(1)
+                                Text(s.isMine
+                                     ? SupperCopy.hostSeats(taken: s.taken, seats: s.seats, waiting: s.waiting)
+                                     : SupperCopy.stageLine(SeatStage.of(s, now: now), host: s.host.displayName) ?? SupperCopy.at(s.host.displayName))
+                                    .font(.system(size: 13)).foregroundStyle(Palette.muted).lineLimit(1)
+                            }
+                            Spacer(minLength: 6)
+                            Text(SupperCopy.when(s.startsAt, now: now))
+                                .font(.system(size: 13, weight: .semibold)).monospacedDigit()
+                                .foregroundStyle(Palette.ink)
+                        }
+                        .padding(.vertical, 10)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, 14)
+                    if i < mine.count - 1 { Divider().overlay(Palette.line).padding(.leading, 70) }
+                }
+            }
+            .card(radius: 20)
+            .padding(.horizontal, 16)
+        }
     }
 
     // MARK: Plans Wren made
@@ -514,6 +556,8 @@ struct PlansView: View {
             if let g = gatherings.first(where: { $0.id == c.id }) { path.append(g) }
         case .drop:
             if let k = kitchens.first(where: { $0.id == c.id }) { path.append(k) }
+        case .supper:
+            path.append(SupperLink(id: c.id))
         }
     }
 }

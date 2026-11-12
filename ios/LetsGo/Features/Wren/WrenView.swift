@@ -67,6 +67,7 @@ struct WrenView: View {
             .navigationDestination(for: Kitchen.self) { KitchenView(kitchen: $0) }
             .navigationDestination(for: Order.self) { OrderStatusView(order: $0) }
             .navigationDestination(for: SavedPlan.self) { PlanView(plan: $0) }
+            .navigationDestination(for: SupperLink.self) { SupperView(id: $0.id) }
             .sheet(item: $draft) { NewGatheringView(draft: $0) }
             .errorAlert($problem)
         }
@@ -327,6 +328,7 @@ struct WrenView: View {
         switch p.kind {
         case .gathering: if let g = gatherings.first(where: { $0.id == p.id }) { path.append(g) }
         case .drop: if let k = kitchens.first(where: { $0.id == p.id }) { path.append(k) }
+        case .supper: path.append(SupperLink(id: p.id))
         }
     }
 }

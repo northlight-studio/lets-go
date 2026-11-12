@@ -42,6 +42,7 @@ struct NearbySheet: View {
             .navigationDestination(for: Kitchen.self) { KitchenView(kitchen: $0) }
             .navigationDestination(for: Order.self) { OrderStatusView(order: $0) }
             .navigationDestination(for: MyKitchenRoute.self) { _ in MyKitchenView() }
+            .navigationDestination(for: SupperLink.self) { SupperView(id: $0.id) }
         }
         .onChange(of: searching) { _, on in if on { model.detent = .large } }
         .onChange(of: model.path.count) { _, count in if count == 0 { model.selectedID = nil } }
@@ -94,6 +95,7 @@ struct NearbySheet: View {
     @ViewBuilder
     private func searchContent(now: Date) -> some View {
         let all = Nearby.candidates(gatherings: gatherings, kitchens: kitchens, from: location.center, now: now)
+            + SupperBook.shared.candidates(from: location.center, now: now)
         if model.query.isEmpty {
             VStack(alignment: .leading, spacing: 0) {
                 header("Try")
@@ -142,6 +144,7 @@ struct NearbySheet: View {
     /// The same window as the map: the rail's day, until the thumb, narrowed by the filters.
     private func nearby(now: Date) -> some View {
         let all = Nearby.candidates(gatherings: gatherings, kitchens: kitchens, from: location.center, now: now)
+            + SupperBook.shared.candidates(from: location.center, now: now)
         // Narrowed the same way as the map, so the two agree.
         let shown = model.narrowed(model.shown(all, now: now), friends: people.map(\.snapshot))
         let span = model.span(now: now)
@@ -261,6 +264,8 @@ struct NearbySheet: View {
             if let g = gatherings.first(where: { $0.id == c.id }) { model.open(g, id: g.id, at: g.coordinate) }
         case .drop:
             if let k = kitchens.first(where: { $0.id == c.id }) { model.open(k, id: k.id, at: k.coordinate) }
+        case .supper:
+            model.open(SupperLink(id: c.id), id: c.id, at: CLLocationCoordinate2D(latitude: c.lat, longitude: c.lon))
         }
     }
 }

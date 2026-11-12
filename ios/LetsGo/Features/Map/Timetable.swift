@@ -315,6 +315,9 @@ enum Timetable {
             parts.append(c.priceText.isEmpty ? "Free" : c.priceText)
         case .drop:
             if let price = c.priceFromCents { parts.append("from \(Pricing.format(price))") }
+        case .supper:
+            if let price = c.priceFromCents { parts.append("\(Pricing.format(price)) a seat") }
+            parts.append(SupperCopy.seatsTag(left: c.spotsLeft ?? 0).lowercased() + (c.spotsLeft == 0 ? "" : " left"))
         }
         return parts.joined(separator: " · ")
     }
