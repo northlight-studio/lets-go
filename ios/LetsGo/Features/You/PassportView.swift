@@ -76,7 +76,7 @@ struct PassportView: View {
                     .overlay(Capsule().stroke(Palette.line))
             }
             Text("Who you were with, and where.")
-                .font(.serif(21))
+                .font(.quiet(21))
                 .foregroundStyle(Palette.soft)
         }
         .padding(.top, 8)
@@ -225,14 +225,13 @@ struct PassportView: View {
         Button { model.showQuote = true } label: {
             HStack(spacing: 12) {
                 Text("\u{201C}")
-                    .font(.serif(40))
+                    .font(.quiet(40))
                     .foregroundStyle(Palette.accent)
                     .frame(width: 30, height: 30)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Read the quote again").font(.system(size: 15, weight: .semibold)).foregroundStyle(Palette.ink)
                     Text("\u{2018}Live more.\u{2019} Fyodor Dostoevsky, Demons")
-                        .font(.serif(15))
-                        .italic()
+                        .font(.quiet(15))
                         .foregroundStyle(Palette.muted)
                 }
                 Spacer(minLength: 0)

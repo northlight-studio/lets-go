@@ -206,8 +206,8 @@ struct PlanView: View {
                 }
                 HStack(spacing: 10) {
                     Button(plan.confirmed ? "Sorted" : "Looks good") { confirm() }
-                        .buttonStyle(PrimaryButtonStyle(color: plan.confirmed ? Palette.accent.opacity(0.18) : Palette.accent,
-                                                        ink: plan.confirmed ? Palette.accentSoft : Palette.accentInk))
+                        .buttonStyle(PrimaryButtonStyle(color: plan.confirmed ? Palette.raise : Palette.prominent,
+                                                        ink: plan.confirmed ? Palette.ink : Palette.onProminent))
                         .disabled(plan.confirmed || busy)
                     Button("Change") { change() }
                         .buttonStyle(SecondaryButtonStyle())

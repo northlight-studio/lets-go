@@ -35,7 +35,7 @@ struct QuoteSplash: View {
 
                 ZStack(alignment: .topLeading) {
                     Text("\u{201C}")
-                        .font(.serif(110))
+                        .font(.quiet(110))
                         .foregroundStyle(Palette.accent.opacity(0.9))
                         .offset(x: -6, y: -40)
                         .accessibilityHidden(true)
@@ -81,11 +81,10 @@ struct QuoteSplash: View {
     private var quote: some View {
         let parts = QuoteText.clauses.enumerated().map { i, clause in
             Text(clause.text)
-                .italic(clause.isWish)
                 .foregroundStyle((clause.isWish ? Palette.accentSoft : Palette.ink).opacity(step > i ? 1 : 0))
         }
         return parts.reduce(Text(verbatim: "")) { Text("\($0)\($1)") }
-            .font(.serif(29))
+            .font(.quiet(29))
             .lineSpacing(6)
             .fixedSize(horizontal: false, vertical: true)
             .contentTransition(.interpolate)
@@ -99,8 +98,7 @@ struct QuoteSplash: View {
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(Palette.muted)
             Text("Demons")
-                .font(.serif(17))
-                .italic()
+                .font(.quiet(17))
                 .foregroundStyle(Palette.soft)
         }
         .accessibilityElement(children: .combine)

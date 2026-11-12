@@ -75,8 +75,8 @@ struct FilterChip: View {
                 .font(.system(size: 14, weight: .semibold))
                 .padding(.horizontal, 15)
                 .frame(height: 36)
-                .foregroundStyle(on ? Palette.accentInk : Palette.ink)
-                .glassEffect(on ? .regular.tint(Palette.accent).interactive() : .regular.interactive(), in: .capsule)
+                .foregroundStyle(on ? Palette.onProminent : Palette.ink)
+                .glassEffect(on ? .regular.tint(Palette.prominent).interactive() : .regular.interactive(), in: .capsule)
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(on ? .isSelected : [])
@@ -233,13 +233,13 @@ struct TipNote: View {
     }
 }
 
-/// The one prominent button a screen: full-width glass tinted yellow (or the colour
-/// given), dark ink on it. Where a screen lays its own buttons out, it uses the system's
-/// `.glassProminent` with `.tint(Palette.accent)` instead; this is the same glass for
+/// The one prominent button a screen: full-width glass tinted ink (or the colour given),
+/// paper on it. Where a screen lays its own buttons out, it uses the system's
+/// `.glassProminent` with `.tint(Palette.prominent)` instead; this is the same glass for
 /// the many full-width buttons that share a style.
 struct PrimaryButtonStyle: ButtonStyle {
-    var color: Color = Palette.accent
-    var ink: Color = Palette.accentInk
+    var color: Color = Palette.prominent
+    var ink: Color = Palette.onProminent
     @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {

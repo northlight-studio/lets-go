@@ -365,13 +365,13 @@ struct GatheringDetailView: View {
     }
 
     /// The system's prominent glass, in yellow (or the colour given) with dark ink.
-    private func prominent(_ title: String, symbol: String? = nil, tint: Color = Palette.accent, action: @escaping () -> Void) -> some View {
+    private func prominent(_ title: String, symbol: String? = nil, tint: Color = Palette.prominent, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Group {
                 if let symbol { Label(title, systemImage: symbol) } else { Text(title) }
             }
             .frame(maxWidth: .infinity)
-            .foregroundStyle(Palette.accentInk)
+            .foregroundStyle(Palette.onProminent)
         }
         .buttonStyle(.glassProminent)
         .tint(tint)

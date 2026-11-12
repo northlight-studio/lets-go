@@ -1,49 +1,75 @@
 import SwiftUI
 import UIKit
 
-/// Daylight map: the app follows the phone's light and dark, the way Maps does (iOS's
-/// Automatic appearance turns dark at sunset). By day, paper surfaces, green-black ink
-/// and white cards; after dark, deep trail green with glass over the map. The colours
-/// come from the compass icon and the map: yellow for the one thing to press (and the
-/// walk ring and route), blue for most pins, orange for music, green for food, and the
-/// system blue dot for you. Chrome is the system's own Liquid Glass (tab bar, toolbar
-/// buttons, sheets, search); nothing here draws behind it. The map's quick-decide mode
-/// (`Signal`) keeps its own black and lime.
+/// Paperwhite: the app follows the phone's light and dark, the way Maps does. By day,
+/// paper and near-black ink; after dark, charcoal paper and cream ink. The map is ours
+/// (`PaperMap`, drawn from our own style), and it carries no colour but what's ours: the
+/// red-orange accent marks what's on now and what you tapped, ink is the one prominent
+/// button a screen, and you are the system blue dot. Chrome is the system's own Liquid
+/// Glass (tab bar, toolbar buttons, sheets, the search field and the time rail); nothing
+/// here draws behind it. The map's quick-decide mode (`Signal`) keeps its own black and lime.
 enum Palette {
-    /// The page: paper by day, trail green after dark.
-    static let bg = Color(light: 0xEFEDE6, dark: 0x0C1D15)
+    /// The page: paper by day, charcoal after dark. The map's paper is the same colour.
+    static let bg = Color(light: 0xF4F2EC, dark: 0x1C1C1A)
     /// Sheets and pages that sit on the map.
-    static let surface = Color(light: 0xF6F4EE, dark: 0x10241A)
-    /// A card on the page: white by day, a lift of the green after dark.
-    static let card = Color(light: 0xFFFFFF, dark: 0x173025)
+    static let surface = Color(light: 0xF8F6F1, dark: 0x22221F)
+    /// A card on the page: white by day, a lift of the charcoal after dark.
+    static let card = Color(light: 0xFFFFFF, dark: 0x2A2A27)
     /// Empty seats, unfilled bars, the quietest fills.
-    static let raise = Color(light: 0xE2DFD6, dark: 0x22392D)
-    static let ink = Color(light: 0x1B231E, dark: 0xF3F0E4)
-    static let muted = Color(light: 0x5F6A62, dark: 0xA7B5AA)
+    static let raise = Color(light: 0xE6E2D8, dark: 0x34342F)
+    /// Near-black on paper, cream on charcoal.
+    static let ink = Color(light: 0x1B1A17, dark: 0xF1EDE3)
+    static let muted = Color(light: 0x6E695F, dark: 0x9A958A)
     /// A step stronger than `muted`, for body copy on glass.
-    static let soft = Color(light: 0x3E4942, dark: 0xCAD4CB)
-    /// Street names and the quietest labels.
-    static let faint = Color(light: 0x7C867F, dark: 0x7F9A8A)
+    static let soft = Color(light: 0x45423B, dark: 0xC9C4B8)
+    /// Street names and the quietest labels: the map's label grey.
+    static let faint = Color(light: 0x8C877C, dark: 0x7D786E)
     static let line = Color(light: 0x000000, lightAlpha: 0.08, dark: 0xFFFFFF, darkAlpha: 0.1)
-    /// The compass's yellow: the one prominent button a screen, the selected chip, the
-    /// walk ring, the route, Wren.
-    static let accent = Color(light: 0xF2A516, dark: 0xF5B82E)
-    /// Yellow as text or a glyph on the page (plain yellow is too light to read on paper).
-    static let accentSoft = Color(light: 0x9A6200, dark: 0xF7C85A)
-    /// Dark ink on yellow, in both appearances.
-    static let accentInk = Color(hex: 0x1C1404)
-    static let star = Color(light: 0xE09A10, dark: 0xFFC766)
+    /// The one prominent button a screen: ink, with paper on it.
+    static let prominent = ink
+    /// Text and glyphs on `prominent`.
+    static let onProminent = Color(light: 0xF4F2EC, dark: 0x1C1C1A)
+    /// Red-orange: on the map, only what's on now and what you tapped. Elsewhere, the
+    /// small marks that are ours (a seat waiting for you, a full stop).
+    static let accent = Color(light: 0xD9502A, dark: 0xF07A45)
+    /// The accent as text on the page, a step darker by day so it reads on paper.
+    static let accentSoft = Color(light: 0xB8401E, dark: 0xF49A6E)
+    /// Paper on the accent, in both appearances.
+    static let accentInk = Color(hex: 0xFFFFFF)
+    static let star = Color(light: 0xD9952A, dark: 0xF2BE62)
     /// You: the system blue dot.
     static let me = Color(uiColor: .systemBlue)
-    /// The compass's blue: most pins.
+    /// Kinds of things in lists (never on the map).
     static let compass = Color(light: 0x2F6FD6, dark: 0x8FB4E6)
-    /// "On now", and a friend who's in.
+    /// A friend who's in.
     static let live = Color(light: 0x1F9D55, dark: 0x6FD49A)
     /// A porch light: someone up for something.
     static let porch = Color(light: 0xE08A12, dark: 0xFFB547)
     static let porchSoft = Color(light: 0xB86E00, dark: 0xFFC88A)
-    /// The walk ring and route lines: the accent.
+    /// A slider's thumb (the time rail's): white, a touch of cream after dark.
+    static let knob = Color(light: 0xFFFFFF, dark: 0xF1EDE3)
+    static let shadow = Color(light: 0x000000, lightAlpha: 0.28, dark: 0x000000, darkAlpha: 0.5)
+    /// A walking route on the plan and walk screens: the accent, since it goes to what you chose.
+    /// (The main map draws its own hairlines; see `PaperMap`.)
     static let walk = accent
+}
+
+/// The map's own colours, as UIKit colours for MapLibre's views and overlays. They match
+/// `Palette` and the bundled styles (`paperwhite-light.json`, `paperwhite-dark.json`).
+enum MapInk {
+    static let paper = UIColor(light: 0xF4F2EC, dark: 0x1C1C1A)
+    static let ink = UIColor(light: 0x1B1A17, dark: 0xF1EDE3)
+    static let accent = UIColor(light: 0xD9502A, dark: 0xF07A45)
+    /// Paper-coloured text on a filled tag.
+    static let onFill = UIColor(light: 0xFFFFFF, dark: 0x1C1C1A)
+}
+
+extension UIColor {
+    /// One colour by day, another after dark.
+    convenience init(light: UInt32, dark: UInt32) {
+        let day = UIColor(hex: light), night = UIColor(hex: dark)
+        self.init(dynamicProvider: Color.provider(day: day, night: night))
+    }
 }
 
 /// The quick-decide look: black, white and one acid lime. Numbers instead of icons.
@@ -87,7 +113,11 @@ extension Color {
     /// colours off the main thread, and a closure formed in main-actor code would carry a
     /// main-actor check and crash there.
     nonisolated private static func adaptive(day: UIColor, night: UIColor) -> UIColor {
-        UIColor { traits in traits.userInterfaceStyle == .dark ? night : day }
+        UIColor(dynamicProvider: provider(day: day, night: night))
+    }
+
+    nonisolated static func provider(day: UIColor, night: UIColor) -> @Sendable (UITraitCollection) -> UIColor {
+        { traits in traits.userInterfaceStyle == .dark ? night : day }
     }
 }
 
@@ -100,9 +130,10 @@ extension Font {
         .system(size: size, weight: weight).width(.condensed)
     }
 
-    /// The quote and the quiet lines: the system serif.
-    static func serif(_ size: CGFloat) -> Font {
-        .system(size: size, design: .serif)
+    /// The quote and the quiet lines: the system face, upright and regular (no serif,
+    /// no italic anywhere).
+    static func quiet(_ size: CGFloat) -> Font {
+        .system(size: size)
     }
 }
 
@@ -141,7 +172,7 @@ struct CardStyle: ViewModifier {
     }
 }
 
-/// LIVE. MORE. with yellow full stops. On one line, or stacked for the Signal header.
+/// LIVE. MORE. with accent full stops. On one line, or stacked for the Signal header.
 /// Shrinks to fit rather than wrap.
 struct LiveMoreMark: View {
     var size: CGFloat = 46

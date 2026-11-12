@@ -170,7 +170,7 @@ struct SignalDot: View {
     }
 }
 
-/// Wren's mark: a yellow disc with a four-point spark.
+/// Wren's mark: an ink disc with a four-point spark.
 struct WrenOrb: View {
     var size: CGFloat = 26
     var glows = true
@@ -178,10 +178,9 @@ struct WrenOrb: View {
     var body: some View {
         Image(systemName: "sparkle")
             .font(.system(size: size * 0.52, weight: .bold))
-            .foregroundStyle(Palette.accentInk)
+            .foregroundStyle(Palette.onProminent)
             .frame(width: size, height: size)
-            .background(Palette.accent, in: .circle)
-            .shadow(color: glows ? Palette.accent.opacity(0.35) : .clear, radius: size * 0.3)
+            .background(Palette.prominent, in: .circle)
             .accessibilityHidden(true)
     }
 }

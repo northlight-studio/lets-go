@@ -60,9 +60,9 @@ struct AddFriendView: View {
                     .onSubmit(accept)
                 Button("Add", action: accept)
                     .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(Palette.accentInk)
+                    .foregroundStyle(Palette.onProminent)
                     .padding(.horizontal, 18).frame(height: 40)
-                    .background(Palette.accent, in: .capsule)
+                    .background(Palette.prominent, in: .capsule)
                     .disabled(theirCode.filter(\.isLetter).count + theirCode.filter(\.isNumber).count < 6 || busy)
             }
             .padding(.leading, 16).padding(.trailing, 6).padding(.vertical, 6)

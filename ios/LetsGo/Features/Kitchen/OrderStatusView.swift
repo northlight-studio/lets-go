@@ -116,8 +116,8 @@ struct ReviewView: View {
                             } label: {
                                 Text(t).font(.system(size: 14, weight: .semibold))
                                     .padding(.horizontal, 12).padding(.vertical, 8)
-                                    .foregroundStyle(on ? Palette.accentInk : Palette.ink)
-                                    .background(on ? Palette.accent : Palette.surface, in: .capsule)
+                                    .foregroundStyle(on ? Palette.onProminent : Palette.ink)
+                                    .background(on ? Palette.prominent : Palette.surface, in: .capsule)
                                     .overlay(Capsule().stroke(on ? .clear : Palette.line))
                             }
                             .buttonStyle(.plain)

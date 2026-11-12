@@ -48,8 +48,8 @@ struct MorningAfterView: View {
                     ThirdTimeRow(intro: intro) { openIntro = intro }
                         .padding(.top, 8)
                 }
-                Text("\(Text("\u{2018}Live more.\u{2019}").italic().foregroundStyle(accent)) Same time next week?")
-                    .font(.serif(21))
+                Text("\(Text("\u{2018}Live more.\u{2019}").foregroundStyle(accent)) Same time next week?")
+                    .font(.quiet(21))
                     .foregroundStyle(Palette.soft)
                     .frame(maxWidth: .infinity)
                     .multilineTextAlignment(.center)
@@ -141,12 +141,12 @@ struct MorningAfterView: View {
     private func tile(_ value: String, _ caption: String, dark: Bool = false) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(value).font(.system(size: 36, weight: .bold)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
-            Text(caption).font(.system(size: 13)).foregroundStyle(dark ? Palette.accentInk.opacity(0.75) : gray).lineLimit(2)
+            Text(caption).font(.system(size: 13)).foregroundStyle(dark ? Palette.onProminent.opacity(0.75) : gray).lineLimit(2)
         }
-        .foregroundStyle(dark ? Palette.accentInk : ink)
+        .foregroundStyle(dark ? Palette.onProminent : ink)
         .padding(.horizontal, 16).padding(.vertical, 14)
         .frame(maxWidth: .infinity, minHeight: 104, alignment: .topLeading)
-        .background(dark ? Palette.accent : Palette.card, in: .rect(cornerRadius: 22))
+        .background(dark ? Palette.prominent : Palette.card, in: .rect(cornerRadius: 22))
     }
 
     private func close() {
