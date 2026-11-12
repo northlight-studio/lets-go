@@ -13,6 +13,7 @@ from app.config import settings
 from app.db import get_session
 from app.models import Kitchen, Order, User
 from app.routes.orders import lock_drop, mark_paid, quantity
+from app.routes.suppers import seat_paid
 from app.schemas import PayoutsOut
 from app.views import now
 
@@ -109,7 +110,11 @@ async def webhook(request: Request, session: AsyncSession = Depends(get_session)
 
 async def _paid(session: AsyncSession, pi_id: str) -> None:
     o = await session.scalar(select(Order).where(Order.payment_intent_id == pi_id))
-    if o is None or o.payment in ("paid", "refunded"):
+    if o is None:
+        # A seat at a supper, paid through the same path.
+        await seat_paid(session, pi_id)
+        return
+    if o.payment in ("paid", "refunded"):
         return
     drop = await lock_drop(session, o.drop_id)
     await session.refresh(o)

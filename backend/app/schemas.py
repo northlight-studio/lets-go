@@ -1,6 +1,6 @@
 import uuid
 from datetime import date as date_
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -704,3 +704,142 @@ class DiscoverOut(BaseModel):
 
 class FindsOut(BaseModel):
     events: list[EventOut]
+
+
+# Supper club
+
+
+class Course(BaseModel):
+    name: str = Field(min_length=1, max_length=60)
+    note: str = Field(default="", max_length=120)
+
+
+class SupperCreate(BaseModel):
+    """Set up a supper. Like a batch, it opens a kitchen in your name the first time (the address
+    goes only to guests you say yes to) and asks for the home kitchen permit once."""
+
+    title: str = Field(min_length=1, max_length=80)
+    starts_at: datetime
+    ends_at: datetime
+    seats: int = Field(ge=1, le=20)
+    price_cents: int = Field(gt=0, le=50_000)
+    menu: list[Course] = Field(default_factory=list, max_length=8)
+    tags: list[str] = Field(default_factory=list, max_length=8)
+    house_notes: str = Field(default="", max_length=500)
+    permit_confirmed: bool = False
+    address: str | None = Field(default=None, max_length=200)
+    lat: float | None = Field(default=None, ge=-90, le=90)
+    lon: float | None = Field(default=None, ge=-180, le=180)
+
+    @model_validator(mode="after")
+    def _ends_after_start(self):
+        if self.ends_at <= self.starts_at:
+            raise ValueError("It has to end after it starts")
+        if self.ends_at - self.starts_at > timedelta(hours=8):
+            raise ValueError("A supper runs at most eight hours")
+        return self
+
+    @field_validator("tags")
+    @classmethod
+    def _tags(cls, v: list[str]) -> list[str]:
+        return [t.strip()[:30] for t in v if t.strip()]
+
+
+class SeatAsk(BaseModel):
+    note: str = Field(default="", max_length=200)
+
+
+class SeatOut(BaseModel):
+    """Your seat at a supper, as you see it."""
+
+    id: uuid.UUID
+    status: Literal["asked", "accepted", "declined", "withdrawn", "canceled", "lapsed"]
+    payment: Literal["none", "at_door", "unpaid", "paid", "refunded"]
+    note: str
+    price_cents: int
+    service_cents: int
+    total_cents: int
+    # Accepted but not paid yet: pay by then or the seat goes back.
+    pay_by: datetime | None = None
+
+
+class TableMate(BaseModel):
+    """Someone at the table (the host or an accepted guest), for the people at it."""
+
+    id: uuid.UUID
+    display_name: str
+    is_host: bool
+    is_friend: bool
+    # You said hi (add as a friend); you're friends once they do too.
+    said_hi: bool
+    # You've reviewed them for this supper.
+    reviewed: bool
+
+
+class SupperOut(BaseModel):
+    id: uuid.UUID
+    title: str
+    starts_at: datetime
+    ends_at: datetime
+    seats: int
+    taken: int
+    seats_left: int
+    price_cents: int
+    # The app's fee on a seat paid in the app (none at the door), and what a seat comes to.
+    service_cents: int
+    seat_total_cents: int
+    pay: Literal["in_app", "at_door"]
+    menu: list[Course]
+    tags: list[str]
+    house_notes: str
+    photo_url: str | None
+    host: PersonOut
+    kitchen_id: uuid.UUID
+    suppers_hosted: int
+    host_rating: float | None
+    host_review_count: int
+    # The real spot only for the host and confirmed guests; everyone else gets the kitchen's
+    # public point, 60 to 150 m off the house.
+    lat: float
+    lon: float
+    exact: bool
+    address: str | None
+    distance_m: float | None = None
+    friends_going: list[PersonOut]
+    is_mine: bool
+    canceled: bool
+    my_seat: SeatOut | None
+    # Guests may cancel for a full refund until then.
+    refund_until: datetime
+    # The host's count of requests waiting for an answer.
+    waiting: int = 0
+    # Everyone at the table, for the host and accepted guests.
+    table: list[TableMate] = Field(default_factory=list)
+
+
+class GuestOut(BaseModel):
+    """Someone asking for a seat, as the host sees them: what others hosts said, and how many suppers
+    they've been to."""
+
+    seat_id: uuid.UUID
+    guest: PersonOut
+    note: str
+    status: str
+    payment: str
+    asked_at: datetime
+    suppers_attended: int
+    rating: float | None
+    review_count: int
+    reviews: list[str]
+    is_friend: bool
+
+
+class MySuppers(BaseModel):
+    hosting: list[SupperOut]
+    going: list[SupperOut]
+
+
+class SupperReviewIn(BaseModel):
+    subject_id: uuid.UUID
+    stars: int = Field(ge=1, le=5)
+    text: str = Field(default="", max_length=1000)

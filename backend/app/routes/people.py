@@ -57,6 +57,7 @@ from app.schemas import (
     UpForOut,
 )
 from app.social import INTRO_AFTER, are_friends, can_see, checked_in_with, friend_ids, met_ids, out_now
+from app.social import say_hi as connect
 from app.views import gathering_out, now
 
 router = APIRouter(prefix="/v1", tags=["people"])
@@ -329,22 +330,9 @@ async def say_hi(
     other_id: uuid.UUID, user: User = Depends(current_user), session: AsyncSession = Depends(get_session)
 ) -> IntroResult:
     """Say hi. If they already did, you're friends now; if not, they hear nothing until they do."""
-    if await are_friends(session, user.id, other_id):
-        return IntroResult(connected=True)
-    intro = await _my_intro(session, user.id, other_id)
-    intro.said_hi_at = intro.said_hi_at or now()
-    intro.declined_at = None
-    theirs = await session.get(Intro, (other_id, user.id))
-    connected = theirs is not None and theirs.said_hi_at is not None and theirs.declined_at is None
-    if connected:
-        session.add_all(
-            [
-                Friendship(user_id=user.id, friend_id=other_id),
-                Friendship(user_id=other_id, friend_id=user.id),
-            ]
-        )
-    await session.commit()
-    return IntroResult(connected=connected)
+    if not await are_friends(session, user.id, other_id):
+        await _my_intro(session, user.id, other_id)  # three check-ins together first
+    return IntroResult(connected=await connect(session, user.id, other_id))
 
 
 @router.post("/intros/{other_id}/not-now", status_code=204)

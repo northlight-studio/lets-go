@@ -21,6 +21,68 @@ router = APIRouter(tags=["batches"])
 MAX_PHOTO_BYTES = 3 * 1024 * 1024
 
 
+async def home_kitchen(
+    session: AsyncSession,
+    user: User,
+    *,
+    address: str | None,
+    pickup_note: str | None,
+    lat: float | None,
+    lon: float | None,
+    permit_confirmed: bool,
+) -> Kitchen:
+    """Your kitchen, opened in your name the first time (a batch or a supper). The address and the
+    permit are asked once and kept on it. Raises when either is still missing."""
+    k = await session.scalar(select(Kitchen).where(Kitchen.owner_id == user.id))
+    address = (address or "").strip()
+    if k is None:
+        if lat is None or lon is None:
+            raise HTTPException(422, "Where's your kitchen? Turn on location and try again.")
+        if not address:
+            raise HTTPException(422, "Add your address. Only your buyers and guests see it.")
+        k = Kitchen(
+            owner_id=user.id,
+            name=f"{user.display_name}'s kitchen",
+            cuisine="Home cooking",
+            lat=lat,
+            lon=lon,
+            address=address,
+            pickup_note=(pickup_note or "").strip(),
+        )
+        k.menu, k.drops = [], []
+        session.add(k)
+        await session.flush()
+    else:
+        if address:
+            k.address = address
+        if pickup_note is not None:
+            k.pickup_note = pickup_note.strip()
+        if not k.address:
+            raise HTTPException(422, "Add your address. Only your buyers and guests see it.")
+    if not (k.permit_confirmed and k.handler_card_confirmed):
+        if not permit_confirmed:
+            raise HTTPException(409, "Confirm your home kitchen permit first")
+        k.permit_confirmed = k.handler_card_confirmed = True
+    return k
+
+
+async def store_photo(
+    session: AsyncSession, request: Request, user: User, replacing: uuid.UUID | None
+) -> Photo:
+    """A JPEG body (Content-Type: image/jpeg), resized on the phone first. Deletes the one it replaces."""
+    data = await request.body()
+    if len(data) > MAX_PHOTO_BYTES:
+        raise HTTPException(413, "That photo is too big. Try again; the app shrinks it first.")
+    if not data.startswith(b"\xff\xd8\xff"):
+        raise HTTPException(415, "Send the photo as a JPEG")
+    photo = Photo(owner_id=user.id, content_type="image/jpeg", data=data)
+    session.add(photo)
+    await session.flush()
+    if replacing is not None:
+        await session.execute(Photo.__table__.delete().where(Photo.id == replacing))
+    return photo
+
+
 async def batch_out(session: AsyncSession, d: Drop, user: User) -> BatchOut:
     k = await session.get(Kitchen, d.kitchen_id)
     review = (
@@ -65,36 +127,15 @@ async def post_batch(
     asked once and kept on the kitchen. Followers get a note."""
     if body.ends_at <= now():
         raise HTTPException(422, "That pickup window has already passed")
-    k = await session.scalar(select(Kitchen).where(Kitchen.owner_id == user.id))
-    address = (body.address or "").strip()
-    if k is None:
-        if body.lat is None or body.lon is None:
-            raise HTTPException(422, "Where's your kitchen? Turn on location and try again.")
-        if not address:
-            raise HTTPException(422, "Add your address. Only people who reserve see it.")
-        k = Kitchen(
-            owner_id=user.id,
-            name=f"{user.display_name}'s kitchen",
-            cuisine="Home cooking",
-            lat=body.lat,
-            lon=body.lon,
-            address=address,
-            pickup_note=(body.pickup_note or "").strip(),
-        )
-        k.menu, k.drops = [], []
-        session.add(k)
-        await session.flush()
-    else:
-        if address:
-            k.address = address
-        if body.pickup_note is not None:
-            k.pickup_note = body.pickup_note.strip()
-        if not k.address:
-            raise HTTPException(422, "Add your address. Only people who reserve see it.")
-    if not (k.permit_confirmed and k.handler_card_confirmed):
-        if not body.permit_confirmed:
-            raise HTTPException(409, "Confirm your home kitchen permit first")
-        k.permit_confirmed = k.handler_card_confirmed = True
+    k = await home_kitchen(
+        session,
+        user,
+        address=body.address,
+        pickup_note=body.pickup_note,
+        lat=body.lat,
+        lon=body.lon,
+        permit_confirmed=body.permit_confirmed,
+    )
 
     # The batch's own item, off the standing menu (inactive), so old orders keep their line.
     item = MenuItem(kitchen_id=k.id, name=body.title.strip(), price_cents=body.price_cents, active=False)
@@ -146,18 +187,8 @@ async def put_photo(
     k = await session.get(Kitchen, d.kitchen_id) if d else None
     if d is None or k is None or k.owner_id != user.id:
         raise HTTPException(404, "That batch isn't yours")
-    data = await request.body()
-    if len(data) > MAX_PHOTO_BYTES:
-        raise HTTPException(413, "That photo is too big. Try again; the app shrinks it first.")
-    if not data.startswith(b"\xff\xd8\xff"):
-        raise HTTPException(415, "Send the photo as a JPEG")
-    old = d.photo_id
-    photo = Photo(owner_id=user.id, content_type="image/jpeg", data=data)
-    session.add(photo)
-    await session.flush()
+    photo = await store_photo(session, request, user, d.photo_id)
     d.photo_id = photo.id
-    if old is not None:
-        await session.execute(Photo.__table__.delete().where(Photo.id == old))
     await session.commit()
     return PhotoOut(photo_url=photo_url(photo.id))
 

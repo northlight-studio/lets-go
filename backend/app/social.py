@@ -121,3 +121,22 @@ async def can_see(session: AsyncSession, viewer: uuid.UUID, other: uuid.UUID) ->
     if await are_friends(session, viewer, other):
         return True
     return other in await met_ids(session, viewer)
+
+
+async def say_hi(session: AsyncSession, me: uuid.UUID, other: uuid.UUID) -> bool:
+    """Say hi to someone (an intro, or someone you sat at a supper with). If they already said hi
+    you're friends now; if not, they hear nothing until they do. True when you're friends. Commits."""
+    if await are_friends(session, me, other):
+        return True
+    intro = await session.get(Intro, (me, other))
+    if intro is None:
+        intro = Intro(user_id=me, other_id=other)
+        session.add(intro)
+    intro.said_hi_at = intro.said_hi_at or now()
+    intro.declined_at = None
+    theirs = await session.get(Intro, (other, me))
+    connected = theirs is not None and theirs.said_hi_at is not None and theirs.declined_at is None
+    if connected:
+        session.add_all([Friendship(user_id=me, friend_id=other), Friendship(user_id=other, friend_id=me)])
+    await session.commit()
+    return connected
