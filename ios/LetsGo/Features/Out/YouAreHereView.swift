@@ -62,6 +62,12 @@ struct YouAreHereView: View {
             withAnimation(.easeInOut(duration: 3).repeatForever(autoreverses: true)) { breathe = true }
         }
         .onChange(of: darkUntil) { _, until in model.dark = until != nil }
+        // When "Go dark" runs out, the screen comes all the way back (status bar too).
+        .task(id: darkUntil) {
+            guard let until = darkUntil else { return }
+            do { try await Task.sleep(for: .seconds(max(0, until.timeIntervalSinceNow))) } catch { return }
+            withAnimation(.easeInOut(duration: 0.6)) { darkUntil = nil }
+        }
         .onDisappear { model.dark = false }
     }
 

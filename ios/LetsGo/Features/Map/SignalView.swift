@@ -168,7 +168,7 @@ struct SignalView: View {
     /// Signal's own way back out, in its own colours.
     private var exit: some View {
         Button { model.toggleSignal() } label: {
-            Label("Quick pick", systemImage: "bolt.fill")
+            Label("Back to the map", systemImage: "xmark")
                 .font(.system(size: 14, weight: .semibold))
                 .padding(.horizontal, 15)
                 .frame(height: 36)

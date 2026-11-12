@@ -25,6 +25,8 @@ struct EyesUpView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var routes = RouteBook()
     @State private var directions: Directions?
+    /// Directions came back empty (offline, or no walking route).
+    @State private var noRoute = false
     @State private var haptics = WalkHaptics()
     @State private var next = 0
     @State private var pocketed = false
@@ -114,6 +116,7 @@ struct EyesUpView: View {
 
     private var subtitle: String {
         let with = target.friends.isEmpty ? "" : ", and \(Crowd.names(target.friends)) \(target.friends.count == 1 ? "is" : "are") on the way too"
+        if noRoute { return "Couldn't get walking directions, so it can't buzz at the turns. Apple Maps can take you." }
         return "Pocket the phone. It buzzes at each turn\(with)."
     }
 
@@ -171,7 +174,14 @@ struct EyesUpView: View {
             }
             .buttonStyle(PrimaryButtonStyle())
             .padding(.top, 16)
-            .disabled(arrived)
+            .disabled(arrived || noRoute)
+            if noRoute {
+                Link(destination: mapsURL) {
+                    Label("Open in Apple Maps", systemImage: "map")
+                }
+                .buttonStyle(SecondaryButtonStyle())
+                .padding(.top, 10)
+            }
             Text("The screen goes dark. Wren handles the rest.")
                 .font(.system(size: 12.5))
                 .foregroundStyle(Palette.muted)
@@ -229,6 +239,16 @@ struct EyesUpView: View {
         .transition(.opacity)
     }
 
+    /// Walking directions in Apple Maps, for when there's no route here.
+    private var mapsURL: URL {
+        var c = URLComponents(string: "https://maps.apple.com/")
+        c?.queryItems = [
+            URLQueryItem(name: "daddr", value: "\(target.coordinate.latitude),\(target.coordinate.longitude)"),
+            URLQueryItem(name: "dirflg", value: "w"),
+        ]
+        return c?.url ?? URL(string: "https://maps.apple.com/")!
+    }
+
     private var upcoming: Turn? {
         guard let d = directions, next < d.turns.count else { return nil }
         return d.turns[next]
@@ -238,6 +258,7 @@ struct EyesUpView: View {
 
     private func load() async {
         directions = await routes.directions(from: location.center, to: target.coordinate)
+        noRoute = directions == nil
     }
 
     private func follow() {

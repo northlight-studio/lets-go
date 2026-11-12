@@ -94,6 +94,22 @@ final class HomeModel {
 
     var isFiltered: Bool { genre != nil || freeOnly || friendsOnly }
 
+    /// Friends going, when that filter or the Friends chip is on: only what a friend is going to.
+    func narrowed(_ shown: [Candidate], friends: [Friend]) -> [Candidate] {
+        guard friendsOnly || layer == .friends else { return shown }
+        return shown.filter { !Crowd.going(to: $0, among: friends).isEmpty }
+    }
+
+    /// Why the map and the list are empty, in one line.
+    func emptyReason(inCity: Bool, hasFriends: Bool) -> String {
+        if layer == .friends && !hasFriends { return "No friends on Let's Go yet. Trade a code with someone and you'll see each other here." }
+        if friendsOnly && !hasFriends { return "Friends going is on, and you haven't added a friend yet. Add one on People." }
+        if layer == .friends && !isFiltered { return "None of your friends are going to anything by then." }
+        if isFiltered { return "Nothing matches your filters by then. Clear them, or drag the rail later." }
+        return inCity ? "Nothing starts by then. Drag the rail later, or start something."
+                      : "Let's Go only knows San Francisco so far. Host something here and people nearby will see it."
+    }
+
     // MARK: The list
 
     /// Open the list from the map, at its slim height.

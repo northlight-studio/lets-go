@@ -26,6 +26,8 @@ struct AddFriendView: View {
                     }
                     if !APIConfig.isConfigured {
                         TipNote(text: "Friends need the server. Add one at the bottom of Passport, under **Server**.")
+                    } else if !ServerFeatures.shared.has(.people) {
+                        TipNote(text: ServerFeatures.Feature.people.comingSoon)
                     }
                     if let added {
                         Label("You and \(added) are friends now.", systemImage: "person.2.fill")
@@ -63,7 +65,7 @@ struct AddFriendView: View {
                     .foregroundStyle(Palette.onProminent)
                     .padding(.horizontal, 18).frame(height: 40)
                     .background(Palette.prominent, in: .capsule)
-                    .disabled(theirCode.filter(\.isLetter).count + theirCode.filter(\.isNumber).count < 6 || busy)
+                    .disabled(theirCode.filter(\.isLetter).count + theirCode.filter(\.isNumber).count < 6 || busy || !ready)
             }
             .padding(.leading, 16).padding(.trailing, 6).padding(.vertical, 6)
             .card(radius: 26)
@@ -93,10 +95,13 @@ struct AddFriendView: View {
             } else {
                 Button { makeCode() } label: { Label("Make my code", systemImage: "qrcode") }
                     .buttonStyle(SecondaryButtonStyle())
-                    .disabled(busy || !APIConfig.isConfigured)
+                    .disabled(busy || !ready)
             }
         }
     }
+
+    /// A server that keeps friends.
+    private var ready: Bool { APIConfig.isConfigured && ServerFeatures.shared.has(.people) }
 
     /// "7KQ4MX2P" → "7KQ4 MX2P", easier to read out.
     static func spaced(_ code: String) -> String {
