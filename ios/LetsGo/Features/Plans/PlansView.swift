@@ -22,7 +22,7 @@ struct PlansView: View {
     @State private var hosting = false
     @State private var selling = false
     /// New batches from kitchens you follow (push isn't set up yet, so they show here).
-    @State private var notes: [NoteDTO] = []
+    @State private var kitchenNotes: [NoteDTO] = []
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -62,7 +62,7 @@ struct PlansView: View {
         }
         .sheet(isPresented: $hosting) { NewGatheringView(draft: nil) }
         .sheet(isPresented: $selling) { SellView() }
-        .task { if ServerFeatures.shared.has(.selling), let n = try? await Sync.notes() { notes = n } }
+        .task { if ServerFeatures.shared.has(.selling), let n = try? await Sync.notes() { kitchenNotes = n } }
     }
 
     // MARK: Kitchens you follow
@@ -70,7 +70,7 @@ struct PlansView: View {
     /// "Dana's kitchen posted Mango sticky rice ice cream": unread notes, newest first.
     @ViewBuilder
     private func followed(now: Date) -> some View {
-        let unread = notes.filter { !$0.read }.prefix(4)
+        let unread = kitchenNotes.filter { !$0.read }.prefix(4)
         if !unread.isEmpty {
             sectionHeader("New from kitchens you follow", action: "Clear") { clearNotes() }
             VStack(spacing: 0) {
@@ -107,7 +107,7 @@ struct PlansView: View {
     }
 
     private func clearNotes() {
-        withAnimation { notes = notes.map { var n = $0; n.read = true; return n } }
+        withAnimation { kitchenNotes = kitchenNotes.map { var n = $0; n.read = true; return n } }
         Task { try? await Sync.markNotesRead() }
     }
 
