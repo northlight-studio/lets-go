@@ -56,10 +56,9 @@ struct PeopleView: View {
         .errorAlert($problem)
     }
 
+    /// Your friends, with tonight as the server has it.
     private func tonight(now: Date) -> [Friend] {
-        let all = Nearby.candidates(gatherings: gatherings, kitchens: kitchens, from: location.center, now: now)
-        let taste = Nearby.taste(notes: notes, gatherings: gatherings, kitchens: kitchens)
-        return Crowd.resolve(people.map(\.snapshot), picks: Picks.picks(all, now: now, taste: taste, limit: 12), here: location.center, now: now)
+        people.map(\.snapshot)
     }
 
     // MARK: Top
@@ -167,24 +166,24 @@ struct PeopleView: View {
         invites(now: now)
         let out = Crowd.outNow(friends)
         if !out.isEmpty {
-            sectionTitle("Out now \u{00B7} \(out.count)", color: Palette.muted, sample: out.contains { $0.isSample })
+            sectionTitle("Out now \u{00B7} \(out.count)", color: Palette.muted)
             ForEach(out) { f in outRow(f, now: now) }
         }
         let lit = Crowd.porchLights(friends, now: now)
         if !lit.isEmpty {
-            sectionTitle("Porch lights on \u{00B7} \(lit.count)", color: Palette.porchSoft, sample: lit.contains { $0.isSample })
+            sectionTitle("Porch lights on \u{00B7} \(lit.count)", color: Palette.porchSoft)
             ForEach(lit) { f in porchRow(f, now: now) }
         }
         let shownIDs = Set(out.map(\.id) + lit.map(\.id))
         let rest = friends.filter { !shownIDs.contains($0.id) }
         if !rest.isEmpty {
-            sectionTitle("Everyone else", color: Palette.muted, sample: rest.contains { $0.isSample })
+            sectionTitle("Everyone else", color: Palette.muted)
             ForEach(rest) { f in
                 personRow(f, detail: f.wavedAt.map { "Waved at you \(When.relative($0, now: now))" } ?? "Home tonight") { EmptyView() }
             }
         }
         if friends.isEmpty {
-            Text("No friends here yet. Trade codes with someone you go out with: they'll see your porch light and you'll see when they're out.")
+            Text("No friends yet. Add one with a code: trade codes with someone you go out with, and they'll see your porch light and you'll see when they're out.")
                 .font(.system(size: 14))
                 .foregroundStyle(Palette.muted)
                 .padding(.top, 20)
@@ -196,9 +195,9 @@ struct PeopleView: View {
 
     @ViewBuilder
     private func invites(now: Date) -> some View {
-        let asked = gatherings.filter { !$0.invitedBy.isEmpty && !$0.isJoined && $0.end > now }
+        let asked = gatherings.filter { !$0.invitedBy.isEmpty && !$0.isJoined && $0.isShown(at: now) }
         if !asked.isEmpty {
-            sectionTitle("Asked along \u{00B7} \(asked.count)", color: Palette.accentSoft, sample: false)
+            sectionTitle("Asked along \u{00B7} \(asked.count)", color: Palette.accentSoft)
             ForEach(asked) { g in
                 Button { path.append(g) } label: {
                     HStack(spacing: 12) {
@@ -292,17 +291,16 @@ struct PeopleView: View {
         .contextMenu {
             if let p = people.first(where: { $0.id == f.id }) {
                 Button(role: .destructive) { unfriend(p) } label: {
-                    Label(p.isSample ? "Hide sample person" : "Remove friend", systemImage: "person.badge.minus")
+                    Label("Remove friend", systemImage: "person.badge.minus")
                 }
             }
         }
     }
 
-    private func sectionTitle(_ text: String, color: Color, sample: Bool) -> some View {
+    private func sectionTitle(_ text: String, color: Color) -> some View {
         HStack {
             Text(text).eyebrow(color)
             Spacer()
-            if sample { SampleTag(text: "Sample people") }
         }
         .padding(.top, 20)
         .padding(.bottom, 4)
@@ -343,10 +341,7 @@ struct PeopleView: View {
             HStack(spacing: 12) {
                 AvatarStack(friends: members, size: 34, includesYou: true, ground: Palette.card)
                 VStack(alignment: .leading, spacing: 1) {
-                    HStack(spacing: 6) {
-                        Text(crew.name).font(.system(size: 16, weight: .semibold))
-                        if crew.isSample { SampleTag() }
-                    }
+                    Text(crew.name).font(.system(size: 16, weight: .semibold))
                     Text(Crowd.names(members) + (members.isEmpty ? "Just you" : " and you"))
                         .font(.system(size: 13)).foregroundStyle(Palette.muted).lineLimit(1)
                 }

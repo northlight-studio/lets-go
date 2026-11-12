@@ -60,20 +60,10 @@ struct SignalPanel: View {
                     .frame(width: 24, height: 24)
                     .background(SignalPalette.lime, in: .rect(cornerRadius: 6))
                 VStack(alignment: .leading, spacing: 1) {
-                    HStack(spacing: 6) {
-                        Text(c.title)
-                            .font(.system(size: 16, weight: .bold))
-                            .tracking(-0.2)
-                            .lineLimit(1)
-                        if c.isSample {
-                            Text("SAMPLE")
-                                .font(.system(size: 10.5, weight: .bold))
-                                .foregroundStyle(SignalPalette.muted)
-                                .padding(.horizontal, 5)
-                                .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color(hex: 0x3A3A3A)))
-                                .fixedSize()
-                        }
-                    }
+                    Text(c.title)
+                        .font(.system(size: 16, weight: .bold))
+                        .tracking(-0.2)
+                        .lineLimit(1)
                     Text(Signal.detail(c, now: at))
                         .font(.system(size: 13))
                         .monospacedDigit()

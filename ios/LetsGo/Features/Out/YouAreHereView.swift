@@ -133,7 +133,7 @@ struct YouAreHereView: View {
                     AvatarStack(friends: moment.friends, size: 26, ground: Palette.card)
                 }
             } caption: {
-                moment.friends.isEmpty ? "Say hi to whoever's here" : "\(Crowd.names(moment.friends))\(moment.friends.contains { $0.isSample } ? " (sample)" : "")"
+                moment.friends.isEmpty ? "Say hi to whoever's here" : "\(Crowd.names(moment.friends))"
             }
             tile {
                 number(NightMath.miles(night?.walkedMeters ?? 0), "mi")

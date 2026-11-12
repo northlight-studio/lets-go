@@ -103,9 +103,9 @@ struct HomeView: View {
 
     // MARK: Bottom
 
-    /// Your people tonight: real friends where the server says, sample ones on the best picks.
+    /// Your people tonight, where the server says they are.
     private func tonight(_ all: [Candidate], taste: Taste, now: Date) -> [Friend] {
-        Crowd.resolve(people.map(\.snapshot), picks: Picks.picks(all, now: now, taste: taste, limit: 12), here: location.center, now: now)
+        people.map(\.snapshot)
     }
 
     private func filtered(_ all: [Candidate], taste: Taste, friends: [Friend], now: Date, at: Date) -> [Candidate] {
@@ -130,7 +130,7 @@ struct HomeView: View {
                 } else {
                     WrenCard(
                         picks: shown.filter { !skipped.contains($0.id) }, now: at, friends: friends,
-                        here: location.center, busy: joining,
+                        here: location.center, inCity: CityListings.covers(location.center), busy: joining,
                         walkMinutes: shown.first { !skipped.contains($0.id) }.flatMap { routes.legs[$0.id]?.minutes },
                         onOpen: { open($0) }, onJoin: { join($0) }, onSkip: { skip($0) },
                         onList: { model.showList() }, onHost: { hostingBlank = true }

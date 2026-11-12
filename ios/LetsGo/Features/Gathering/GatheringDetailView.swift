@@ -50,7 +50,6 @@ struct GatheringDetailView: View {
                         if gathering.isMine { posterBlock(now: now) }
                         if gathering.isListing { listingLinks }
                         checkInHint(now: now)
-                        if gathering.isSample { SampleNote() }
                         if gathering.isMine {
                             Button("Cancel this gathering", role: .destructive) { confirmDelete = true }
                                 .font(.system(size: 14, weight: .semibold))
@@ -118,7 +117,6 @@ struct GatheringDetailView: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
                 Text(GatheringCopy.eyebrow(start: gathering.start, end: gathering.end, now: now)).eyebrow(Palette.accentSoft)
-                if gathering.isSample { SampleTag() }
             }
             Text(gathering.title).display(32).foregroundStyle(Palette.ink)
             Text(GatheringCopy.whereLine(place: gathering.placeName, meters: location.center.distance(to: gathering.coordinate)))
@@ -144,13 +142,9 @@ struct GatheringDetailView: View {
         ]
     }
 
-    /// Your friends going to this, real or (placed) sample.
+    /// Your friends going to this, as the server says.
     private func friendsGoing(now: Date) -> [Friend] {
-        let all = Nearby.candidates(gatherings: allGatherings, kitchens: kitchens, from: location.center, now: now)
-        let taste = Nearby.taste(notes: notes, gatherings: allGatherings, kitchens: kitchens)
-        let friends = Crowd.resolve(people.map(\.snapshot), picks: Picks.picks(all, now: now, taste: taste, limit: 12),
-                                    here: location.center, now: now)
-        return Crowd.going(to: Candidate(gathering, from: location.center), among: friends)
+        Crowd.going(to: Candidate(gathering, from: location.center), among: people.map(\.snapshot))
     }
 
     /// Seats and friends for things with people to count; for a listing, just your friends.
@@ -260,11 +254,11 @@ struct GatheringDetailView: View {
     }
 
     /// Hosts get a poster to print and tape up; people who scan it can say they're in from the web.
-    /// Only for a real gathering on the server, never a sample.
+    /// Only for a real gathering on the server.
     @ViewBuilder
     private func posterBlock(now: Date) -> some View {
         let unavailable = PosterCopy.unavailable(gathering, now: now)
-        if !gathering.isSample, !gathering.hasEnded(at: now) {
+        if !gathering.hasEnded(at: now) {
             VStack(alignment: .leading, spacing: 8) {
                 Button { postering = true } label: {
                     Label(gathering.posterCode == nil ? "Make a poster" : "Your poster", systemImage: "doc.richtext")
@@ -319,7 +313,7 @@ struct GatheringDetailView: View {
                         let at = location.center
                         run { () throws(APIError) in
                             earned = try await Sync.checkIn(gathering, at: at, context: context)
-                            Ledger.arrive(gathering.placeName, genre: gathering.category, with: going, isSample: gathering.isSample, context: context)
+                            Ledger.arrive(gathering.placeName, genre: gathering.category, with: going, context: context)
                             here = HereMoment(title: gathering.placeName, genre: gathering.category, checkedInAt: .now,
                                               friends: going, stamped: earned != nil)
                         }

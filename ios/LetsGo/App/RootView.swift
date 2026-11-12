@@ -15,6 +15,8 @@ struct RootView: View {
     @State private var litSince: Date?
     /// Steps not yet written to tonight's night, so it isn't saved every few meters.
     @State private var pendingWalk: Double = 0
+    /// The day the listings were last laid out for, so they roll on at midnight.
+    @State private var listedDay: Date?
 
     var body: some View {
         @Bindable var model = model
@@ -69,22 +71,51 @@ struct RootView: View {
         .onChange(of: model.dark) { _, dark in
             if dark { flushPhoneTime() } else { litSince = .now }
         }
-        .task { location.start() }
-        // Fill in the sample neighborhood and pull from the server when the
-        // neighborhood changes, and whenever the app comes back.
+        .task {
+            SamplePurge.runOnce(context: context)
+            location.start()
+        }
+        // Lay out the listings and pull from the server when the neighborhood changes,
+        // and whenever the app comes back.
         .task(id: location.center.roundedKey) {
-            if CityListings.covers(location.center) { CityListings.refresh(context: context) }
-            await SampleNeighborhood.refreshIfNeeded(around: location.center, context: context)
+            prune(relist: true)
             await pull()
         }
+        // While the app is open, things leave the map as they end, and weekly listings roll on at midnight.
+        .task { await keepPruning() }
         .onChange(of: scenePhase) { _, phase in
             if phase != .active { flushPhoneTime() }
             if phase == .active {
                 if !model.dark { litSince = .now }
                 checkRecap()
-                // Weekly listings roll forward, so refresh them when the app comes back.
-                if CityListings.covers(location.center) { CityListings.refresh(context: context) }
+                prune(relist: true)
                 Task { await pull() }
+            }
+        }
+    }
+
+    /// Takes off what has ended (`Upcoming`), and in the city lays the listings out again when asked
+    /// or when the day has changed. Returns when to prune next.
+    @discardableResult
+    private func prune(relist: Bool = false, now: Date = .now) -> Date {
+        let today = Calendar.current.startOfDay(for: now)
+        if CityListings.covers(location.center), relist || listedDay != today {
+            CityListings.refresh(context: context, now: now)
+            listedDay = today
+        }
+        return Ledger.pruneEnded(context: context, now: now)
+    }
+
+    /// Wakes when the next thing on show ends, or at midnight. New things can arrive from the server
+    /// meanwhile, so it looks again at least every five minutes.
+    private func keepPruning() async {
+        while !Task.isCancelled {
+            let next = prune()
+            let wait = min(max(1, next.timeIntervalSinceNow + 1), 5 * 60)
+            do {
+                try await Task.sleep(for: .seconds(wait))
+            } catch {
+                return
             }
         }
     }
@@ -104,10 +135,11 @@ struct RootView: View {
 
     private func pull() async {
         let center = location.center
-        if CityListings.covers(center), await CityListings.update() { CityListings.refresh(context: context) }
+        if CityListings.covers(center), await CityListings.update() { prune(relist: true) }
         await sync.run { () throws(APIError) in
             try await Sync.refresh(around: center, context: context)
             try await Sync.refreshPeople(around: center, context: context)
         }
+        prune()
     }
 }

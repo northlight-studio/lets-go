@@ -128,12 +128,11 @@ struct MorningAfterView: View {
 
     private func tiles(out: TimeInterval) -> some View {
         let people = Set(night.stops.flatMap(\.withNames))
-        let sample = night.stops.contains { $0.isSample }
         let tonightStamps = stamps.filter { night.startedAt <= $0.earnedAt && $0.earnedAt <= night.lastActiveAt.addingTimeInterval(3600) }.count
         let city = Spots.stamped(stamps).count
         return LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
             tile(NightMath.duration(out), "out in the world", dark: true)
-            tile("\(people.count)", people.isEmpty ? "people you were with" : "with \(people.sorted().joined(separator: ", "))\(sample ? " (sample)" : "")")
+            tile("\(people.count)", people.isEmpty ? "people you were with" : "with \(people.sorted().joined(separator: ", "))")
             tile("\(NightMath.miles(night.walkedMeters)) mi", "walked")
             tile("\(tonightStamps) stamp\(tonightStamps == 1 ? "" : "s")", "Know your city: now \(city) of \(Spots.all.count)")
         }

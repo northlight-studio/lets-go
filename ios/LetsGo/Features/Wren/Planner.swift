@@ -111,6 +111,7 @@ struct Plan: Equatable, Sendable {
         /// The gathering for an event stop, the kitchen for a food stop.
         var gatheringID: UUID?
         var kitchenID: UUID?
+        /// From the old sample neighborhood; always false now. Kept because saved plans store stops.
         var isSample = false
         var coordinate: CLLocationCoordinate2D { .init(latitude: latitude, longitude: longitude) }
     }
@@ -154,7 +155,6 @@ struct DropSlot: Equatable, Sendable {
     var priceFromCents: Int?
     var latitude: Double
     var longitude: Double
-    var isSample: Bool
     var coordinate: CLLocationCoordinate2D { .init(latitude: latitude, longitude: longitude) }
 }
 
@@ -218,7 +218,7 @@ enum Planner {
             stops.append(Plan.Stop(
                 kind: .food, title: food.name, note: "\(food.cuisine) for \(size). Pay at pickup.",
                 start: slot, genre: .food, latitude: food.latitude, longitude: food.longitude,
-                kitchenID: food.kitchenID, isSample: food.isSample
+                kitchenID: food.kitchenID
             ))
         }
 
@@ -245,7 +245,7 @@ enum Planner {
             kind: .event, title: event.title,
             note: [event.place, event.priceText.isEmpty ? nil : event.priceText].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " \u{00B7} "),
             start: event.start, genre: event.category, latitude: event.lat, longitude: event.lon,
-            gatheringID: event.id, isSample: event.isSample
+            gatheringID: event.id
         ))
 
         var legs: [Plan.Leg] = []
@@ -266,8 +266,7 @@ enum Planner {
             let parts = withHours.enumerated().map { i, f in
                 i == 0 ? "\(f.firstName)'s free after \(hourText(f.freeAfterHour ?? 0))" : "\(f.firstName) after \(hourText(f.freeAfterHour ?? 0))"
             }
-            let sample = withHours.contains { $0.isSample }
-            checks.append(.init(title: parts.joined(separator: ", "), detail: sample ? "Sample availability, until real friends share theirs" : "From what they've shared with Wren"))
+            checks.append(.init(title: parts.joined(separator: ", "), detail: "From what they've shared with Wren"))
         } else if !group.isEmpty {
             checks.append(.init(title: "Planning from \(clock(from))", detail: "I'll check that works for \(names) when I ask"))
         }

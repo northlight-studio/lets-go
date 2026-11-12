@@ -114,7 +114,6 @@ struct NightPin: View {
         var parts = [pick.title, pick.start <= now ? "on now" : "at \(HomeLine.clock(pick.start))"]
         if let badge = HomeLine.badge(pick) { parts.append(badge) }
         if picked { parts.append("Wren's pick") }
-        if pick.isSample { parts.append("sample") }
         return parts.joined(separator: ", ")
     }
 }

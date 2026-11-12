@@ -3,20 +3,20 @@ import SwiftData
 import SwiftUI
 import CoreLocation
 
-/// Someone you go out with. Real friends come from the server (you became friends by
-/// trading a code); sample ones stand in until you have some, and say so.
+/// Someone you go out with. Friends come from the server: you became friends by trading a code.
 @Model
 final class Person {
     /// A real friend's id is their id on the server.
     var id: UUID
     var name: String
+    /// Left from the sample neighborhood, which is gone. Only `SamplePurge` reads these, to clear
+    /// what older versions stored; they stay in the model so the store opens without a migration.
     var isSample: Bool
-    /// For sample people: what they're doing in the sample neighborhood ("team", "solo", "porch", "home").
     var sampleRole: String = ""
     /// Porch light: up for something until then.
     var porchUntil: Date?
     var porchNote: String = ""
-    /// Where their porch light is, if they shared it. Sample people have one so the map has them.
+    /// Where their porch light is, if they shared it.
     var latitude: Double?
     var longitude: Double?
     /// What they joined tonight, from the server: "there" (checked in) or "heading".
@@ -31,14 +31,13 @@ final class Person {
     var wavedAt: Date?
     /// You waved at them.
     var youWavedAt: Date?
-    /// For sample people: the hour they're free from on a weekend, for Wren's planning.
+    /// The hour they're free from on a weekend, when they've shared it, for Wren's planning.
     var freeAfterHour: Int?
 
-    init(id: UUID = UUID(), name: String, isSample: Bool, sampleRole: String = "") {
+    init(id: UUID = UUID(), name: String) {
         self.id = id
         self.name = name
-        self.isSample = isSample
-        self.sampleRole = sampleRole
+        self.isSample = false
     }
 }
 
@@ -50,14 +49,15 @@ final class Crew {
     /// `Person.id`s, you not included.
     var memberIDs: [UUID]
     var isMine: Bool
+    /// Only `SamplePurge` reads this (see `Person.isSample`).
     var isSample: Bool
 
-    init(id: UUID = UUID(), name: String, memberIDs: [UUID], isMine: Bool = true, isSample: Bool = false) {
+    init(id: UUID = UUID(), name: String, memberIDs: [UUID], isMine: Bool = true) {
         self.id = id
         self.name = name
         self.memberIDs = memberIDs
         self.isMine = isMine
-        self.isSample = isSample
+        self.isSample = false
     }
 }
 
@@ -78,8 +78,6 @@ struct Friend: Identifiable, Hashable, Sendable {
 
     var id: UUID
     var name: String
-    var isSample: Bool
-    var sampleRole: String = ""
     var porchUntil: Date?
     var porchNote: String = ""
     var latitude: Double?
@@ -108,10 +106,8 @@ struct Friend: Identifiable, Hashable, Sendable {
         (0xB9A2FF, 0x170A33), (0xFF9F7A, 0x2E0E02), (0xE9E4D8, 0x1B1A17), (0x9FD9E8, 0x062A33),
     ]
 
-    /// The mocks' own colors for the sample people, then a stable pick for anyone else.
+    /// A stable pick for each name.
     static func swatch(for name: String) -> (fill: UInt32, ink: UInt32) {
-        let named: [String: Int] = ["Maya": 0, "Theo": 1, "Jun": 2, "Priya": 3, "Ben": 4, "Lucía": 5, "Ana": 5, "Omar": 6, "Leo": 7]
-        if let i = named[name] { return swatches[i] }
         return swatches[Int(Art.unit(name, 7) * Double(swatches.count)) % swatches.count]
     }
 
@@ -129,7 +125,7 @@ extension Person {
             )
         }
         return Friend(
-            id: id, name: name, isSample: isSample, sampleRole: sampleRole,
+            id: id, name: name,
             porchUntil: porchUntil, porchNote: porchNote, latitude: latitude, longitude: longitude,
             out: out, wavedAt: wavedAt, youWavedAt: youWavedAt, freeAfterHour: freeAfterHour
         )
@@ -140,23 +136,24 @@ extension Person {
 /// If you both say hi, you're friends; if one doesn't, nobody hears a thing.
 @Model
 final class Intro {
-    /// Their id on the server (sample ones get their own).
+    /// Their id on the server.
     var id: UUID
     var name: String
     var together: [SharedNight]
     var saidHi: Bool
+    /// Only `SamplePurge` reads this (see `Person.isSample`).
     var isSample: Bool
     var dismissed: Bool = false
 
-    init(id: UUID, name: String, together: [SharedNight], saidHi: Bool = false, isSample: Bool = false) {
+    init(id: UUID, name: String, together: [SharedNight], saidHi: Bool = false) {
         self.id = id
         self.name = name
         self.together = together
         self.saidHi = saidHi
-        self.isSample = isSample
+        self.isSample = false
     }
 
-    var friend: Friend { Friend(id: id, name: name, isSample: isSample) }
+    var friend: Friend { Friend(id: id, name: name) }
 }
 
 struct SharedNight: Codable, Hashable, Sendable {

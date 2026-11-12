@@ -9,9 +9,11 @@ import CoreLocation
 struct WrenCard: View {
     var picks: [Candidate]
     var now: Date
-    /// Your people tonight (`Crowd.resolve`), for who's going and who to walk in with.
+    /// Your friends, for who's going and who to walk in with.
     var friends: [Friend] = []
     var here: CLLocationCoordinate2D
+    /// Listings only cover San Francisco so far (`CityListings.covers`).
+    var inCity: Bool = true
     var busy: Bool
     /// The pick's walk from a real route, when there is one.
     var walkMinutes: Int? = nil
@@ -71,7 +73,7 @@ struct WrenCard: View {
                         .mask(LinearGradient(colors: [.black, .black.opacity(0.35)], startPoint: .top, endPoint: .bottom))
                 }
             } else {
-                line(HomeLine.quiet).padding(.top, 6)
+                line(HomeLine.empty(inCity: inCity)).padding(.top, 6)
                 Button(action: onHost) { Label("Host something", systemImage: "plus") }
                     .buttonStyle(SecondaryButtonStyle())
                     .padding(.top, 14)
@@ -89,9 +91,6 @@ struct WrenCard: View {
         HStack(spacing: 6) {
             Image(systemName: "sparkle").font(.system(size: 12, weight: .bold))
             Text("Wren's pick")
-            if let top = picks.first, top.isSample || Crowd.going(to: top, among: friends).contains(where: { $0.isSample }) {
-                SampleTag()
-            }
             Spacer()
         }
         .font(.system(size: 13, weight: .semibold))
@@ -172,7 +171,6 @@ private struct NextRow: View {
                 VStack(alignment: .leading, spacing: 1) {
                     HStack(spacing: 6) {
                         Text(pick.title).font(.system(size: 15, weight: .semibold)).lineLimit(1)
-                        if pick.isSample { SampleTag() }
                     }
                     Text(Picks.reason(pick, now: now))
                         .font(.system(size: 13))
@@ -190,20 +188,5 @@ private struct NextRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-    }
-}
-
-/// The small outlined "Sample" on anything that stands in for a real person or listing.
-struct SampleTag: View {
-    var text = "Sample"
-
-    var body: some View {
-        Text(text)
-            .font(.system(size: 11, weight: .semibold))
-            .foregroundStyle(Palette.muted)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 1)
-            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Palette.line))
-            .fixedSize()
     }
 }

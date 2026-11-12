@@ -20,8 +20,7 @@ enum MyPorchLight {
     }
 }
 
-/// Friends, crews, porch lights and invites. Real friends live on the server; sample ones
-/// stay on this phone, and anything you do with them (a wave, an invite) stays here too.
+/// Friends, crews, porch lights and invites. Friends live on the server; this phone keeps a copy.
 extension Sync {
     // MARK: Pull
 
@@ -34,7 +33,7 @@ extension Sync {
     }
 
     static func apply(_ dto: PeopleDTO, context: ModelContext) {
-        let local = fetch(context, FetchDescriptor<Person>(predicate: #Predicate { !$0.isSample }))
+        let local = fetch(context, FetchDescriptor<Person>())
         var byID = Dictionary(local.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
 
         // Invites carry a gathering; make sure it's on the phone so the invite can open it.
@@ -61,7 +60,7 @@ extension Sync {
 
         for f in dto.friends {
             let p = byID.removeValue(forKey: f.id) ?? {
-                let new = Person(id: f.id, name: f.displayName, isSample: false)
+                let new = Person(id: f.id, name: f.displayName)
                 context.insert(new)
                 return new
             }()
@@ -91,16 +90,16 @@ extension Sync {
         // No longer friends.
         for p in byID.values { context.delete(p) }
 
-        // Crews: the server's list replaces the phone's real ones.
-        for c in fetch(context, FetchDescriptor<Crew>(predicate: #Predicate { !$0.isSample })) { context.delete(c) }
+        // Crews: the server's list replaces the phone's.
+        for c in fetch(context, FetchDescriptor<Crew>()) { context.delete(c) }
         let friendIDs = Set(dto.friends.map(\.id))
         for c in dto.crews {
             context.insert(Crew(id: c.id, name: c.name, memberIDs: c.members.map(\.id).filter { friendIDs.contains($0) }, isMine: c.isMine))
         }
 
-        // Third time's a friend: the server's list replaces the phone's real ones.
+        // Third time's a friend: the server's list replaces the phone's.
         if let intros = dto.intros {
-            for i in fetch(context, FetchDescriptor<Intro>(predicate: #Predicate { !$0.isSample })) { context.delete(i) }
+            for i in fetch(context, FetchDescriptor<Intro>()) { context.delete(i) }
             for i in intros {
                 context.insert(Intro(
                     id: i.person.id, name: i.person.displayName,
@@ -127,32 +126,22 @@ extension Sync {
     }
 
     static func unfriend(_ p: Person, context: ModelContext) async throws(APIError) {
-        if !p.isSample {
-            let _: Empty = try await api.send(.delete("/v1/friends/\(p.id.uuidString)"))
-        }
+        let _: Empty = try await api.send(.delete("/v1/friends/\(p.id.uuidString)"))
         context.delete(p)
         Ledger.save(context, "unfriend")
     }
 
     static func wave(_ p: Person, context: ModelContext) async throws(APIError) {
-        if !p.isSample {
-            let _: Empty = try await api.send(.post("/v1/friends/\(p.id.uuidString)/wave"))
-        }
+        let _: Empty = try await api.send(.post("/v1/friends/\(p.id.uuidString)/wave"))
         p.youWavedAt = .now
         Ledger.save(context, "wave")
     }
 
     // MARK: Third time's a friend
 
-    /// Say hi. Returns true when they already had, and you're friends now. A sample intro
-    /// says hi back (it's a sample).
+    /// Say hi. Returns true when they already had, and you're friends now.
     @discardableResult
     static func sayHi(_ intro: Intro, around c: CLLocationCoordinate2D, context: ModelContext) async throws(APIError) -> Bool {
-        if intro.isSample {
-            intro.saidHi = true
-            Ledger.save(context, "say hi")
-            return false
-        }
         let result: IntroResultDTO = try await api.send(.post("/v1/intros/\(intro.id.uuidString)/hi"))
         intro.saidHi = true
         Ledger.save(context, "say hi")
@@ -161,9 +150,7 @@ extension Sync {
     }
 
     static func notNow(_ intro: Intro, context: ModelContext) async throws(APIError) {
-        if !intro.isSample {
-            let _: Empty = try await api.send(.post("/v1/intros/\(intro.id.uuidString)/not-now"))
-        }
+        let _: Empty = try await api.send(.post("/v1/intros/\(intro.id.uuidString)/not-now"))
         intro.dismissed = true
         intro.saidHi = false
         Ledger.save(context, "not now")
@@ -195,18 +182,16 @@ extension Sync {
 
     // MARK: Invites and crews
 
-    /// Ask friends along. Real friends get it through the server when the gathering lives
-    /// there; sample friends are just marked asked on this phone. Returns how many were asked.
+    /// Ask friends along, through the server; the gathering has to live there. Returns how many were asked.
     @discardableResult
     static func invite(_ people: [Person], to g: Gathering, context: ModelContext) async throws(APIError) -> Int {
-        let real = people.filter { !$0.isSample }
-        var asked = people.count - real.count
-        if let id = g.remoteID, !real.isEmpty {
+        var asked = 0
+        if let id = g.remoteID, !people.isEmpty {
             let dto: InvitedDTO = try await api.send(.post(
-                "/v1/gatherings/\(id.uuidString)/invites", InviteFriendsDTO(userIds: real.map(\.id))
+                "/v1/gatherings/\(id.uuidString)/invites", InviteFriendsDTO(userIds: people.map(\.id))
             ))
             asked += dto.invited
-        } else if !real.isEmpty {
+        } else if !people.isEmpty {
             // Only on this phone: nobody else can see it yet.
             throw .rejected(status: 409, reason: "This one isn't on the server, so friends can't be invited to it yet.")
         }
@@ -216,19 +201,18 @@ extension Sync {
 
     static func makeCrew(_ name: String, members: [Person], context: ModelContext) async throws(APIError) {
         let trimmed = name.trimmingCharacters(in: .whitespaces)
-        let real = members.filter { !$0.isSample }
-        if APIConfig.isConfigured, real.count == members.count, !real.isEmpty {
-            let dto: CrewDTO = try await api.send(.post("/v1/crews", NewCrewDTO(name: trimmed, memberIds: real.map(\.id))))
-            context.insert(Crew(id: dto.id, name: dto.name, memberIDs: real.map(\.id), isMine: true))
+        if APIConfig.isConfigured, !members.isEmpty {
+            let dto: CrewDTO = try await api.send(.post("/v1/crews", NewCrewDTO(name: trimmed, memberIds: members.map(\.id))))
+            context.insert(Crew(id: dto.id, name: dto.name, memberIDs: members.map(\.id), isMine: true))
         } else {
-            // A crew with any sample people in it stays on this phone.
-            context.insert(Crew(name: trimmed, memberIDs: members.map(\.id), isMine: true, isSample: real.count != members.count))
+            // No server to keep it: it stays on this phone.
+            context.insert(Crew(name: trimmed, memberIDs: members.map(\.id), isMine: true))
         }
         Ledger.save(context, "make crew")
     }
 
     static func leave(_ crew: Crew, context: ModelContext) async throws(APIError) {
-        if !crew.isSample, APIConfig.isConfigured {
+        if APIConfig.isConfigured {
             let _: Empty = try await api.send(.delete("/v1/crews/\(crew.id.uuidString)"))
         }
         context.delete(crew)

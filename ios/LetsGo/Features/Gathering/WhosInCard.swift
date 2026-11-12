@@ -172,8 +172,7 @@ struct WhosInCard: View {
     private var noteLines: [(text: String, dot: Color)] {
         var out: [(text: String, dot: Color)] = []
         if !friends.isEmpty {
-            let sample = friends.contains { $0.isSample } ? " (sample)" : ""
-            out.append(("\(Crowd.names(friends)) \(friends.count == 1 ? "is" : "are") in\(sample).", Palette.live))
+            out.append(("\(Crowd.names(friends)) \(friends.count == 1 ? "is" : "are") in.", Palette.live))
         }
         if !gathering.invitedBy.isEmpty, !gathering.isJoined {
             out.append(("\(gathering.invitedBy) asked you along.", Palette.accentSoft))
@@ -230,7 +229,6 @@ struct InviteFriendsView: View {
                                     Text(p.name).foregroundStyle(Palette.ink)
                                     if going { Text("Already in").font(.system(size: 12)).foregroundStyle(Palette.live) }
                                 }
-                                if p.isSample { SampleTag() }
                                 Spacer()
                                 Image(systemName: picked.contains(p.id) ? "checkmark.circle.fill" : "circle")
                                     .foregroundStyle(picked.contains(p.id) ? Palette.accent : Palette.muted)
@@ -239,7 +237,7 @@ struct InviteFriendsView: View {
                         .disabled(going)
                     }
                 } footer: {
-                    Text("They'll see it on their People tab. Sample people are only marked asked on this phone.")
+                    Text("They'll see it on their People tab.")
                 }
             }
             .scrollContentBackground(.hidden)

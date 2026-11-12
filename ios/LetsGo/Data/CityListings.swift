@@ -6,7 +6,8 @@ import OSLog
 /// Real things happening around San Francisco: weekly regulars (run clubs, markets, trivia)
 /// and dated one-offs. They come from the server's /v1/listings, kept on the phone for when
 /// it's offline, and before the first fetch from `sf_happenings.json` in the app bundle.
-/// Weekly ones are expanded into actual dates for the next two weeks, so the map is always current.
+/// Weekly ones are expanded into actual dates for the next two weeks, so the map is always current,
+/// and nothing that has ended is laid out (`Upcoming`). Only San Francisco so far (`covers`).
 enum CityListings {
     /// Roughly the city, from Ocean Beach to the Embarcadero, Daly City line to the Marina.
     static func covers(_ c: CLLocationCoordinate2D) -> Bool {
@@ -176,7 +177,7 @@ enum CityListings {
                 // An end before the start means it runs past midnight.
                 let length = end > start ? end - start : end + 24 * 60 - start
                 let e = s.addingTimeInterval(TimeInterval(length * 60))
-                guard e > now else { continue }
+                guard Upcoming.isShown(end: e, now: now) else { continue }
                 // One-offs further out than two months aren't worth a pin yet.
                 if slot.date != nil && s > now.addingTimeInterval(60 * 86_400) { continue }
                 out.append(Occurrence(
@@ -189,7 +190,8 @@ enum CityListings {
         return out.sorted { $0.start < $1.start }
     }
 
-    /// Replaces listed happenings with the current set. Anything you joined or showed up to stays.
+    /// Replaces listed happenings with the current set. What has ended leaves (`Upcoming`); anything you
+    /// joined or showed up to stays in the store for your history, off the map.
     static func refresh(context: ModelContext, now: Date = .now) {
         let listings = current()
         var existing: [String: Gathering] = [:]

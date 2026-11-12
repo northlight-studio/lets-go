@@ -177,15 +177,6 @@ struct LeftBar: View {
     }
 }
 
-/// Footnote on a sample listing's page. Lists stay clean; the page says it once.
-struct SampleNote: View {
-    var body: some View {
-        Label("Sample listing. Real ones appear as neighbors post.", systemImage: "info.circle")
-            .font(.system(size: 12))
-            .foregroundStyle(Palette.muted)
-    }
-}
-
 struct Stars: View {
     var value: Double
     var size: CGFloat = 12

@@ -8,11 +8,15 @@ import OSLog
 enum Ledger {
     private static let log = Logger(subsystem: "com.yasser100ali.letsgo", category: "ledger")
 
-    static func save(_ context: ModelContext, _ what: String) {
+    /// True when it saved.
+    @discardableResult
+    static func save(_ context: ModelContext, _ what: String) -> Bool {
         do {
             try context.save()
+            return true
         } catch {
             log.error("Save failed (\(what, privacy: .public)): \(error.localizedDescription, privacy: .public)")
+            return false
         }
     }
 
@@ -135,12 +139,11 @@ enum Ledger {
 
     /// You showed up: the place goes on tonight's night, with whoever's there with you.
     @discardableResult
-    static func arrive(_ title: String, genre: Genre, with friends: [Friend], isSample: Bool, context: ModelContext, now: Date = .now) -> Night? {
+    static func arrive(_ title: String, genre: Genre, with friends: [Friend], context: ModelContext, now: Date = .now) -> Night? {
         guard let n = night(at: now, create: true, context: context) else { return nil }
         if !n.stops.contains(where: { $0.title == title }) {
             n.stops.append(NightStop(title: title, genreRaw: genre.rawValue, arrivedAt: now,
-                                     withIDs: friends.map(\.id), withNames: friends.map(\.firstName),
-                                     isSample: isSample || friends.contains { $0.isSample }))
+                                     withIDs: friends.map(\.id), withNames: friends.map(\.firstName)))
         }
         n.lastActiveAt = now
         save(context, "arrive")
@@ -175,6 +178,55 @@ enum Ledger {
     static func sawRecap(_ n: Night, context: ModelContext) {
         n.recapSeenAt = .now
         save(context, "recap seen")
+    }
+
+    // MARK: Clean-up
+
+    /// Deletes what has ended and isn't yours (`Upcoming.fate`); what you joined, checked in to or
+    /// host stays for your history. Returns when to prune next.
+    @discardableResult
+    static func pruneEnded(context: ModelContext, now: Date = .now) -> Date {
+        var ends: [Date] = []
+        var deleted = 0
+        do {
+            for g in try context.fetch(FetchDescriptor<Gathering>()) {
+                switch Upcoming.fate(of: g.upcoming, now: now) {
+                case .show: ends.append(g.end)
+                case .history: break
+                case .delete:
+                    context.delete(g)
+                    deleted += 1
+                }
+            }
+        } catch {
+            log.error("Pruning failed: \(error.localizedDescription, privacy: .public)")
+        }
+        if deleted > 0 { save(context, "prune ended") }
+        return Upcoming.nextPrune(ends: ends, now: now)
+    }
+
+    /// Deletes everything the old sample neighborhood stored (`SamplePurge`): its gatherings,
+    /// kitchens (with their menus, drops and any orders), people, crews and intros, and the stops
+    /// on your nights that were at sample things. A night left with no stops goes too.
+    /// True when it all went and saved.
+    @discardableResult
+    static func clearSamples(context: ModelContext) -> Bool {
+        do {
+            try context.delete(model: Gathering.self, where: #Predicate { $0.isSample })
+            try context.delete(model: Person.self, where: #Predicate { $0.isSample })
+            try context.delete(model: Crew.self, where: #Predicate { $0.isSample })
+            try context.delete(model: Intro.self, where: #Predicate { $0.isSample })
+            // Cascade rules only run for object deletes, so sample kitchens go one by one.
+            try context.fetch(FetchDescriptor<Kitchen>(predicate: #Predicate { $0.isSample })).forEach { context.delete($0) }
+            for n in try context.fetch(FetchDescriptor<Night>()) where n.stops.contains(where: \.isSample) {
+                n.stops.removeAll(where: \.isSample)
+                if n.stops.isEmpty { context.delete(n) }
+            }
+        } catch {
+            log.error("Clearing samples failed: \(error.localizedDescription, privacy: .public)")
+            return false
+        }
+        return save(context, "clear samples")
     }
 
     // MARK: Stamps and taste

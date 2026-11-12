@@ -170,7 +170,7 @@ struct SpotView: View {
             } else if meters <= checkInRadius && !location.isUsingFallback {
                 Button {
                     earned = Ledger.visit(spot, context: context)
-                    Ledger.arrive(spot.title, genre: spot.kind.genre, with: [], isSample: false, context: context)
+                    Ledger.arrive(spot.title, genre: spot.kind.genre, with: [], context: context)
                     here = HereMoment(title: spot.title, genre: spot.kind.genre, checkedInAt: .now, friends: [], stamped: earned != nil)
                 } label: {
                     Label("I'm here. Stamp it.", systemImage: "checkmark.seal")
@@ -228,7 +228,6 @@ struct GatheringLine: View {
     private var line: String {
         var parts = [When.relative(gathering.start, end: gathering.end, now: now)]
         if gathering.going > 0 { parts.append("\(gathering.going) going") }
-        if gathering.isSample { parts.append("Sample") }
         return parts.joined(separator: " · ")
     }
 }

@@ -27,7 +27,7 @@ struct PosterContent: Equatable {
     var tabs: Int = 8
 }
 
-/// The poster's words and rules. A poster is only for a real gathering you host: never a sample,
+/// The poster's words and rules. A poster is only for a real gathering you host:
 /// never someone else's, never a listing, and only one the server knows (the link lives there).
 enum PosterCopy {
     static let scanLead = "Scan to say you're in."
@@ -35,7 +35,6 @@ enum PosterCopy {
 
     /// Why there's no poster for this, or nil when there can be one.
     static func unavailable(_ g: Gathering, now: Date) -> String? {
-        if g.isSample { return "Posters are for real gatherings. This one is a sample." }
         if g.isListing || !g.isMine { return "Only the host can make its poster." }
         if g.hasEnded(at: now) { return "It's over." }
         if g.remoteID == nil { return "Posters need the server, and this one is only on your phone." }

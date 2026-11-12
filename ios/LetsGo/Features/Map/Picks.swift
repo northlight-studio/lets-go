@@ -19,7 +19,6 @@ struct Candidate: Identifiable, Hashable, Sendable {
     var dropTotal: Int?
     var priceFromCents: Int?
     var isJoined: Bool = false
-    var isSample: Bool = false
     /// Where it is, in words: "Lafayette Park", or a kitchen's cuisine.
     var place: String = ""
     /// Everything search looks through, lowercased.
@@ -40,7 +39,7 @@ extension Candidate {
         self.init(
             id: g.id, kind: .gathering, title: g.title, category: g.category,
             start: g.start, end: g.end, meters: here.distance(to: g.coordinate),
-            capacity: g.capacity, going: g.going, isJoined: g.isJoined, isSample: g.isSample,
+            capacity: g.capacity, going: g.going, isJoined: g.isJoined,
             place: g.placeName,
             searchText: [g.title, g.details, g.placeName, g.address, g.hostName, g.bring, g.priceText, g.category.label, g.category.noun]
                 .joined(separator: " ").lowercased(),
@@ -54,7 +53,7 @@ extension Candidate {
             id: k.id, kind: .drop, title: k.name, category: .food,
             start: drop.start, end: drop.end, meters: here.distance(to: k.coordinate),
             dropLeft: drop.left, dropTotal: drop.total,
-            priceFromCents: k.menu.map(\.priceCents).min(), isSample: k.isSample,
+            priceFromCents: k.menu.map(\.priceCents).min(),
             place: k.cuisine,
             searchText: ([k.name, k.cookName, k.cuisine, k.story, "food home cooking kitchen"] + k.menu.map { "\($0.name) \($0.note)" })
                 .joined(separator: " ").lowercased(),

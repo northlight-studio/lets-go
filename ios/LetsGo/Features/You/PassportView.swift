@@ -31,7 +31,6 @@ struct PassportView: View {
 
     @Environment(SyncStatus.self) private var sync
     @State private var newNote = ""
-    @AppStorage(SampleNeighborhood.enabledKey) private var samplesOn = true
     @AppStorage(APIClient.nameKey) private var displayName = ""
     @AppStorage(APIConfig.overrideKey) private var serverURL = ""
 
@@ -56,7 +55,6 @@ struct PassportView: View {
             stampGrid
             knows
             quoteCard
-            sampleSettings
             serverSettings
         }
         .padding(.horizontal, 16)
@@ -118,7 +116,6 @@ struct PassportView: View {
                 HStack {
                     Text("Most nights with").eyebrow()
                     Spacer()
-                    if ranked.contains(where: { $0.friend.isSample }) { SampleTag(text: "Sample people") }
                 }
                 ScrollView(.horizontal) {
                     HStack(spacing: 16) {
@@ -153,11 +150,8 @@ struct PassportView: View {
                                 Text(PassportPeople.title(n.stops, evening: n.evening, with: with)).font(.system(size: 16, weight: .bold)).lineLimit(1)
                                 Text(n.stops.map(\.title).joined(separator: " \u{00B7} ")).font(.system(size: 13)).foregroundStyle(Palette.muted).lineLimit(1)
                                 if !with.isEmpty {
-                                    HStack(spacing: 8) {
-                                        AvatarStack(friends: with, size: 22, ground: Palette.bg)
-                                        if with.contains(where: \.isSample) { SampleTag() }
-                                    }
-                                    .padding(.top, 6)
+                                    AvatarStack(friends: with, size: 22, ground: Palette.bg)
+                                        .padding(.top, 6)
                                 }
                             }
                             Spacer(minLength: 0)
@@ -316,33 +310,6 @@ struct PassportView: View {
             .padding(12)
             .card(radius: 14)
         }
-    }
-
-    private var sampleSettings: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Sample neighborhood").eyebrow()
-            Toggle("Show sample things nearby", isOn: $samplesOn)
-                .font(.system(size: 15))
-                .onChange(of: samplesOn) { _, on in
-                    if on {
-                        let center = location.center
-                        Task { await SampleNeighborhood.seed(around: center, context: context) }
-                    } else {
-                        SampleNeighborhood.clear(context: context)
-                    }
-                }
-            Text("Until neighbors post for real, example games and kitchens are placed around you so the map isn't empty. They're placed at real parks, courts and cafés near you, and each page says it's a sample.")
-                .font(.system(size: 12)).foregroundStyle(Palette.muted)
-            if samplesOn {
-                Button("Refresh samples around me") {
-                    let center = location.center
-                    Task { await SampleNeighborhood.seed(around: center, context: context) }
-                }
-                    .font(.system(size: 14, weight: .semibold))
-            }
-        }
-        .padding(14)
-        .card()
     }
 
     private var serverSettings: some View {

@@ -12,7 +12,9 @@ iOS app: a live map of things to do within walking distance, home kitchens selli
 - The look is *Daylight map* (README → The look): follow the phone's light and dark, colours only from `Palette` in `Design/Theme.swift` (never a hard-coded dark), the system's own Liquid Glass for chrome with nothing drawn behind toolbars or the tab bar, yellow for the one prominent button a screen, the system face, no all-caps body copy. Signal keeps its black and lime.
 - MVVM-ish: views stay dumb; logic that can be tested lives in plain types (`Wren`, `WrenQuery`, `Pricing`, `Walk`).
 - Every write goes through `Ledger` so stamps and Wren's taste notes stay consistent. Saves log on failure, never silently.
-- Anything shown as a real person, place or listing that isn't one must be marked Sample.
+- Nothing made up goes on the map: no sample people, places or listings. A screen with nothing real to show says so and offers the way to start (add a friend, host something).
+- Listings in `ios/LetsGo/Resources/sf_happenings.json` come only from real public event pages (`url`), with the real venue, coordinates, date and time; never guessed. Dated ones past their day get dropped. Keep the format `CityListings` and `backend/app/listings_import.py` both read.
+- Anything that has ended never shows as something to go to (`Upcoming`); what you joined stays only in your history.
 - Tests use Swift Testing (`import Testing`), not XCTest.
 - Never commit the App Store Connect key (`*.p8`, `asc_api_key.json`).
 - AI works the way Pulse's does: every model call goes through `backend/app/llm.py` (`llm.create`, the OpenAI Responses API), names the model only through `settings.ai_model` (gpt-6-luna), and passes a `prompt_cache_key` of `letsgo:<surface>:v<n>`. The key is `OPENAI_API_KEY`, the same one Pulse uses.

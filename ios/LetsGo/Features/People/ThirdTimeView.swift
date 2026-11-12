@@ -53,13 +53,6 @@ struct ThirdTimeView: View {
                 .padding(.top, 22)
 
                 actions.padding(.top, 26)
-                if intro.isSample {
-                    Text("Sample. \(intro.name) is a stand-in for someone you keep running into.")
-                        .font(.system(size: 12))
-                        .foregroundStyle(Palette.muted)
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 12)
-                }
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 24)
@@ -199,10 +192,7 @@ struct ThirdTimeRow: View {
             HStack(spacing: 12) {
                 FriendAvatar(friend: intro.friend, size: 40, ring: .edge(Palette.accent), ground: Palette.card)
                 VStack(alignment: .leading, spacing: 1) {
-                    HStack(spacing: 6) {
-                        Text("Third time's a friend").font(.system(size: 15, weight: .bold))
-                        if intro.isSample { SampleTag() }
-                    }
+                    Text("Third time's a friend").font(.system(size: 15, weight: .bold))
                     Text(intro.saidHi ? "Hi sent to \(intro.name). Waiting." : "You and \(intro.name) keep ending up at the same things.")
                         .font(.system(size: 13)).foregroundStyle(Palette.muted).lineLimit(2)
                 }

@@ -40,6 +40,7 @@ struct NightStop: Codable, Hashable, Sendable {
     /// Friends there with you (`Person.id`s) and their names, kept so the recap still reads after they change.
     var withIDs: [UUID] = []
     var withNames: [String] = []
+    /// A stop at something from the old sample neighborhood. Only `SamplePurge` reads it.
     var isSample = false
 
     var genre: Genre { Genre(rawValue: genreRaw) ?? .party }

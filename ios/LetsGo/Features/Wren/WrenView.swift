@@ -250,7 +250,7 @@ struct WrenView: View {
         let drops = kitchens.flatMap { k in
             k.drops.filter { $0.end > now && !$0.isSoldOut }.map { d in
                 DropSlot(kitchenID: k.id, name: k.name, cuisine: k.cuisine, start: d.start, end: d.end, left: d.left,
-                         priceFromCents: k.menu.map(\.priceCents).min(), latitude: k.latitude, longitude: k.longitude, isSample: k.isSample)
+                         priceFromCents: k.menu.map(\.priceCents).min(), latitude: k.latitude, longitude: k.longitude)
             }
         }
         let outside = Spots.all
@@ -298,9 +298,8 @@ struct WrenView: View {
             await attempt($problem) { () throws(APIError) in
                 if let event {
                     if !event.isJoined { try await Sync.join(event, context: context) }
-                    // Real friends get an invite only when the event is on the server.
-                    let reachable = event.remoteID == nil ? group.filter(\.isSample) : group
-                    if !reachable.isEmpty { try await Sync.invite(reachable, to: event, context: context) }
+                    // Friends get an invite only when the event is on the server.
+                    if event.remoteID != nil, !group.isEmpty { try await Sync.invite(group, to: event, context: context) }
                 }
             }
             busy = false
