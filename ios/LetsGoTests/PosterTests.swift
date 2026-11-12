@@ -16,11 +16,11 @@ struct PosterTests {
         cal.date(from: DateComponents(year: 2026, month: 11, day: 12, hour: h, minute: m))!
     }
 
-    func game(mine: Bool = true, sample: Bool = false, onServer: Bool = true, recurring: String = "") -> Gathering {
+    func game(mine: Bool = true, onServer: Bool = true, recurring: String = "") -> Gathering {
         let g = Gathering(
             title: "Pickup soccer", category: .play, details: "All levels.", placeName: "The park on Elm St",
             coordinate: .init(latitude: 37.76, longitude: -122.42), start: thursday(18, 30), end: thursday(20, 30),
-            capacity: 12, hostName: "You", bring: "water", recurring: recurring, isMine: mine, isSample: sample
+            capacity: 12, hostName: "You", bring: "water", recurring: recurring, isMine: mine
         )
         if onServer { g.remoteID = UUID() }
         return g
@@ -29,7 +29,6 @@ struct PosterTests {
     @Test func onlyARealGatheringYouHostGetsAPoster() {
         let before = thursday(12)
         #expect(PosterCopy.unavailable(game(), now: before) == nil)
-        #expect(PosterCopy.unavailable(game(sample: true), now: before) != nil)
         #expect(PosterCopy.unavailable(game(mine: false), now: before) != nil)
         #expect(PosterCopy.unavailable(game(onServer: false), now: before) != nil)
         #expect(PosterCopy.unavailable(game(), now: thursday(21)) == "It's over.")

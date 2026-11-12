@@ -20,7 +20,7 @@ struct PlannerTests {
     let here = CLLocationCoordinate2D(latitude: 37.7596, longitude: -122.4269)
 
     func friend(_ name: String, free: Int?) -> Friend {
-        Friend(id: UUID(), name: name, isSample: true, sampleRole: "home", freeAfterHour: free)
+        Friend(id: UUID(), name: name, freeAfterHour: free)
     }
 
     func event(_ title: String, _ genre: Genre, day: Int, hour: Int, east: Double, north: Double, price: String = "") -> Candidate {
@@ -72,7 +72,7 @@ struct PlannerTests {
         let park = here.offset(east: -150, north: -100)
         let tamales = DropSlot(kitchenID: UUID(), name: "Rosa's Tamales", cuisine: "Tamales", start: date(31, 16),
                                end: date(31, 19), left: 30, priceFromCents: 1600, latitude: park.latitude - 0.002,
-                               longitude: park.longitude, isSample: true)
+                               longitude: park.longitude)
         let dolores = OutsideSpot(title: "Dolores Park", area: "Mission", latitude: park.latitude, longitude: park.longitude)
         return (r, [maya, theo], [show, run], [tamales], [dolores])
     }

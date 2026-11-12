@@ -8,7 +8,7 @@ import OSLog
 /// The store stays the source the screens read from. `refresh` pulls what's
 /// nearby into it; the actions below send a change to the server first when the
 /// thing lives there, then apply it locally through `Ledger` (stamps, taste).
-/// Sample and on-phone-only things never touch the network.
+/// On-phone-only things never touch the network.
 enum Sync {
     private static let log = Logger(subsystem: "com.yasser100ali.letsgo", category: "sync")
     static var api: APIClient { .shared }
@@ -254,7 +254,6 @@ enum Sync {
         if let at = dto.checkedInAt { g.checkedInAt = at }
         g.friendIDs = dto.friendsGoing?.map(\.id) ?? []
         g.webNames = dto.webNames ?? []
-        g.isSample = false
     }
 
     private static func insertKitchen(_ dto: KitchenDTO, context: ModelContext) -> Kitchen {
@@ -277,7 +276,6 @@ enum Sync {
         k.longitude = dto.lon
         k.porchTables = dto.porchTables
         k.isMine = dto.isMine
-        k.isSample = false
         k.permitConfirmed = dto.permitted
         k.handlerCardConfirmed = dto.permitted
         k.regulars = 0

@@ -148,9 +148,7 @@ struct OrderView: View {
 
     private func isFull(_ s: Date) -> Bool {
         let booked = kitchen.orders.filter { $0.pickupAt == s }.count
-        // Sample kitchens are busy: their first slot is already taken.
-        let sampleTaken = kitchen.isSample && s == drop.slots.first && drop.sold >= drop.perSlot ? drop.perSlot : 0
-        return booked + sampleTaken >= drop.perSlot
+        return booked >= drop.perSlot
     }
 
     private func reserve() {

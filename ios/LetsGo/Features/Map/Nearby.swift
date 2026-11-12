@@ -7,7 +7,7 @@ enum Nearby {
         gatherings: [Gathering], kitchens: [Kitchen],
         from here: CLLocationCoordinate2D, now: Date
     ) -> [Candidate] {
-        let g = gatherings.filter { !$0.hasEnded(at: now) }.map { Candidate($0, from: here) }
+        let g = gatherings.filter { $0.isShown(at: now) }.map { Candidate($0, from: here) }
         let k = kitchens.compactMap { Candidate($0, from: here, now: now) }
         return g + k
     }

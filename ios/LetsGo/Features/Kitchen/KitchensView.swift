@@ -20,7 +20,14 @@ struct KitchensView: View {
                             }
                         }
                         section("Drops near you") {
-                            ForEach(sorted(now: now)) { k in
+                            let near = sorted(now: now)
+                            if near.isEmpty {
+                                Text("No kitchens nearby yet. When a neighbor opens theirs, its drops show up here, or open yours below.")
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(Palette.muted)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            ForEach(near) { k in
                                 NavigationLink(value: k) { KitchenRow(kitchen: k, now: now, meters: location.center.distance(to: k.coordinate)) }
                                     .buttonStyle(.plain)
                             }

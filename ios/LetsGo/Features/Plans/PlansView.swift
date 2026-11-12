@@ -19,6 +19,7 @@ struct PlansView: View {
     @State private var path = NavigationPath()
     @State private var day: Date?
     @State private var showWholeDay = false
+    @State private var hosting = false
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -55,6 +56,7 @@ struct PlansView: View {
             .navigationDestination(for: KitchensRoute.self) { _ in KitchensPage() }
             .navigationDestination(for: SavedPlan.self) { PlanView(plan: $0) }
         }
+        .sheet(isPresented: $hosting) { NewGatheringView(draft: nil) }
     }
 
     // MARK: Plans Wren made
@@ -103,7 +105,7 @@ struct PlansView: View {
     /// What you've said yes to that hasn't happened yet: gatherings and pickups.
     @ViewBuilder
     private func yours(now: Date) -> some View {
-        let joined = gatherings.filter { $0.isJoined && $0.end > now }.prefix(6)
+        let joined = gatherings.filter { $0.isJoined && $0.isShown(at: now) }.prefix(6)
         let pickups = orders.filter { $0.status == .reserved && $0.pickupAt.addingTimeInterval(3600) > now }.prefix(4)
         if !joined.isEmpty || !pickups.isEmpty {
             sectionHeader("You're in", detail: "Show up, check in, collect the stamp.")
@@ -137,6 +139,20 @@ struct PlansView: View {
                 }
             }
             .padding(.vertical, 2)
+            .card(radius: 20)
+            .padding(.horizontal, 16)
+        } else {
+            sectionHeader("You're in", detail: "Nothing on your list yet.")
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Say you're in to something below, or host something of your own and people nearby will see it.")
+                    .font(.system(size: 14))
+                    .foregroundStyle(Palette.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button { hosting = true } label: { Label("Host something", systemImage: "plus") }
+                    .buttonStyle(SecondaryButtonStyle())
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .card(radius: 20)
             .padding(.horizontal, 16)
         }
@@ -238,7 +254,7 @@ struct PlansView: View {
         let cal = Calendar.current
         let today = cal.startOfDay(for: now)
         let selected = day ?? today
-        let real = gatherings.filter { !$0.isSample }.map { Candidate($0, from: location.center) }
+        let real = gatherings.filter { $0.isShown(at: now) }.map { Candidate($0, from: location.center) }
         let items = Today.happening(real, on: selected, now: now)
         let shown = showWholeDay ? items : Array(items.prefix(8))
         return VStack(alignment: .leading, spacing: 0) {
@@ -332,6 +348,9 @@ struct PlansView: View {
                 .padding(.horizontal, 16)
             }
             .scrollIndicators(.hidden)
+        } else {
+            sectionHeader("Home kitchens near you", detail: "No kitchens nearby yet. When a neighbor opens theirs, its drops show up here.",
+                          action: "Open yours") { path.append(MyKitchenRoute()) }
         }
     }
 
@@ -443,7 +462,6 @@ struct PickCard: View {
                         tag(pick.category.label, color: pick.category.color)
                         if pick.isFree { tag("Free") }
                         if !pick.place.isEmpty { tag(pick.place) }
-                        if pick.isSample { tag("Sample") }
                     }
                     .padding(.top, 4)
                     HStack {
@@ -516,7 +534,7 @@ struct SoonCard: View {
                 HStack {
                     Text(Walk.label(pick.meters))
                     Spacer()
-                    Text(pick.isSample ? "Sample" : (pick.going > 0 ? "\(pick.going) going" : (pick.isFree ? "Free" : pick.priceText)))
+                    Text(pick.going > 0 ? "\(pick.going) going" : (pick.isFree ? "Free" : pick.priceText))
                         .lineLimit(1)
                 }
                 .font(.system(size: 12, weight: .semibold))
@@ -584,7 +602,6 @@ struct KitchenCard: View {
 
     private func kitchenLine(_ drop: Drop?) -> String {
         var parts: [String] = []
-        if kitchen.isSample { parts.append("Sample") }
         if let drop { parts.append(drop.isLive(at: now) ? "Open now" : When.short(drop.start, now: now)) }
         return parts.joined(separator: " · ")
     }

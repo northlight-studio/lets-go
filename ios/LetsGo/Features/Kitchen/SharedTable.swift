@@ -20,12 +20,11 @@ enum SharedTable {
         var taken: Int
         /// Friends sitting down, and when.
         var friends: [(friend: Friend, at: Date)]
-        var isSample: Bool
 
         var open: Int { max(0, seats - taken) }
 
         static func == (a: Table, b: Table) -> Bool {
-            a.seats == b.seats && a.taken == b.taken && a.isSample == b.isSample
+            a.seats == b.seats && a.taken == b.taken
                 && a.friends.map { $0.friend } == b.friends.map { $0.friend } && a.friends.map { $0.at } == b.friends.map { $0.at }
         }
     }
@@ -42,24 +41,13 @@ enum SharedTable {
         return out
     }
 
-    /// The table at a kitchen: the server's numbers for a real one; for a sample kitchen, a
-    /// believable table with a sample friend at it, so the idea shows before neighbors post.
+    /// The table at a kitchen's next drop, from the server's numbers: seats, porch orders, friends at it.
     static func table(seats porchTables: Int, serverTaken: Int, serverFriends: [TableSeat], people: [Friend],
-                      kitchenName: String, isSample: Bool, drop: (start: Date, end: Date)?) -> Table? {
-        guard porchTables > 0, let drop else { return nil }
-        let seats = porchTables * 4
-        if !isSample {
-            let byID = Dictionary(people.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
-            let friends = serverFriends.map { s in (friend: byID[s.personID] ?? Friend(id: s.personID, name: s.name, isSample: false), at: s.at) }
-            return Table(seats: seats, taken: max(serverTaken, friends.count), friends: friends, isSample: false)
-        }
-        let taken = max(1, Int(Double(seats) * (0.4 + 0.3 * Art.unit(kitchenName, 12))))
-        var friends: [(friend: Friend, at: Date)] = []
-        if let mate = people.first(where: { $0.isSample && $0.sampleRole == "team" }), Art.unit(kitchenName, 11) < 0.6 {
-            let at = drop.start.addingTimeInterval(30 * 60)
-            if at < drop.end { friends.append((mate, at)) }
-        }
-        return Table(seats: seats, taken: max(taken, friends.count), friends: friends, isSample: true)
+                      drop: (start: Date, end: Date)?) -> Table? {
+        guard porchTables > 0, drop != nil else { return nil }
+        let byID = Dictionary(people.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        let friends = serverFriends.map { s in (friend: byID[s.personID] ?? Friend(id: s.personID, name: s.name), at: s.at) }
+        return Table(seats: porchTables * 4, taken: max(serverTaken, friends.count), friends: friends)
     }
 }
 
@@ -72,7 +60,6 @@ struct SharedTableCard: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline) {
                 Text(name).eyebrow()
-                if table.isSample { SampleTag() }
                 Spacer()
                 Text("\(Text("\(table.open)").foregroundStyle(Palette.ink)) of \(table.seats) seats open")
                     .font(.system(size: 14, weight: .bold))

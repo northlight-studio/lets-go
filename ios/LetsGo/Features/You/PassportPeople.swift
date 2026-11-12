@@ -23,7 +23,7 @@ enum PassportPeople {
         }
         let byID = Dictionary(people.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         return counts
-            .map { id, n in Ranked(friend: byID[id] ?? Friend(id: id, name: names[id] ?? "Someone", isSample: false), nights: n) }
+            .map { id, n in Ranked(friend: byID[id] ?? Friend(id: id, name: names[id] ?? "Someone"), nights: n) }
             .sorted { $0.nights != $1.nights ? $0.nights > $1.nights : $0.friend.name < $1.friend.name }
             .prefix(limit)
             .map { $0 }
@@ -35,7 +35,7 @@ enum PassportPeople {
         var out: [Friend] = []
         for stop in stops {
             for (id, name) in zip(stop.withIDs, stop.withNames) where !out.contains(where: { $0.id == id }) {
-                out.append(byID[id] ?? Friend(id: id, name: name, isSample: stop.isSample))
+                out.append(byID[id] ?? Friend(id: id, name: name))
             }
         }
         return out

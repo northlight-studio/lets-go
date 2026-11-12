@@ -15,17 +15,19 @@ final class Kitchen {
     /// Shown only after you've reserved: "Side gate, ring the bell".
     var pickupNote: String
     var porchTables: Int
-    /// Ratings carried over from before this device knew the kitchen (sample data).
+    /// Ratings carried over from before this device knew the kitchen (the server's).
     var baseRatingTotal: Double
     var baseReviewCount: Int
     var regulars: Int
     var permitConfirmed: Bool
     var handlerCardConfirmed: Bool
     var isMine: Bool
+    /// Only `SamplePurge` reads this (see `Person.isSample`).
     var isSample: Bool
-    /// Reviews shown on a sample kitchen's page. Already counted in the base rating.
+    /// The server's reviews, as shown text. Already counted in the base rating. (The name is from
+    /// when sample kitchens had them; it's kept so the store opens without a migration.)
     var sampleReviews: [SampleReview] = []
-    /// The backend's id. Its reviews are kept in `sampleReviews` too, as shown text.
+    /// The backend's id.
     var remoteID: UUID?
     /// The shared porch table at the next drop, from the server: seats, porch orders, friends at it.
     var tableSeats: Int = 0
@@ -41,7 +43,7 @@ final class Kitchen {
         name: String, cookName: String, cuisine: String, story: String,
         coordinate: CLLocationCoordinate2D, pickupNote: String, porchTables: Int = 0,
         rating: Double = 0, reviewCount: Int = 0, regulars: Int = 0,
-        isMine: Bool = false, isSample: Bool = false
+        isMine: Bool = false
     ) {
         self.id = UUID()
         self.name = name
@@ -55,10 +57,10 @@ final class Kitchen {
         self.baseRatingTotal = rating * Double(reviewCount)
         self.baseReviewCount = reviewCount
         self.regulars = regulars
-        self.permitConfirmed = isSample
-        self.handlerCardConfirmed = isSample
+        self.permitConfirmed = false
+        self.handlerCardConfirmed = false
         self.isMine = isMine
-        self.isSample = isSample
+        self.isSample = false
     }
 
     var coordinate: CLLocationCoordinate2D { .init(latitude: latitude, longitude: longitude) }

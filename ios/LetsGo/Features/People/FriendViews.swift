@@ -18,7 +18,7 @@ struct FriendAvatar: View {
             .frame(width: size, height: size)
             .background(friend.color, in: .circle)
             .overlay { ringView }
-            .accessibilityLabel(friend.isSample ? "\(friend.name), sample" : friend.name)
+            .accessibilityLabel(friend.name)
     }
 
     @ViewBuilder
@@ -122,7 +122,6 @@ struct FriendPin: View {
         var parts = [friend.name]
         if porch { parts.append("porch light on") }
         if let out = friend.out { parts.append(out.state == .there ? "at \(out.title)" : "heading to \(out.title)") }
-        if friend.isSample { parts.append("sample") }
         return parts.joined(separator: ", ")
     }
 }

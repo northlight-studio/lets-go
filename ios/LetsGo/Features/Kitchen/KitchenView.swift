@@ -36,7 +36,6 @@ struct KitchenView: View {
                         if let table = table(drop) { SharedTableCard(table: table, name: kitchen.porchTables > 0 ? "The porch table" : "The table") }
                         menu(drop: drop)
                         reviews
-                        if kitchen.isSample { SampleNote() }
                     }
                     .padding(.horizontal, 18)
                     .padding(.top, 14)
@@ -167,7 +166,7 @@ struct KitchenView: View {
     private func table(_ drop: Drop?) -> SharedTable.Table? {
         SharedTable.table(
             seats: kitchen.porchTables, serverTaken: kitchen.tableTaken, serverFriends: kitchen.tableFriends,
-            people: people.map(\.snapshot), kitchenName: kitchen.name, isSample: kitchen.isSample,
+            people: people.map(\.snapshot),
             drop: drop.map { (start: $0.start, end: $0.end) }
         )
     }

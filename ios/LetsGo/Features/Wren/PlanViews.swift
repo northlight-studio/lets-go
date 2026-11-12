@@ -62,7 +62,7 @@ struct PlanCard: View {
                         Text(NightPin.hour(stop.start)).font(.system(size: 15, weight: .heavy)).monospacedDigit()
                         Capsule().fill(stop.genre.color).frame(height: 3)
                         Text(stop.title).font(.system(size: 13, weight: .semibold)).lineLimit(2)
-                        Text(stop.isSample ? "Sample" : stop.note)
+                        Text(stop.note)
                             .font(.system(size: 11.5))
                             .foregroundStyle(Palette.muted)
                             .lineLimit(2)
@@ -232,7 +232,6 @@ struct PlanView: View {
             Text(label)
                 .font(.system(size: 12.5, weight: .bold))
                 .foregroundStyle(all ? Palette.live : Palette.soft)
-            if group.contains(where: \.isSample) { SampleTag() }
         }
         .padding(.leading, 4).padding(.trailing, 10)
         .frame(height: 26)
@@ -264,7 +263,6 @@ struct PlanView: View {
                             .padding(.horizontal, 6).padding(.vertical, 1)
                             .background(Palette.live.opacity(0.14), in: .rect(cornerRadius: 6))
                     }
-                    if stop.isSample { SampleTag() }
                 }
                 Text(stop.note).font(.system(size: 13.5)).foregroundStyle(Palette.muted).fixedSize(horizontal: false, vertical: true)
                 if Calendar.current.isDateInToday(stop.start), stop.start.addingTimeInterval(3600) > .now {
@@ -304,19 +302,10 @@ struct PlanView: View {
 
     // MARK: State
 
-    /// Real friends are in when the server lists them on the event; sample ones say yes a
-    /// moment after you ask (they're samples).
+    /// Friends are in when the server lists them on the event.
     private func whoIsIn(_ group: [Friend], now: Date) -> Set<UUID> {
         let event = plan.event.flatMap { e in gatherings.first { $0.id == e.gatheringID } }
-        var ids = Set<UUID>()
-        for f in group {
-            if f.isSample {
-                if let asked = plan.askedAt, now.timeIntervalSince(asked) > 4 { ids.insert(f.id) }
-            } else if event?.friendIDs.contains(f.id) == true {
-                ids.insert(f.id)
-            }
-        }
-        return ids
+        return Set(group.map(\.id).filter { event?.friendIDs.contains($0) == true })
     }
 
     private func held(_ stop: Plan.Stop) -> Bool {

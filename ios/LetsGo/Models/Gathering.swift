@@ -24,6 +24,7 @@ final class Gathering {
     var isJoined: Bool
     var checkedInAt: Date?
     var isMine: Bool
+    /// Only `SamplePurge` reads this (see `Person.isSample`).
     var isSample: Bool
     /// The backend's id, for things that came from (or were posted to) the server.
     var remoteID: UUID?
@@ -52,7 +53,7 @@ final class Gathering {
         title: String, category: Genre, details: String = "", placeName: String,
         coordinate: CLLocationCoordinate2D, start: Date, end: Date, capacity: Int = 0,
         othersGoing: Int = 0, hostName: String, bring: String = "", recurring: String = "",
-        isMine: Bool = false, isSample: Bool = false
+        isMine: Bool = false
     ) {
         self.id = UUID()
         self.title = title
@@ -71,7 +72,7 @@ final class Gathering {
         self.isJoined = isMine
         self.checkedInAt = nil
         self.isMine = isMine
-        self.isSample = isSample
+        self.isSample = false
     }
 
     var category: Genre { Genre(rawValue: categoryRaw) ?? .party }

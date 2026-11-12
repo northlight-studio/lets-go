@@ -152,7 +152,6 @@ struct NewCrewView: View {
                             HStack(spacing: 12) {
                                 FriendAvatar(friend: p.snapshot, size: 32)
                                 Text(p.name).foregroundStyle(Palette.ink)
-                                if p.isSample { SampleTag() }
                                 Spacer()
                                 Image(systemName: picked.contains(p.id) ? "checkmark.circle.fill" : "circle")
                                     .foregroundStyle(picked.contains(p.id) ? Palette.accent : Palette.muted)

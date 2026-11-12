@@ -163,9 +163,11 @@ struct NearbySheet: View {
 
             if shown.isEmpty {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text(model.window == .now ? "Nothing in the next few hours." : "Nothing here yet.")
+                    let inCity = CityListings.covers(location.center)
+                    Text(!inCity ? "Let's Go only knows San Francisco so far." : model.window == .now ? "Nothing in the next few hours." : "Nothing here yet.")
                         .font(.system(size: 17, weight: .semibold))
-                    Text(model.window == .now ? "Try Tonight or Weekend, or start something yourself." : "Start something and it shows up here for people nearby.")
+                    Text(!inCity ? "There are no listings here yet. Start something and it shows up for people nearby."
+                         : model.window == .now ? "Try Tonight or Weekend, or start something yourself." : "Start something and it shows up here for people nearby.")
                         .font(.system(size: 15)).foregroundStyle(Palette.muted)
                     Button { hosting = GatheringDraft.from(SearchQuery.parse("")) } label: {
                         Label("Host something", systemImage: "plus")

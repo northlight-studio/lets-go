@@ -73,6 +73,11 @@ struct HomeLineTests {
         #expect(HomeLine.searchPrompt(.weekend, inCity: true) == "This weekend, in the city")
     }
 
+    @Test func outsideTheCityItSaysSo() {
+        #expect(HomeLine.empty(inCity: false).text.hasPrefix("Let's Go only knows San Francisco so far."))
+        #expect(HomeLine.empty(inCity: true) == HomeLine.quiet)
+    }
+
     @Test func leaveByIsTheStartLessTheWalk() {
         let trivia = gathering("Trivia", startsIn: 60, meters: 1440) // 18 minutes at 80 m a minute
         let leave = HomeLine.leaveBy(trivia, now: now)

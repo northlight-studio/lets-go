@@ -2,60 +2,9 @@ import Foundation
 import CoreLocation
 
 /// Where your people are tonight, and how to end up with them. Plain functions, so they're tested.
-///
-/// Real friends are wherever the server says they joined. Sample friends (until you have
-/// real ones) are placed on the best things near you, so the map, Wren and "who's in"
-/// have someone to show. Every sample person is labeled as one wherever they appear.
+/// Friends are wherever the server says they joined; nobody is placed anywhere they didn't say.
 enum Crowd {
-    /// Your friends with tonight filled in. Sample ones go on the top picks: the "team"
-    /// pair on the first thing with a cap and room, the "solo" one on the next.
-    static func resolve(_ friends: [Friend], picks: [Candidate], here: CLLocationCoordinate2D, now: Date) -> [Friend] {
-        let gatherings = picks.filter { $0.kind == .gathering && $0.spotsLeft != 0 }
-        let teamPick = gatherings.first { $0.capacity > 0 } ?? gatherings.first
-        let soloPick = gatherings.first { $0.id != teamPick?.id }
-        var teamSeen = 0
-        return friends.map { (friend: Friend) -> Friend in
-            guard friend.isSample else { return friend }
-            var f = friend
-            switch f.sampleRole {
-            case "team":
-                guard let c = teamPick else { return f }
-                // The first of the pair is on the way; the rest are already there if it's started.
-                let state: Friend.OutState = teamSeen == 0 || c.start.timeIntervalSince(now) > 30 * 60 ? .heading : .there
-                teamSeen += 1
-                place(&f, at: c, state: state, here: here)
-            case "solo":
-                guard let c = soloPick else { return f }
-                place(&f, at: c, state: c.start <= now ? .there : .heading, here: here)
-            default:
-                break
-            }
-            return f
-        }
-    }
-
-    private static func place(_ f: inout Friend, at c: Candidate, state: Friend.OutState, here: CLLocationCoordinate2D) {
-        let there = CLLocationCoordinate2D(latitude: c.lat, longitude: c.lon)
-        let at: CLLocationCoordinate2D
-        switch state {
-        case .there:
-            // A few steps off the pin, so they don't sit on it.
-            at = there.offset(east: 30 * (Art.unit(f.name, 3) - 0.5) * 2, north: 30 * (Art.unit(f.name, 4) - 0.5) * 2)
-        case .heading:
-            // Partway there, off the straight line a little: walking over from their place.
-            let t = 0.45 + 0.2 * Art.unit(f.name, 5)
-            at = CLLocationCoordinate2D(
-                latitude: here.latitude + (there.latitude - here.latitude) * t,
-                longitude: here.longitude + (there.longitude - here.longitude) * t
-            ).offset(east: 60 * (Art.unit(f.name, 6) - 0.5), north: 60 * (Art.unit(f.name, 8) - 0.5))
-        }
-        f.out = Friend.Out(state: state, title: c.title, place: c.place, start: c.start, gatheringID: c.id,
-                           latitude: at.latitude, longitude: at.longitude)
-        f.latitude = at.latitude
-        f.longitude = at.longitude
-    }
-
-    /// Friends going to this: on its list from the server, or placed there.
+    /// Friends going to this: on its list from the server, or out heading there.
     static func going(to c: Candidate, among friends: [Friend]) -> [Friend] {
         friends.filter { c.friendIDs.contains($0.id) || $0.out?.gatheringID == c.id }
     }

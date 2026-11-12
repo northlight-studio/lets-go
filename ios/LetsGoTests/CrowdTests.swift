@@ -19,39 +19,26 @@ struct CrowdTests {
         )
     }
 
-    func sample(_ name: String, _ role: String) -> Friend {
-        Friend(id: UUID(), name: name, isSample: true, sampleRole: role)
+    func friend(_ name: String) -> Friend {
+        Friend(id: UUID(), name: name)
     }
 
-    @Test func theSampleTeamGoesToTheFirstThingWithRoom() throws {
-        let open = gathering("Open mic", startsIn: 20, east: 300, north: 0)
-        let trivia = gathering("Trivia", startsIn: 60, east: -400, north: -600, capacity: 6, going: 4)
-        let friends = [sample("Maya", "team"), sample("Theo", "team"), sample("Jun", "solo"), sample("Ana", "home")]
-        let tonight = Crowd.resolve(friends, picks: [open, trivia], here: here, now: now)
-
-        let maya = try #require(tonight.first { $0.name == "Maya" }?.out)
-        let theo = try #require(tonight.first { $0.name == "Theo" }?.out)
-        #expect(maya.gatheringID == trivia.id)
-        #expect(theo.gatheringID == trivia.id)
-        #expect(maya.state == .heading)
-        // Jun takes the other one; Ana stays home.
-        #expect(tonight.first { $0.name == "Jun" }?.out?.gatheringID == open.id)
-        #expect(tonight.first { $0.name == "Ana" }?.out == nil)
-        #expect(Crowd.going(to: trivia, among: tonight).count == 2)
-    }
-
-    @Test func realFriendsAreLeftAsTheServerSaid() {
-        let real = Friend(id: UUID(), name: "Sam", isSample: false, sampleRole: "team")
+    @Test func friendsAreWhereTheServerSaid() {
+        let sam = friend("Sam")
         let trivia = gathering("Trivia", startsIn: 60, east: 0, north: 400, capacity: 6)
-        let tonight = Crowd.resolve([real], picks: [trivia], here: here, now: now)
-        #expect(tonight[0].out == nil)
+        // Nobody is placed on anything: not on its list, not out heading there.
+        #expect(Crowd.going(to: trivia, among: [sam]).isEmpty)
         // Going according to the server's list.
-        let listed = gathering("Trivia", startsIn: 60, east: 0, north: 400, friends: [real.id])
-        #expect(Crowd.going(to: listed, among: [real]).map(\.name) == ["Sam"])
+        let listed = gathering("Trivia", startsIn: 60, east: 0, north: 400, friends: [sam.id])
+        #expect(Crowd.going(to: listed, among: [sam]).map(\.name) == ["Sam"])
+        // Or out, heading to it.
+        var maya = friend("Maya")
+        maya.out = Friend.Out(state: .heading, title: "Trivia", place: "", start: trivia.start, gatheringID: trivia.id)
+        #expect(Crowd.going(to: trivia, among: [sam, maya]).map(\.name) == ["Maya"])
     }
 
     @Test func namesReadLikeASentence() {
-        let f = ["Maya", "Theo", "Jun", "Ben"].map { Friend(id: UUID(), name: $0, isSample: true) }
+        let f = ["Maya", "Theo", "Jun", "Ben"].map { Friend(id: UUID(), name: $0) }
         #expect(Crowd.names(Array(f.prefix(1))) == "Maya")
         #expect(Crowd.names(Array(f.prefix(2))) == "Maya and Theo")
         #expect(Crowd.names(Array(f.prefix(3))) == "Maya, Theo and Jun")
@@ -59,16 +46,16 @@ struct CrowdTests {
     }
 
     @Test func porchLightsAreOnlyTheOnesStillOn() {
-        var priya = sample("Priya", "porch")
+        var priya = friend("Priya")
         priya.porchUntil = now.addingTimeInterval(3600)
-        var omar = sample("Omar", "porch")
+        var omar = friend("Omar")
         omar.porchUntil = now.addingTimeInterval(-60)
         #expect(Crowd.porchLights([priya, omar], now: now).map(\.name) == ["Priya"])
     }
 
     @Test func wrenRoutesYouPastAFriendOnTheWay() throws {
         let trivia = gathering("Trivia", startsIn: 40, east: 0, north: 1200)
-        var maya = sample("Maya", "team")
+        var maya = friend("Maya")
         let halfway = here.offset(east: 80, north: 600)
         maya.latitude = halfway.latitude
         maya.longitude = halfway.longitude
@@ -83,7 +70,7 @@ struct CrowdTests {
 
     @Test func noDetourThatDoublesTheWalk() {
         let trivia = gathering("Trivia", startsIn: 60, east: 0, north: 800)
-        var maya = sample("Maya", "team")
+        var maya = friend("Maya")
         let away = here.offset(east: 0, north: -900)
         maya.latitude = away.latitude
         maya.longitude = away.longitude
@@ -93,7 +80,7 @@ struct CrowdTests {
 
     @Test func wrenLeadsWithFriends() {
         let trivia = gathering("Trivia", startsIn: 60, east: 0, north: 1200, capacity: 6, going: 4)
-        let friends = [sample("Maya", "team"), sample("Theo", "team")]
+        let friends = [friend("Maya"), friend("Theo")]
         let meet = MeetUp(friendID: friends[0].id, friendName: "Maya", leave: now.addingTimeInterval(1800),
                           meetAt: now.addingTimeInterval(2400), latitude: 0, longitude: 0, extraMinutes: 1)
         let line = HomeLine.sentence(for: trivia, now: now, friends: friends, meet: meet, clock: { _ in "T" })

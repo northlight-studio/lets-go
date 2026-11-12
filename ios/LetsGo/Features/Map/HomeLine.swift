@@ -162,6 +162,12 @@ enum HomeLine {
     /// When nothing is close enough to suggest.
     static let quiet = Line(lead: "Quiet out there right now. ", emphasis: "Try Tonight or the weekend,", tail: " or start something and people nearby will see it.")
 
+    /// Outside San Francisco there are no listings yet, so say so rather than show an empty map.
+    static let outsideCity = Line(lead: "Let's Go only knows ", emphasis: "San Francisco", tail: " so far. Host something here and people nearby will see it.")
+
+    /// Wren's line when there's no pick: honest about where the listings are.
+    static func empty(inCity: Bool) -> Line { inCity ? quiet : outsideCity }
+
     nonisolated static func clock(_ d: Date) -> String { d.formatted(date: .omitted, time: .shortened) }
 
     static func number(_ n: Int) -> String {
