@@ -11,6 +11,7 @@ struct NearbySheet: View {
     @Query(sort: \Gathering.start) private var gatherings: [Gathering]
     @Query private var kitchens: [Kitchen]
     @Query private var people: [Person]
+    @Query private var notes: [TasteNote]
 
     @FocusState private var searching: Bool
     @State private var hosting: GatheringDraft?
@@ -43,6 +44,9 @@ struct NearbySheet: View {
             .navigationDestination(for: Order.self) { OrderStatusView(order: $0) }
             .navigationDestination(for: MyKitchenRoute.self) { _ in MyKitchenView() }
             .navigationDestination(for: SupperLink.self) { SupperView(id: $0.id) }
+        }
+        .task(id: "\(location.center.roundedKey)|\(gatherings.count)|\(kitchens.count)") {
+            await RightNowFeed.shared.refresh(gatherings: gatherings, kitchens: kitchens, notes: notes, around: location.center)
         }
         .onChange(of: searching) { _, on in if on { model.detent = .large } }
         .onChange(of: model.path.count) { _, count in if count == 0 { model.selectedID = nil } }
@@ -149,7 +153,15 @@ struct NearbySheet: View {
         let shown = model.narrowed(model.shown(all, now: now), friends: people.map(\.snapshot))
         let span = model.span(now: now)
         let day = Timetable.label(model.railDay(now: now), now: now)
+        // Wren's three: about right now whatever the rail says, and never while you're filtering,
+        // when the list below is the answer to what you asked for.
+        let taste = Nearby.taste(notes: notes, gatherings: gatherings, kitchens: kitchens)
+        let three = model.isFiltered ? [] : RightNow.picks(all, now: now, taste: taste, fits: RightNowFeed.shared.fits)
         return VStack(alignment: .leading, spacing: 0) {
+            if !three.isEmpty {
+                header("Wren\u{2019}s three for right now")
+                rows(three, now: now)
+            }
             Text("\(Timetable.countLine(shown.count)) \u{00B7} \(day) \(Timetable.untilLine(model.railUntil(all, now: now), span: span))")
                 .font(.subheadline)
                 .monospacedDigit()

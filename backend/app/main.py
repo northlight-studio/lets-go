@@ -18,6 +18,7 @@ from app.routes import (
     payments,
     people,
     posters,
+    right_now,
     suppers,
     users,
 )
@@ -52,6 +53,7 @@ app.include_router(people.router)
 app.include_router(discover.router)
 app.include_router(posters.router)
 app.include_router(suppers.router)
+app.include_router(right_now.router)
 app.include_router(admin.router)
 
 

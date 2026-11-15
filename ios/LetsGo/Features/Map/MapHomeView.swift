@@ -19,6 +19,7 @@ struct HomeView: View {
     @Query(sort: \Gathering.start) private var gatherings: [Gathering]
     @Query private var kitchens: [Kitchen]
     @Query private var people: [Person]
+    @Query private var notes: [TasteNote]
 
     @Environment(HomeModel.self) private var model
     @State private var camera: PaperMap.Camera?
@@ -46,6 +47,11 @@ struct HomeView: View {
             .toolbarVisibility(model.exploring && model.mode == .paper ? .hidden : .visible, for: .tabBar)
         }
         .errorAlert($problem)
+        // Wren's three for right now: scored as the map opens and whenever what's near changes,
+        // so they're there when the list comes up.
+        .task(id: "\(location.center.roundedKey)|\(gatherings.count)|\(kitchens.count)") {
+            await RightNowFeed.shared.refresh(gatherings: gatherings, kitchens: kitchens, notes: notes, around: location.center)
+        }
         .sheet(isPresented: $model.listOpen) {
             NearbySheet()
                 .environment(model)

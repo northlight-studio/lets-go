@@ -30,6 +30,8 @@ final class ServerFeatures {
         case suppers
         /// Your block: the short list of what's on within a few blocks.
         case block
+        /// Wren's three for right now: the server scores how well each nearby thing fits you.
+        case rightNow
 
         /// Routes (as the server's OpenAPI lists them) the feature can't work without.
         var routes: [String] {
@@ -42,6 +44,7 @@ final class ServerFeatures {
             case .selling: ["/v1/batches", "/v1/drops/{drop_id}"]
             case .suppers: ["/v1/suppers", "/v1/suppers/{supper_id}", "/v1/supper-seats/{seat_id}/accept"]
             case .block: ["/v1/me/block"]
+            case .rightNow: ["/v1/me/right-now"]
             }
         }
 
@@ -50,6 +53,7 @@ final class ServerFeatures {
             // Before selling: a seat's ".../pay" is a supper's.
             if ["/v1/suppers", "/v1/supper-seats", "/v1/me/suppers"].contains(where: { path.hasPrefix($0) }) { return .suppers }
             if path.hasPrefix("/v1/me/block") { return .block }
+            if path.hasPrefix("/v1/me/right-now") { return .rightNow }
             if path.hasSuffix("/poster") || path.hasPrefix("/v1/posters") { return .posters }
             if path.hasSuffix("/invites") { return .people }
             if ["/v1/me/up-for", "/v1/up-for", "/v1/meetups"].contains(where: { path.hasPrefix($0) }) { return .upFor }
@@ -74,6 +78,7 @@ final class ServerFeatures {
             case .selling: "Selling a batch needs the new server. It's coming soon."
             case .suppers: "Suppers need the new server. They're coming soon."
             case .block: "Your block needs the new server. It's coming soon."
+            case .rightNow: "Wren's picks for you need the new server. Until then they go by the clock and the walk."
             }
         }
 

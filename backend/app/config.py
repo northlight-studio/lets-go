@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     # there's a key (OPENAI_API_KEY, the same one Pulse uses).
     openai_api_key: str = ""
     ai_model: str = "gpt-6-luna"
+    # OpenAI's Decisions API (`app.decisions`): how well each nearby thing fits a person, for
+    # Wren's three for right now. Off, the phone ranks on its own as it did before.
+    decisions_enabled: bool = True
     scout_reasoning_effort: Literal["low", "medium", "high"] = "medium"
     # A day's scout spend per city at list prices, and runs one person can start in an hour.
     scout_daily_budget_usd: float = 40
