@@ -21,3 +21,14 @@ async def create(client: Any, **kwargs: Any) -> Any:
     if "temperature" in kwargs:
         raise ValueError("reasoning models reject temperature; leave it out")
     return await client.responses.create(**kwargs)
+
+
+async def decide(client: Any, **kwargs: Any) -> Any:
+    """A Decisions call (`app.decisions`): typed answers with a probability each, no text. The same
+    house rule on the cache key; it raises `decisions.DecisionError` and the caller falls back."""
+    from app import decisions
+
+    key = kwargs.get("prompt_cache_key")
+    if not isinstance(key, str) or not _CACHE_KEY.match(key):
+        raise ValueError("every model call passes prompt_cache_key='letsgo:<surface>:v<n>'")
+    return await decisions.decide(client, **kwargs)

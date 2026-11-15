@@ -554,3 +554,41 @@ nonisolated struct BlockDTO: Codable, Sendable {
     var items: [BlockItemDTO]
     var radiusM: Double
 }
+
+// MARK: Right now
+
+/// One thing the phone is showing, as the server scores it (backend `ThingIn`). `key` is the
+/// phone's own id for it and comes back unchanged.
+nonisolated struct RightNowThingDTO: Codable, Sendable, Equatable {
+    var key: String
+    var title: String
+    /// gathering · drop · supper
+    var kind: String
+    var genre: String
+    var place: String
+    var price: String
+}
+
+/// What the phone sends to have its nearby things scored for one person (backend `RightNowIn`).
+/// The server keeps none of it.
+nonisolated struct RightNowBody: Codable, Sendable, Equatable {
+    /// The phone's own day and time, in words: "Saturday 7:40 PM".
+    var localTime: String
+    /// The taste notes you can see in Passport, hidden ones left out.
+    var taste: [String]
+    /// Titles of things you joined or showed up to, newest first.
+    var wentTo: [String]
+    var things: [RightNowThingDTO]
+}
+
+nonisolated struct RightNowFitDTO: Codable, Sendable {
+    var key: String
+    /// 0 (not for you) to 1 (what you keep choosing).
+    var fit: Double
+}
+
+nonisolated struct RightNowDTO: Codable, Sendable {
+    /// False when the server scored nothing: rank without it.
+    var scored: Bool
+    var fits: [RightNowFitDTO]
+}

@@ -17,7 +17,7 @@ iOS app: a live map of things to do within walking distance, home kitchens selli
 - Anything that has ended never shows as something to go to (`Upcoming`); what you joined stays only in your history.
 - Tests use Swift Testing (`import Testing`), not XCTest.
 - Never commit the App Store Connect key (`*.p8`, `asc_api_key.json`).
-- AI works the way Pulse's does: every model call goes through `backend/app/llm.py` (`llm.create`, the OpenAI Responses API), names the model only through `settings.ai_model` (gpt-6-luna), and passes a `prompt_cache_key` of `letsgo:<surface>:v<n>`. The key is `OPENAI_API_KEY`, the same one Pulse uses.
+- AI works the way Pulse's does: every model call goes through `backend/app/llm.py` (`llm.create`, the OpenAI Responses API), names the model only through `settings.ai_model` (gpt-6-luna), and passes a `prompt_cache_key` of `letsgo:<surface>:v<n>`. The key is `OPENAI_API_KEY`, the same one Pulse uses. **Decisions** (`llm.decide`, `backend/app/decisions.py`, the same module as Pulse's) returns typed answers with a probability and no text, in a fraction of a second; it takes the same `prompt_cache_key`, raises `DecisionError`, and the caller falls back. Wren's three for right now (`right_now.py`) scores fit with it.
 
 ## Pull requests (same rules as Pulse)
 - **Merge it yourself.** When your PR is ready, merge it, squashed like the rest of `main`: `gh pr merge <n> --squash`, or the GitHub merge tool in a cloud session. Don't hand it back to be merged. Ready means its checks finished green, it merges cleanly with `main`, and your own pass over the diff found nothing.
